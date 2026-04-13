@@ -40,7 +40,9 @@ def extract_from_cfg(cfg):
             if condition.operator in [">", "<", ">=", "<="]:
                 table = filter_numeric_rows(table, condition.column)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
-            print(f"Table rows matching population IDs: {len(table)} after filtering on {condition.match_on}")
+            print(
+                f"Table rows matching population IDs: {len(table)} after filtering on {condition.column} {condition.operator} {condition.value}"
+            )
 
             if condition.condition is None:
                 last_condition_population = set(table[condition.match_on])
