@@ -41,6 +41,16 @@ def summary_from_cfg(cfg):
     population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
     print("Population size:", len(population))
 
+    for criterion in cfg.conditional_criteria:
+        for condition in criterion.conditions:
+            if all_dists.get(condition.table) is None:
+                all_dists[condition.table] = {}
+            table = load_table(condition.table, strict=cfg.strict)
+            print(f"Table rows total: {len(table)} for table: {condition.table}")
+            all_dists[condition.table][condition.column] = (
+                get_column_distribution(column=table.get_column(condition.column)) if cfg.distribution_save_path else {}
+            )
+
     print("\n ### Applying standard criteria ### \n")
     for table_cfg in cfg.get("standard_criteria", []):
         table = load_table(table_cfg.table, strict=cfg.strict)
