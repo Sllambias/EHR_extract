@@ -3,6 +3,8 @@ discards_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/discards_${
 imaging_metadata_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/imaging_metadata_${hydra:job.config_name}.csv
 distribution_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/distribution_${hydra:job.config_name}.csv
 
+strict: True 
+
 base_population: 
   table: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/population.csv
   column: CPR_BARN

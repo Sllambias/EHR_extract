@@ -135,3 +135,6 @@ data/*
 outputs/*
 discards_*
 distribution_*
+*outputs*
+*discard*
+*distribution*
