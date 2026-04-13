@@ -1,0 +1,23 @@
+
+population: 
+  table: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_from_population/population.csv
+  column: CPR_BARN
+
+inclusion_criteria:
+  # GA at scan within 28-37 weeks (196-259 days)
+  - table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+    match_on: CPR_BARN
+    criteria:
+      - column: GA_at_studydate_in_days
+        operator: ">"
+        value: 196
+      - column: GA_at_studydate_in_days
+        operator: "<"
+        value: 259
+  # GA at delivery available
+  - table: ehr2meds/data/raw/fetal_data/SDS_from_population/MFR2_main.csv
+    match_on: CPR_BARN
+    criteria:
+      - column: GESTATIONSDAGE
+        operator: ">"
+        value: 0
