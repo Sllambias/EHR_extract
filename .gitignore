@@ -133,3 +133,5 @@ data/*
 
 #
 outputs/*
+discards_*
+distribution_*
