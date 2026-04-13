@@ -1,7 +1,8 @@
 population_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/population_${hydra:job.config_name}.json
 discards_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/discards_${hydra:job.config_name}.json
+distribution_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/distribution_${hydra:job.config_name}.json
 imaging_metadata_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/imaging_metadata_${hydra:job.config_name}.csv
-distribution_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/distribution_${hydra:job.config_name}.csv
+
 
 strict: True 
 

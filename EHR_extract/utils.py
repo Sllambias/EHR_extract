@@ -8,7 +8,10 @@ def load_table(path, strict=True, n_rows=None):
         ignore_errors = True
 
     if path.endswith(".csv"):
-        return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows)
+        try:
+            return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows)
+        except pl.exceptions.ComputeError:
+            return pl.read_csv(path, ignore_errors=ignore_errors, infer_schema_length=1000000, n_rows=n_rows)
     else:
         raise NotImplementedError(f"Unknown file type for path: {path}. Did you remember to add the file extension?")
 
