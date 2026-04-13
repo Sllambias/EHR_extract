@@ -31,6 +31,8 @@ def get_column_distribution(column):
         stats["NOT NA/NULL"] = len(column) - stats["NA/NULL"]
     else:
         stats["unique"] = list(column.unique())
+        stats["NA/NULL"] = column.null_count()
+        stats["NOT NA/NULL"] = len(column) - stats["NA/NULL"]
     return stats
 
 
