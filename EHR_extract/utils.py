@@ -41,6 +41,7 @@ def filter_numeric_rows(table, column):
 
 
 def update_population(population, subset, action):
+    pre_discard_population = len(population)
     if action == "exclude":
         discards = subset
         population.difference_update(subset)
@@ -49,4 +50,4 @@ def update_population(population, subset, action):
         population = population.intersection(subset)
     else:
         raise NotImplementedError(f"unexpected action: {action}")
-    return population, discards
+    return population, discards, len(discards), pre_discard_population
