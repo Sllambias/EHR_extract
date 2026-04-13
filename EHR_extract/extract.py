@@ -43,7 +43,7 @@ def extract_from_cfg(cfg):
 
     print("\n ### Applying standard criteria ### \n")
     for table_cfg in cfg.get("standard_criteria", []):
-        table = load_table(table_cfg.table)
+        table = load_table(table_cfg.table, strict=cfg.strict)
         all_dists[table_cfg.table] = {}
         print(f"Table rows total: {len(table)} for table: {table_cfg.table}")
         table = table.filter(pl.col(table_cfg.match_on).is_in(population))

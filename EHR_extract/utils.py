@@ -1,9 +1,14 @@
 import polars as pl
 
 
-def load_table(path, n_rows=None):
+def load_table(path, strict=True, n_rows=None):
+    if strict:
+        ignore_errors = False
+    else:
+        ignore_errors = True
+
     if path.endswith(".csv"):
-        return pl.read_csv(path, n_rows=n_rows)
+        return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows)
     else:
         raise NotImplementedError(f"Unknown file type for path: {path}. Did you remember to add the file extension?")
 
