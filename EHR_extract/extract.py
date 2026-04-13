@@ -27,6 +27,39 @@ def extract_from_cfg(cfg):
     population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
     print("Population size:", len(population))
 
+    for criterion in cfg.conditional_criteria:
+        criterion_population = set()
+        for condition in criterion.conditions:
+            table = load_table(condition.table, strict=cfg.strict)
+            print(f"Table rows total: {len(table)} for table: {condition.table}")
+
+            table = table.filter(pl.col(condition.match_on).is_in(population))
+            print(f"Table rows matching population IDs: {len(table)} after filtering on {condition.match_on}")
+
+            py_operator = get_python_operator(condition.operator)
+            if condition.operator in [">", "<", ">=", "<="]:
+                table = filter_numeric_rows(table, condition.column)
+            table = table.filter(py_operator(pl.col(condition.column), condition.value))
+            print(f"Table rows matching population IDs: {len(table)} after filtering on {condition.match_on}")
+
+            if condition.condition is None:
+                last_condition_population = set(table[condition.match_on])
+            elif condition.condition == "and":
+                last_condition_population = last_condition_population.intersection(set(table[condition.match_on]))
+            elif condition.condition == "or":
+                criterion_population = last_condition_population
+                last_condition_population = set(table[condition.match_on])
+            else:
+                print("wow, weird condition")
+
+        criterion_population = criterion_population.union(last_condition_population)
+        population, discards, n_discards, n_population_before_discard = update_population(
+            population=population,
+            subset=set(criterion_population),
+            action=criterion.action,
+        )
+        print(f"Population size: {len(population)} after filtering on criteria {criterion}")
+
     print("\n ### Applying standard criteria ### \n")
     for table_cfg in cfg.get("standard_criteria", []):
         table = load_table(table_cfg.table, strict=cfg.strict)
