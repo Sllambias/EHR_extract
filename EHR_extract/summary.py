@@ -71,7 +71,6 @@ def summary_from_cfg(cfg):
 )
 def main(cfg: DictConfig) -> None:
     dist = summary_from_cfg(cfg)
-    print(dist)
     with open(cfg.distribution_save_path, "w") as fp:
         json.dump(dist, fp, indent=4, ensure_ascii=False)
 
