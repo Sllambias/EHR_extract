@@ -23,7 +23,6 @@ custom_functions = {
 
 def get_column_distribution(column):
     stats = {}
-    print("HEEERE", column.dtype)
     if column.dtype.is_numeric():
         stats["mean"] = column.mean()
         stats["max"] = column.max()
@@ -38,6 +37,7 @@ def get_column_distribution(column):
 def extract_from_cfg(cfg):
     all_discards = []
     all_dists = {}
+    imaging_metadata = {}
     population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
     print("Population size:", len(population))
 
