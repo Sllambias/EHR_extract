@@ -37,7 +37,7 @@ def get_column_distribution(column):
 def extract_from_cfg(cfg):
     all_discards = []
     all_dists = {}
-    imaging_metadata = {}
+    imaging_metadata = None
     population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
     print("Population size:", len(population))
 
@@ -138,7 +138,8 @@ def main(cfg: DictConfig) -> None:
         json.dump(list(population), fp, indent=4)
     with open(cfg.distribution_save_path, "w") as fp:
         json.dump(dist, fp, indent=4)
-    metadata.write_csv(cfg.imaging_metadata_save_path)
+    if metadata is not None:
+        metadata.write_csv(cfg.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":
