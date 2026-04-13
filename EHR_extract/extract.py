@@ -85,7 +85,7 @@ def extract_from_cfg(cfg):
         print("---")
 
     print("\n ### Applying custom criteria ### \n")
-    for custom_cfg in cfg.get("custom_criteria"):
+    for custom_cfg in cfg.get("custom_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
         set_of_matches = fn(**args, population=population)
@@ -100,7 +100,7 @@ def extract_from_cfg(cfg):
         print("---")
 
     print("\n ### Applying imaging matching criteria ### \n")
-    for custom_cfg in cfg.get("imaging_matching_criteria"):
+    for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
         set_of_matches, imaging_metadata = fn(**args, population=population)
