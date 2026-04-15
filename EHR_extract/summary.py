@@ -47,9 +47,7 @@ def summary_from_cfg(cfg):
                 all_dists[condition.table] = {}
             table = load_table(condition.table, strict=cfg.strict)
             print(f"Table rows total: {len(table)} for table: {condition.table}")
-            all_dists[condition.table][condition.column] = (
-                get_column_distribution(column=table.get_column(condition.column)) if cfg.distribution_save_path else {}
-            )
+            all_dists[condition.table][condition.column] = get_column_distribution(column=table.get_column(condition.column))
 
     print("\n ### Applying standard criteria ### \n")
     for table_cfg in cfg.get("standard_criteria", []):
@@ -60,15 +58,13 @@ def summary_from_cfg(cfg):
         print(f"Table rows matching population IDs: {len(table)} after filtering on {table_cfg.match_on}")
         for criteria in table_cfg.get("criteria", []):
             tmp_table = table.clone()
-            all_dists[table_cfg.table][criteria.column] = (
-                get_column_distribution(column=tmp_table.get_column(criteria.column)) if cfg.distribution_save_path else {}
-            )
+            all_dists[table_cfg.table][criteria.column] = get_column_distribution(column=tmp_table.get_column(criteria.column))
 
         for multicolumn_criteria in table_cfg.get("multicolumn_criteria", []):
             tmp_table = table.clone()
             for criterion in criteria.criteria:
-                all_dists[table_cfg.table][criteria.column] = (
-                    get_column_distribution(column=tmp_table.get_column(criteria.column)) if cfg.distribution_save_path else {}
+                all_dists[table_cfg.table][criteria.column] = get_column_distribution(
+                    column=tmp_table.get_column(criteria.column)
                 )
 
     return all_dists
@@ -81,7 +77,7 @@ def summary_from_cfg(cfg):
 )
 def main(cfg: DictConfig) -> None:
     dist = summary_from_cfg(cfg)
-    with open(cfg.distribution_save_path, "w") as fp:
+    with open(cfg.paths.distribution_save_path, "w") as fp:
         json.dump(dist, fp, indent=4, ensure_ascii=False)
 
 
