@@ -61,45 +61,7 @@ def extract_from_cfg(cfg):
             action=criterion.action,
         )
         print(f"Population size: {len(population)} after filtering on criteria {criterion}")
-
-    print("\n ### Applying standard criteria ### \n")
-    for table_cfg in cfg.get("standard_criteria", []):
-        table = load_table(table_cfg.table, strict=cfg.strict)
-        print(f"Table rows total: {len(table)} for table: {table_cfg.table}")
-        table = table.filter(pl.col(table_cfg.match_on).is_in(population))
-        print(f"Table rows matching population IDs: {len(table)} after filtering on {table_cfg.match_on}")
-        for criteria in table_cfg.get("criteria", []):
-            tmp_table = table.clone()
-            py_operator = get_python_operator(criteria.operator)
-            if criteria.operator in [">", "<", ">=", "<="]:
-                tmp_table = filter_numeric_rows(tmp_table, criteria.column)
-            tmp_table = tmp_table.filter(py_operator(pl.col(criteria.column), criteria.value))
-
-            population, discards, n_discards, n_population_before_discard = update_population(
-                population=population,
-                subset=set(tmp_table[table_cfg.match_on]),
-                action=criteria.action,
-            )
-            all_discards.append([OmegaConf.to_container(criteria), list(discards), n_discards, n_population_before_discard])
-            print(f"Population size: {len(population)} after filtering on criteria {criteria}")
-
-        for multicolumn_criteria in table_cfg.get("multicolumn_criteria", []):
-            tmp_table = table.clone()
-            for criterion in criteria.criteria:
-                py_operator = get_python_operator(criterion.operator)
-                if criterion.operator in [">", "<", ">=", "<="]:
-                    tmp_table = filter_numeric_rows(tmp_table, criterion.column)
-                tmp_table = tmp_table.filter(py_operator(pl.col(criterion.column), criterion.value))
-                population, discards, n_discards, n_population_before_discard = update_population(
-                    population=population,
-                    subset=set(tmp_table[table_cfg.match_on]),
-                    action=criteria.action,
-                )
-                all_discards.append(
-                    [OmegaConf.to_container(criteria), list(discards), n_discards, n_population_before_discard]
-                )
-                print(f"Population size: {len(population)} after filtering on multicolumn criteria {criterion}")
-        print("---")
+        all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
 
     print("\n ### Applying custom criteria ### \n")
     for custom_cfg in cfg.get("custom_criteria", {}):
