@@ -1,5 +1,6 @@
 paths:
-  input_dir: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  input_dir_SDS: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  input_dir_SP: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs 
   population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.json
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
@@ -9,7 +10,7 @@ paths:
 strict: True 
 
 base_population: 
-  table: ${paths.input_dir}/population.csv
+  table: ${paths.input_dir_SP}/population.csv
   column: CPR_BARN
 
 conditional_criteria:
@@ -17,20 +18,20 @@ conditional_criteria:
   - action: include
     conditions: 
       - condition: 
-        table: ${paths.input_dir}/mfr.csv
+        table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: GESTATIONSALDER_DAGE
         operator: ">"
         value: 0
       - condition: and
-        table: ${paths.input_dir}/mfr.csv
+        table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: LEVENDE_ELLER_DOEDFOEDT
         operator: "!="
         value: Levende
         action: exclude
       - condition: or
-        table: ${paths.input_dir}/nyfoedte.csv
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Gestationsalder
         operator: ">"
@@ -39,13 +40,13 @@ conditional_criteria:
   - action: include
     conditions:
       - condition:
-        table: ${paths.input_dir}/nyfoedte.csv
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Kejsersnit
         operator: "=="
         value: "-1"
       - condition: or
-        table: ${paths.input_dir}/mfr.csv
+        table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_KEJSERSNIT
         operator: "!="
@@ -54,25 +55,25 @@ conditional_criteria:
   - action: exclude
     conditions:
       - condition:
-        table: ${paths.input_dir}/mfr.csv
+        table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_IGANGSAETTELSE
         operator: "=="
         value: "1"
       - condition: or
-        table: ${paths.input_dir}/nyfoedte.csv
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Ballonkateter
         operator: "=="
         value: "Ja"
       - condition: or
-        table: ${paths.input_dir}/nyfoedte.csv
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Medicinsk
         operator: "=="
         value: "Ja"
       - condition: or
-        table: ${paths.input_dir}/nyfoedte.csv
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_HSP
         operator: "=="
@@ -82,7 +83,7 @@ custom_criteria:
   # Removes twin pregnancies AND close pregnancies
   - function: find_close_siblings
     args:
-      table: ${paths.input_dir}/mfr.csv
+      table: ${paths.input_dir_SDS}/mfr.csv
       match_on: CPR_BARN
       mom_column: CPR_MODER
       delivery_date_column: FOEDSELSDATO
@@ -93,7 +94,7 @@ custom_criteria:
 #  # Scan-to-delivery interval
 #  - function: find_images_and_timedeltas
 #    args: 
-#      table1: ${paths.input_dir}/mfr.csv
+#      table1: ${paths.input_dir_SDS}/mfr.csv
 #      table2: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
 #      child_id_column1: CPR_BARN
 #      mom_id_column1: CPR_MODER
