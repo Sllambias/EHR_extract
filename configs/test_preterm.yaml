@@ -1,12 +1,15 @@
-population_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/population_${hydra:job.config_name}.json
-discards_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/discards_${hydra:job.config_name}.json
-distribution_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/distribution_${hydra:job.config_name}.json
-imaging_metadata_save_path: /Users/zcr545/Desktop/Projects/repos/EHR_extract/imaging_metadata_${hydra:job.config_name}.csv
+paths:
+  input_dir: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs 
+  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.json
+  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
+  distribution_save_path: ${paths.output_dir}/distribution_${hydra:job.config_name}.json
+  imaging_metadata_save_path: ${paths.output_dir}/imaging_metadata_${hydra:job.config_name}.csv
 
 strict: True 
 
 base_population: 
-  table: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/population.csv
+  table: ${paths.input_dir}/population.csv
   column: CPR_BARN
 
 conditional_criteria:
@@ -14,21 +17,21 @@ conditional_criteria:
   - action: include
     conditions: 
       - condition: 
-        table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
+        table: ${paths.input_dir}/mfr.csv
         match_on: CPR_BARN
-        column: GESTATIONSDAGE
+        column: GESTATIONSALDER_DAGE
         operator: ">"
         value: 0
       - condition: and
-        table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
+        table: ${paths.input_dir}/mfr.csv
         match_on: CPR_BARN
         column: LEVENDE_ELLER_DOD
         operator: "!="
         value: Levende
         action: exclude
       - condition: or
-        table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR3_Nyfoedte.csv
-        match_on: CPRNummer_Barn
+        table: ${paths.input_dir}/nyfoedte.csv
+        match_on: CPRnummer_Barn
         column: Gestationsalder
         operator: ">"
         value: 0
@@ -36,23 +39,50 @@ conditional_criteria:
   - action: include
     conditions:
       - condition:
-        table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR3_Nyfoedte.csv
-        match_on: CPRNummer_Barn
+        table: ${paths.input_dir}/nyfoedte.csv
+        match_on: CPRnummer_Barn
         column: Kejsersnit
         operator: "=="
         value: "-1"
       - condition: or
-        table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
+        table: ${paths.input_dir}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_KEJSERSNIT
         operator: "!="
         value: "1"
+  # Not induced
+  - action: exclude
+    conditions:
+      - condition:
+        table: ${paths.input_dir}/mfr.csv
+        match_on: CPR_BARN
+        column: MARKOER_IGANGSAETTELSE
+        operator: 
+        value: 
+      - condition: or
+        table: ${paths.input_dir}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_Ballonkateter
+        operator: 
+        value:
+      - condition: or
+        table: ${paths.input_dir}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_Medicinsk
+        operator: 
+        value:
+      - condition: or
+        table: ${paths.input_dir}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_HSP
+        operator: 
+        value:
 
 custom_criteria:
   # Removes twin pregnancies AND close pregnancies
   - function: find_close_siblings
     args:
-      table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
+      table: ${paths.input_dir}/mfr.csv
       match_on: CPR_BARN
       mom_column: CPR_MODER
       delivery_date_column: FOEDSELSDATO
@@ -63,7 +93,7 @@ custom_criteria:
 #  # Scan-to-delivery interval
 #  - function: find_images_and_timedeltas
 #    args: 
-#      table1: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
+#      table1: ${paths.input_dir}/mfr.csv
 #      table2: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
 #      child_id_column1: CPR_BARN
 #      mom_id_column1: CPR_MODER
