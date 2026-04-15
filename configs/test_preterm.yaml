@@ -41,13 +41,12 @@ conditional_criteria:
         column: Kejsersnit
         operator: "=="
         value: "-1"
-      - condition: 
+      - condition: or
         table: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
         match_on: CPR_BARN
         column: MARKOER_KEJSERSNIT
-        operator: "=="
-        value: "-1"
-
+        operator: "!="
+        value: "1"
 
 custom_criteria:
   # Removes twin pregnancies AND close pregnancies
@@ -59,6 +58,7 @@ custom_criteria:
       delivery_date_column: FOEDSELSDATO
       threshold_days: 280
     action: exclude
+    
 #imaging_matching_criteria:
 #  # Scan-to-delivery interval
 #  - function: find_images_and_timedeltas
@@ -76,20 +76,3 @@ custom_criteria:
 #      min_diff_ga_scan_to_delivery: -999999999999 #196
 #      max_diff_ga_scan_to_delivery: 999999999999 #259
 #    action: include
-
-  # GA at scan within 28-37 weeks (196-259 days)
-  # function: find_scantime_ga
-  # args: 
-  #   table1: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/MFR2_main.csv
-  #   table2: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
-  #   child_id_column1: CPR_BARN
-  #   mom_id_column1: CPR_MODER
-  #   mom_id_column2: CPR_MOR
-
-  #   birth_date_col: FOEDSELSDATO
-  #   birth_ga: GESTATIONSDAGE
-  #   id_col_scan: CPR_BARN
-  #   scan_date_col: studydate
-  #   min_diff: 0
-  #   max_diff: 20000 #259
-  # action: include
