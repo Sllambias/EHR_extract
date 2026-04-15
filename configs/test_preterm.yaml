@@ -25,7 +25,7 @@ conditional_criteria:
       - condition: and
         table: ${paths.input_dir}/mfr.csv
         match_on: CPR_BARN
-        column: LEVENDE_ELLER_DOD
+        column: LEVENDE_ELLER_DOEDFOEDT
         operator: "!="
         value: Levende
         action: exclude
@@ -57,26 +57,26 @@ conditional_criteria:
         table: ${paths.input_dir}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_IGANGSAETTELSE
-        operator: 
-        value: 
+        operator: "=="
+        value: "1"
       - condition: or
         table: ${paths.input_dir}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Ballonkateter
-        operator: 
-        value:
+        operator: "=="
+        value: "Ja"
       - condition: or
         table: ${paths.input_dir}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Medicinsk
-        operator: 
-        value:
+        operator: "=="
+        value: "Ja"
       - condition: or
         table: ${paths.input_dir}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_HSP
-        operator: 
-        value:
+        operator: "=="
+        value: "Ja"
 
 custom_criteria:
   # Removes twin pregnancies AND close pregnancies

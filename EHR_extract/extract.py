@@ -151,12 +151,12 @@ def main(cfg: DictConfig) -> None:
             "discards": discards[i][1],
         }
 
-    with open(cfg.discards_save_path, "w") as fp:
+    with open(cfg.paths.discards_save_path, "w") as fp:
         json.dump(d, fp, indent=4)
-    with open(cfg.population_save_path, "w") as fp:
+    with open(cfg.paths.population_save_path, "w") as fp:
         json.dump(list(population), fp, indent=4)
     if metadata is not None:
-        metadata.write_csv(cfg.imaging_metadata_save_path)
+        metadata.write_csv(cfg.paths.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":
