@@ -127,9 +127,9 @@ imaging_matching_criteria:
       child_id_column: cpr_child
       delivery_date_column: Birthdate
       scan_date_column: study_date
-      ga_in_days_column: GA_days
+      ga_in_days_at_delivery_column: GA_days
       min_diff_days_scan_to_delivery: -999999999999 #0
       max_diff_days_scan_to_delivery: 999999999999 #210
-      min_diff_ga_in_days_scan_to_delivery: -999999999999 #196
-      max_diff_ga_in_days_scan_to_delivery: 999999999999 #259
+      min_ga_in_days_at_scan: -999999999999 #196
+      max_ga_in_days_at_scan: 999999999999 #259
     action: include

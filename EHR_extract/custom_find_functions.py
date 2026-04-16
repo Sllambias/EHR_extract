@@ -45,11 +45,11 @@ def find_images_and_timedeltas(
     child_id_column,
     delivery_date_column,
     scan_date_column,
-    ga_in_days_column,
+    ga_in_days_at_delivery_column,
     min_diff_days_scan_to_delivery,
     max_diff_days_scan_to_delivery,
-    min_diff_ga_in_days_scan_to_delivery,
-    max_diff_ga_in_days_scan_to_delivery,
+    min_ga_in_days_at_scan,
+    max_ga_in_days_at_scan,
     population,
 ):
     table_path = table
@@ -73,13 +73,14 @@ def find_images_and_timedeltas(
         & (pl.col("diff_in_days_scan_to_delivery") < max_diff_days_scan_to_delivery)
     )
 
-    matching = filter_numeric_rows(matching, ga_in_days_column)
+    matching = filter_numeric_rows(matching, ga_in_days_at_delivery_column)
     matching = matching.with_columns(
-        GA_in_days_at_scantime=(pl.col(ga_in_days_column)).cast(pl.Float64) - pl.col("diff_in_days_scan_to_delivery")
+        GA_in_days_at_scantime=(pl.col(ga_in_days_at_delivery_column)).cast(pl.Float64)
+        - pl.col("diff_in_days_scan_to_delivery")
     )
     matching = matching.filter(
-        (min_diff_ga_in_days_scan_to_delivery < pl.col("GA_in_days_at_scantime"))
-        & (pl.col("GA_in_days_at_scantime") < max_diff_ga_in_days_scan_to_delivery)
+        (min_ga_in_days_at_scan < pl.col("GA_in_days_at_scantime"))
+        & (pl.col("GA_in_days_at_scantime") < max_ga_in_days_at_scan)
     )
     matching_ids = set(matching[child_id_column])
 
