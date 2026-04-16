@@ -57,7 +57,7 @@ def find_images_and_timedeltas(
     print(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(child_id_column).is_in(population))
     print(f"Table rows matching population IDs: {len(table)} after filtering on {child_id_column}")
-
+    print(f"Table unique population IDs: {table[child_id_column].n_unique()} after filtering on {child_id_column}")
     # Calculate absolute difference in days
     table = table.with_columns(
         diff_in_days_scan_to_delivery=(
@@ -93,6 +93,7 @@ def find_close_births(table, match_on, mom_column, birth_id_column, delivery_dat
     print(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(match_on).is_in(population))
     print(f"Table rows matching population IDs: {len(table)} after filtering on {match_on}")
+    print(f"Table unique population IDs: {table[match_on].n_unique()} after filtering on {match_on}")
 
     table = table.with_columns(pl.col(delivery_date_column).str.to_date())
     table = table.sort([mom_column, delivery_date_column])

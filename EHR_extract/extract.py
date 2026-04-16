@@ -29,7 +29,6 @@ custom_functions = {
 
 def extract_from_cfg(cfg):
     all_discards = []
-    imaging_metadata = None
     population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
     print("Population size:", len(population))
 
@@ -41,6 +40,9 @@ def extract_from_cfg(cfg):
 
             table = table.filter(pl.col(condition.match_on).is_in(population))
             print(f"Table rows matching population IDs: {len(table)} after filtering on {condition.match_on}")
+            print(
+                f"Table unique population IDs: {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
+            )
 
             py_operator = get_python_operator(condition.operator)
             if condition.operator in [">", "<", ">=", "<="]:
