@@ -6,26 +6,30 @@ from datetime import datetime, timedelta
 def generate_test_csv(num_rows, output_path):
     # Read CPR_BARN values from the source file
     source_df = polars.read_csv(
-        "/Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population/population.csv"
+        "/Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population/population.csv"
     )
     cpr_mor_values = source_df["CPR_MOR"].to_list()
+    cpr_child_values = source_df["CPR_BARN"].to_list()
 
     # Generate random date between 2020-01-01 and 2024-12-31
     start_date = datetime(1970, 1, 1)
     end_date = datetime(2024, 12, 31)
 
-    def random_date():
+    def random_study_date():
+        random_days = random.randint(0, (end_date - start_date).days)
+        return (start_date + timedelta(days=random_days)).strftime("%Y%m%d")
+
+    def random_birth_date():
         random_days = random.randint(0, (end_date - start_date).days)
         return (start_date + timedelta(days=random_days)).strftime("%Y-%m-%d")
 
     data = {
-        "CPR_MOR": [random.choice(cpr_mor_values[:50]) for _ in range(num_rows)],
-        "image_path": [
-            f"/images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
-            for _ in range(num_rows)
-        ],
-        "studydate": [random_date() for _ in range(num_rows)],
-        "GA_at_studydate_in_days": [random.randint(70, 280) for _ in range(num_rows)],
+        "cpr_mother": [random.choice(cpr_mor_values[:50]) for _ in range(num_rows)],
+        "cpr_child": [random.choice(cpr_child_values[:50]) for _ in range(num_rows)],
+        "file_path": f"/images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm",
+        "study_date": [random_study_date() for _ in range(num_rows)],
+        "Birthdate": [random_birth_date() for _ in range(num_rows)],
+        "GA_days": [random.randint(100, 300) for _ in range(num_rows)],
     }
 
     # Create DataFrame and save to CSV

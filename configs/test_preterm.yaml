@@ -107,32 +107,29 @@ custom_criteria:
       delivery_date_column: FOEDSELSDATO
       threshold_days: 280
     action: exclude
-  - function: find_multiple_pregnancies
-    args:
-      table: ${paths.input_dir_SDS}/nyfoedte.csv
-      match_on: CPRnummer_Barn
-      birth_id_column: DW_EK_Foedsel
-    action: exclude
-  - function: find_multiple_pregnancies
-    args:
-      table: ${paths.input_dir_SDS}/mfr.csv
-      match_on: CPR_BARN
-      birth_id_column: FOEDSELSLOEBENUMMER
-    action: exclude
-#imaging_matching_criteria:
-#  # Scan-to-delivery interval
-#  - function: find_images_and_timedeltas
-#    args: 
-#      table1: ${paths.input_dir_SDS}/mfr.csv
-#      table2: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
-#      child_id_column1: CPR_BARN
-#      mom_id_column1: CPR_MODER
-#      mom_id_column2: CPR_MOR
-#      date_column1: FOEDSELSDATO
-#      date_column2: studydate
-#      ga_column1: GESTATIONSDAGE
-#      min_diff_days_scan_to_delivery: -999999999999 #0
-#      max_diff_days_scan_to_delivery: 999999999999 #210
-#      min_diff_ga_scan_to_delivery: -999999999999 #196
-#      max_diff_ga_scan_to_delivery: 999999999999 #259
-#    action: include
+  #- function: find_multiple_pregnancies
+  #  args:
+  #    table: ${paths.input_dir_SDS}/nyfoedte.csv
+  #    match_on: CPRnummer_Barn
+  #    birth_id_column: DW_EK_Foedsel
+  #  action: exclude
+  #- function: find_multiple_pregnancies
+  #  args:
+  #    table: ${paths.input_dir_SDS}/mfr.csv
+  #    match_on: CPR_BARN
+  #    birth_id_column: FOEDSELSLOEBENUMMER
+  #  action: exclude
+imaging_matching_criteria:
+  # Scan-to-delivery interval
+  - function: find_images_and_timedeltas
+    args: 
+      table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+      child_id_column: cpr_child
+      delivery_date_column: Birthdate
+      scan_date_column: study_date
+      ga_in_days_column: GA_days
+      min_diff_days_scan_to_delivery: -999999999999 #0
+      max_diff_days_scan_to_delivery: 999999999999 #210
+      min_diff_ga_in_days_scan_to_delivery: -999999999999 #196
+      max_diff_ga_in_days_scan_to_delivery: 999999999999 #259
+    action: include

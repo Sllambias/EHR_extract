@@ -88,7 +88,7 @@ def extract_from_cfg(cfg):
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_matches, imaging_metadata = fn(**args, population=population)
+        set_of_matches = fn(**args, population=population)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
             subset=set_of_matches,
@@ -98,7 +98,7 @@ def extract_from_cfg(cfg):
 
         print(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function}")
         print("---")
-    return population, imaging_metadata, all_discards
+    return population, all_discards
 
 
 @hydra.main(
@@ -107,7 +107,7 @@ def extract_from_cfg(cfg):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    population, metadata, discards = extract_from_cfg(cfg)
+    population, discards = extract_from_cfg(cfg)
 
     d = {}
     for i in range(len(discards)):
@@ -123,8 +123,6 @@ def main(cfg: DictConfig) -> None:
         json.dump(d, fp, indent=4)
     with open(cfg.paths.population_save_path, "w") as fp:
         json.dump(list(population), fp, indent=4)
-    if metadata is not None:
-        metadata.write_csv(cfg.paths.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":
