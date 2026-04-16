@@ -2,7 +2,12 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import find_close_siblings, find_scantime_ga, find_images_and_timedeltas
+from EHR_extract.custom_find_functions import (
+    find_close_births,
+    find_scantime_ga,
+    find_images_and_timedeltas,
+    find_multiple_pregnancies,
+)
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     filter_numeric_rows,
@@ -15,9 +20,10 @@ from omegaconf import DictConfig, OmegaConf
 load_dotenv()
 
 custom_functions = {
-    "find_close_siblings": find_close_siblings,
+    "find_close_births": find_close_births,
     "find_images_and_timedeltas": find_images_and_timedeltas,
     "find_scantime_ga": find_scantime_ga,
+    "find_multiple_pregnancies": find_multiple_pregnancies,
 }
 
 
