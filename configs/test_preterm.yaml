@@ -142,10 +142,8 @@ imaging_matching_criteria:
     args: 
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
       child_id_column: cpr_child
-      delivery_date_column: Birthdate
       scan_date_column: study_date
       image_path_column: "file_path"
-      ga_in_days_at_delivery_column: GA_days
       min_diff_days_scan_to_delivery: -999999999999 #0
       max_diff_days_scan_to_delivery: 999999999999 #210
       min_ga_in_days_at_scan: -999999999999 #196

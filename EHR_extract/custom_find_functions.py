@@ -48,24 +48,28 @@ def find_scantime_ga(
 def find_images_and_timedeltas(
     table,
     child_id_column,
-    delivery_date_column,
     scan_date_column,
     image_path_column,
-    ga_in_days_at_delivery_column,
     min_diff_days_scan_to_delivery,
     max_diff_days_scan_to_delivery,
     min_ga_in_days_at_scan,
     max_ga_in_days_at_scan,
     imaging_metadata,
     population,
+    population_key_column,
+    delivery_date_column="Birthday",
+    ga_in_days_at_delivery_column="GA",
 ):
     table_path = table
     table = load_table(table)
     print(f"Table rows total: {len(table)} for table: {table_path}")
-    table = table.filter(pl.col(child_id_column).is_in(population))
+    table = table.filter(pl.col(child_id_column).is_in(population.get_column(population_key_column)))
     print(
         f"Table rows / unique IDs matching population IDs: {len(table)} /  {table[child_id_column].n_unique()} after filtering on {child_id_column}"
     )
+
+    table = table.join(population, left_on=child_id_column, right_on=population_key_column)
+    print(table.head())
     # Calculate absolute difference in days
     table = table.with_columns(
         diff_in_days_scan_to_delivery=(
@@ -103,6 +107,7 @@ def find_images_with_predicted_classes(
     imaging_metadata,
     imaging_metadata_image_path_column,
     population,
+    population_key_column,
 ):
     table_path = table
     table = load_table(table)

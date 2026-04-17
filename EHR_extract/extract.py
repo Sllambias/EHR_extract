@@ -101,8 +101,12 @@ def extract_from_cfg(cfg):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
         set_of_ID_matches, imaging_metadata = fn(
-            **args, imaging_metadata=imaging_metadata, population=set(population.get_column(cfg.population.population_key))
+            **args,
+            imaging_metadata=imaging_metadata,
+            population=population,
+            population_key_column=cfg.population.population_key,
         )
+
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
             key=cfg.population.population_key,
@@ -136,14 +140,12 @@ def main(cfg: DictConfig) -> None:
 
     with open(cfg.paths.discards_save_path, "w") as fp:
         json.dump(d, fp, indent=4)
-    # with open(cfg.paths.population_save_path, "w") as fp:
-    #    json.dump(list(population), fp, indent=4)
+
     population.write_csv(cfg.paths.population_save_path)
     if imaging_metadata is not None:
         write_imaging_metadata_to_formats(
             imaging_metadata, cfg.paths.imaging_metadata_output_formats, cfg.paths.imaging_metadata_save_path
         )
-        # imaging_metadata.write_csv(cfg.paths.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":

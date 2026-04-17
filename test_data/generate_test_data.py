@@ -31,8 +31,8 @@ def generate_test_csv(num_rows, output_path):
             for _ in range(num_rows)
         ],
         "study_date": [random_study_date() for _ in range(num_rows)],
-        "Birthdate": [random_birth_date() for _ in range(num_rows)],
-        "GA_days": [random.randint(100, 300) for _ in range(num_rows)],
+        # "Birthdate": [random_birth_date() for _ in range(num_rows)],
+        # "GA_days": [random.randint(100, 300) for _ in range(num_rows)],
     }
 
     # Create DataFrame and save to CSV
