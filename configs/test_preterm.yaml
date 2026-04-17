@@ -142,8 +142,9 @@ imaging_matching_criteria:
     args:
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
       classes: [14]
-      image_path_column: file_path
-      class_column: "class"
+      image_path_column: filename
+      imaging_metadata_image_path_column: file_path 
+      class_column: pred
       child_id_column: cpr_child
     action: include
 

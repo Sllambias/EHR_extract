@@ -95,19 +95,26 @@ def find_images_and_timedeltas(
 
 
 def find_images_with_predicted_classes(
-    table, classes, child_id_column, class_column, image_path_column, imaging_metadata, population
+    table,
+    classes,
+    child_id_column,
+    class_column,
+    image_path_column,
+    imaging_metadata,
+    imaging_metadata_image_path_column,
+    population,
 ):
     table_path = table
     table = load_table(table)
     print(f"Table rows total: {len(table)} for table: {table_path}")
-    matching = table.filter(pl.col(image_path_column).is_in(imaging_metadata[image_path_column]))
+    matching = table.filter(pl.col(image_path_column).is_in(imaging_metadata[imaging_metadata_image_path_column]))
     print(f"Table rows matching imaging metadata: {len(matching)}")
 
     # Filter to find images with predicted class in the provided classes
     matching = matching.filter(pl.col(class_column).is_in(classes))
     print(f"Table rows matching predicted classes: {len(matching)}")
 
-    imaging_metadata = imaging_metadata.filter(pl.col(image_path_column).is_in(matching[image_path_column]))
+    imaging_metadata = imaging_metadata.filter(pl.col(imaging_metadata_image_path_column).is_in(matching[image_path_column]))
     matching_ids = set(imaging_metadata[child_id_column])
     return matching_ids, imaging_metadata
 
