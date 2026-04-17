@@ -7,6 +7,7 @@ from EHR_extract.custom_find_functions import (
     find_scantime_ga,
     find_images_and_timedeltas,
     find_multiple_pregnancies,
+    find_images_with_predicted_classes,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
@@ -24,24 +25,30 @@ custom_functions = {
     "find_images_and_timedeltas": find_images_and_timedeltas,
     "find_scantime_ga": find_scantime_ga,
     "find_multiple_pregnancies": find_multiple_pregnancies,
+    "find_images_with_predicted_classes": find_images_with_predicted_classes,
 }
 
 
 def extract_from_cfg(cfg):
     all_discards = []
-    population = set(load_table(cfg.base_population.table)[cfg.base_population.column])
+    imaging_metadata = None
+    population = set()
+
+    for population_source in cfg.base_population:
+        population = population.union(set(load_table(population_source.table)[population_source.column]))
     print("Population size:", len(population))
 
     for criterion in cfg.conditional_criteria:
         criterion_population = set()
         for condition in criterion.conditions:
             table = load_table(condition.table, strict=cfg.strict)
-            print(f"Table rows total: {len(table)} for table: {condition.table}")
+            print(
+                f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} for table: {condition.table}"
+            )
 
             table = table.filter(pl.col(condition.match_on).is_in(population))
-            print(f"Table rows matching population IDs: {len(table)} after filtering on {condition.match_on}")
             print(
-                f"Table unique population IDs: {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
+                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
             )
 
             py_operator = get_python_operator(condition.operator)
@@ -49,7 +56,7 @@ def extract_from_cfg(cfg):
                 table = filter_numeric_rows(table, condition.column)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
             print(
-                f"Table rows matching population IDs: {len(table)} after filtering on {condition.column} {condition.operator} {condition.value}"
+                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.column} {condition.operator} {condition.value}"
             )
 
             if condition.condition is None:
@@ -90,10 +97,10 @@ def extract_from_cfg(cfg):
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_matches = fn(**args, population=population)
+        set_of_ID_matches, imaging_metadata = fn(**args, imaging_metadata=imaging_metadata, population=population)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
-            subset=set_of_matches,
+            subset=set_of_ID_matches,
             action=custom_cfg.action,
         )
         all_discards.append([OmegaConf.to_container(custom_cfg), list(discards), n_discards, n_population_before_discard])

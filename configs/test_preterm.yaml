@@ -10,8 +10,10 @@ paths:
 strict: True 
 
 base_population: 
-  table: ${paths.input_dir_SP}/population.csv
-  column: CPR_BARN
+  - table: ${paths.input_dir_SDS}/mfr.csv
+    column: CPR_BARN
+  - table: ${paths.input_dir_SDS}/nyfoedte.csv
+    column: CPRnummer_Barn
 
 conditional_criteria:
   # GA available at birth
@@ -120,16 +122,28 @@ custom_criteria:
   #    birth_id_column: FOEDSELSLOEBENUMMER
   #  action: exclude
 imaging_matching_criteria:
-  # Scan-to-delivery interval
+  # Filter1: Scan-to-delivery interval
+  # Filter2: GA at scan
   - function: find_images_and_timedeltas
     args: 
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
       child_id_column: cpr_child
       delivery_date_column: Birthdate
       scan_date_column: study_date
+      image_path_column: "file_path"
       ga_in_days_at_delivery_column: GA_days
       min_diff_days_scan_to_delivery: -999999999999 #0
       max_diff_days_scan_to_delivery: 999999999999 #210
       min_ga_in_days_at_scan: -999999999999 #196
       max_ga_in_days_at_scan: 999999999999 #259
     action: include
+  - function: find_images_with_predicted_classes
+    # requires that "find_images_and_timedeltas" is run first to generate imaging metadata dataframe
+    args:
+      table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
+      classes: [14]
+      image_path_column: file_path
+      class_column: "class"
+      child_id_column: cpr_child
+    action: include
+

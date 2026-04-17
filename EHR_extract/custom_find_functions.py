@@ -14,6 +14,9 @@ def find_scantime_ga(
     max_diff,
     population,
 ):
+    """
+    WIP
+
     table_birth_path = table_birth
     table_birth = load_table(table_birth)
     print(f"Table rows total: {len(table_birth)} for table: {table_birth_path}")
@@ -38,6 +41,8 @@ def find_scantime_ga(
     # Get IDs that have the target difference
     matching_ids = set(matching[id_col_birth])
     return matching_ids
+    """
+    raise NotImplementedError
 
 
 def find_images_and_timedeltas(
@@ -45,19 +50,22 @@ def find_images_and_timedeltas(
     child_id_column,
     delivery_date_column,
     scan_date_column,
+    image_path_column,
     ga_in_days_at_delivery_column,
     min_diff_days_scan_to_delivery,
     max_diff_days_scan_to_delivery,
     min_ga_in_days_at_scan,
     max_ga_in_days_at_scan,
+    imaging_metadata,
     population,
 ):
     table_path = table
     table = load_table(table)
     print(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(child_id_column).is_in(population))
-    print(f"Table rows matching population IDs: {len(table)} after filtering on {child_id_column}")
-    print(f"Table unique population IDs: {table[child_id_column].n_unique()} after filtering on {child_id_column}")
+    print(
+        f"Table rows / unique IDs matching population IDs: {len(table)} /  {table[child_id_column].n_unique()} after filtering on {child_id_column}"
+    )
     # Calculate absolute difference in days
     table = table.with_columns(
         diff_in_days_scan_to_delivery=(
@@ -83,8 +91,25 @@ def find_images_and_timedeltas(
         & (pl.col("GA_in_days_at_scantime") < max_ga_in_days_at_scan)
     )
     matching_ids = set(matching[child_id_column])
+    return matching_ids, matching
 
-    return matching_ids
+
+def find_images_with_predicted_classes(
+    table, classes, child_id_column, class_column, image_path_column, imaging_metadata, population
+):
+    table_path = table
+    table = load_table(table)
+    print(f"Table rows total: {len(table)} for table: {table_path}")
+    matching = table.filter(pl.col(image_path_column).is_in(imaging_metadata[image_path_column]))
+    print(f"Table rows matching imaging metadata: {len(matching)}")
+
+    # Filter to find images with predicted class in the provided classes
+    matching = matching.filter(pl.col(class_column).is_in(classes))
+    print(f"Table rows matching predicted classes: {len(matching)}")
+
+    imaging_metadata = imaging_metadata.filter(pl.col(image_path_column).is_in(matching[image_path_column]))
+    matching_ids = set(imaging_metadata[child_id_column])
+    return matching_ids, imaging_metadata
 
 
 def find_close_births(table, match_on, mom_column, birth_id_column, delivery_date_column, threshold_days, population):
@@ -93,8 +118,9 @@ def find_close_births(table, match_on, mom_column, birth_id_column, delivery_dat
     table = load_table(table)
     print(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(match_on).is_in(population))
-    print(f"Table rows matching population IDs: {len(table)} after filtering on {match_on}")
-    print(f"Table unique population IDs: {table[match_on].n_unique()} after filtering on {match_on}")
+    print(
+        f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} after filtering on {match_on}"
+    )
 
     table = table.with_columns(pl.col(delivery_date_column).str.to_date())
     table = table.sort([mom_column, delivery_date_column])
@@ -116,13 +142,15 @@ def find_close_births(table, match_on, mom_column, birth_id_column, delivery_dat
 
 
 def find_multiple_pregnancies(table, match_on, birth_id_column, population):
+    """
+    WIP
+
     # Sort by mother and birth date
     table_path = table
     table = load_table(table)
     print(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(match_on).is_in(population))
     print(f"Table rows matching population IDs: {len(table)} after filtering on {match_on}")
-
     print(table[birth_id_column].value_counts())
-
+    """
     raise NotImplementedError
