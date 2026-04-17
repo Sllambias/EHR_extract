@@ -107,7 +107,7 @@ def extract_from_cfg(cfg):
 
         print(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function}")
         print("---")
-    return population, all_discards
+    return population, all_discards, imaging_metadata
 
 
 @hydra.main(
@@ -116,7 +116,7 @@ def extract_from_cfg(cfg):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    population, discards = extract_from_cfg(cfg)
+    population, discards, imaging_metadata = extract_from_cfg(cfg)
 
     d = {}
     for i in range(len(discards)):
@@ -132,6 +132,7 @@ def main(cfg: DictConfig) -> None:
         json.dump(d, fp, indent=4)
     with open(cfg.paths.population_save_path, "w") as fp:
         json.dump(list(population), fp, indent=4)
+    imaging_metadata.write_csv(cfg.paths.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":
