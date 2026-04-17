@@ -15,6 +15,8 @@ from EHR_extract.utils import (
     get_python_operator,
     load_table,
     update_population,
+    write_imaging_metadata_to_formats,
+    merge_population_tables,
 )
 from omegaconf import DictConfig, OmegaConf
 
@@ -32,12 +34,11 @@ custom_functions = {
 def extract_from_cfg(cfg):
     all_discards = []
     imaging_metadata = None
-    population = set()
+    population = merge_population_tables(cfg.population.tables)
 
-    for population_source in cfg.base_population:
-        population = population.union(set(load_table(population_source.table)[population_source.column]))
-    print("Population size:", len(population))
-
+    print(
+        f"Population size: {len(population)} with unique IDs: {population[cfg.population.population_key].n_unique()}",
+    )
     for criterion in cfg.conditional_criteria:
         criterion_population = set()
         for condition in criterion.conditions:
@@ -46,7 +47,7 @@ def extract_from_cfg(cfg):
                 f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} for table: {condition.table}"
             )
 
-            table = table.filter(pl.col(condition.match_on).is_in(population))
+            table = table.filter(pl.col(condition.match_on).is_in(population[cfg.population.population_key]))
             print(
                 f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
             )
@@ -72,6 +73,7 @@ def extract_from_cfg(cfg):
         criterion_population = criterion_population.union(last_condition_population)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
+            key=cfg.population.population_key,
             subset=set(criterion_population),
             action=criterion.action,
         )
@@ -82,9 +84,10 @@ def extract_from_cfg(cfg):
     for custom_cfg in cfg.get("custom_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_matches = fn(**args, population=population)
+        set_of_matches = fn(**args, population=set(population.get_column(cfg.population.population_key)))
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
+            key=cfg.population.population_key,
             subset=set_of_matches,
             action=custom_cfg.action,
         )
@@ -97,9 +100,12 @@ def extract_from_cfg(cfg):
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_ID_matches, imaging_metadata = fn(**args, imaging_metadata=imaging_metadata, population=population)
+        set_of_ID_matches, imaging_metadata = fn(
+            **args, imaging_metadata=imaging_metadata, population=set(population.get_column(cfg.population.population_key))
+        )
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
+            key=cfg.population.population_key,
             subset=set_of_ID_matches,
             action=custom_cfg.action,
         )
@@ -130,9 +136,14 @@ def main(cfg: DictConfig) -> None:
 
     with open(cfg.paths.discards_save_path, "w") as fp:
         json.dump(d, fp, indent=4)
-    with open(cfg.paths.population_save_path, "w") as fp:
-        json.dump(list(population), fp, indent=4)
-    imaging_metadata.write_csv(cfg.paths.imaging_metadata_save_path)
+    # with open(cfg.paths.population_save_path, "w") as fp:
+    #    json.dump(list(population), fp, indent=4)
+    population.write_csv(cfg.paths.population_save_path)
+    if imaging_metadata is not None:
+        write_imaging_metadata_to_formats(
+            imaging_metadata, cfg.paths.imaging_metadata_output_formats, cfg.paths.imaging_metadata_save_path
+        )
+        # imaging_metadata.write_csv(cfg.paths.imaging_metadata_save_path)
 
 
 if __name__ == "__main__":

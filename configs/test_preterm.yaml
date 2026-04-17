@@ -2,18 +2,32 @@ paths:
   input_dir_SDS: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   input_dir_SP: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs 
-  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.json
+  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
   distribution_save_path: ${paths.output_dir}/distribution_${hydra:job.config_name}.json
-  imaging_metadata_save_path: ${paths.output_dir}/imaging_metadata_${hydra:job.config_name}.csv
+  imaging_metadata_save_path: ${paths.output_dir}/imaging_metadata_${hydra:job.config_name}
+  imaging_metadata_output_formats: ["csv",]
 
 strict: True 
 
-base_population: 
-  - table: ${paths.input_dir_SDS}/mfr.csv
-    column: CPR_BARN
-  - table: ${paths.input_dir_SDS}/nyfoedte.csv
-    column: CPRnummer_Barn
+population: 
+  population_key: CPR_BARN
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        Birthday: FOEDSELSDATO
+      # Hospital: 
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        Birthday: FoedselsDato_Barn
+      # Hospital: 
+  
 
 conditional_criteria:
   # GA available at birth

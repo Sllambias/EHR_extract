@@ -43,14 +43,36 @@ def filter_numeric_rows(table, column):
     return table
 
 
-def update_population(population, subset, action):
+def update_population(population, key, subset, action):
     pre_discard_population = len(population)
+    population_set = set(population[key])
     if action == "exclude":
         discards = subset
-        population.difference_update(subset)
+        population_set.difference_update(subset)
     elif action == "include":
-        discards = population.difference(subset)
-        population = population.intersection(subset)
+        discards = population_set.difference(subset)
+        population_set = population_set.intersection(subset)
     else:
         raise NotImplementedError(f"unexpected action: {action}")
+    population = population.filter(pl.col(key).is_in(population_set))
     return population, discards, len(discards), pre_discard_population
+
+
+def write_imaging_metadata_to_formats(imaging_dataframe, output_formats, path):
+    for output_format in output_formats:
+        if output_format == "csv":
+            imaging_dataframe.write_csv(path + ".csv")
+        elif output_format == "json":
+            raise NotImplementedError
+        else:
+            raise NotImplementedError(f"funky output arg: {output_format}")
+
+
+def merge_population_tables(table_cfgs: list):
+    population = pl.DataFrame()
+    for table_cfg in table_cfgs:
+        tab = load_table(table_cfg.table)
+        tab = tab.select(list(table_cfg.columns.values()))
+        tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
+        population = population.vstack(tab)
+    return population
