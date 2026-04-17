@@ -69,7 +69,6 @@ def find_images_and_timedeltas(
     )
 
     table = table.join(population, left_on=child_id_column, right_on=population_key_column)
-    print(table.head())
     # Calculate absolute difference in days
     table = table.with_columns(
         diff_in_days_scan_to_delivery=(

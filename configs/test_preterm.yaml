@@ -19,14 +19,12 @@ population:
         CPR_MOR: CPR_MODER
         GA: GESTATIONSALDER_DAGE
         Birthday: FOEDSELSDATO
-      # Hospital: 
     - table: ${paths.input_dir_SDS}/nyfoedte.csv
       columns:
         CPR_BARN: CPRnummer_Barn
         CPR_MOR: CPRnummer_Mor
         GA: Gestationsalder
         Birthday: FoedselsDato_Barn
-      # Hospital: 
   
 
 conditional_criteria:
@@ -123,18 +121,6 @@ custom_criteria:
       delivery_date_column: FOEDSELSDATO
       threshold_days: 280
     action: exclude
-  #- function: find_multiple_pregnancies
-  #  args:
-  #    table: ${paths.input_dir_SDS}/nyfoedte.csv
-  #    match_on: CPRnummer_Barn
-  #    birth_id_column: DW_EK_Foedsel
-  #  action: exclude
-  #- function: find_multiple_pregnancies
-  #  args:
-  #    table: ${paths.input_dir_SDS}/mfr.csv
-  #    match_on: CPR_BARN
-  #    birth_id_column: FOEDSELSLOEBENUMMER
-  #  action: exclude
 imaging_matching_criteria:
   # Filter1: Scan-to-delivery interval
   # Filter2: GA at scan
@@ -149,6 +135,7 @@ imaging_matching_criteria:
       min_ga_in_days_at_scan: -999999999999 #196
       max_ga_in_days_at_scan: 999999999999 #259
     action: include
+  # Only Cervix
   - function: find_images_with_predicted_classes
     # requires that "find_images_and_timedeltas" is run first to generate imaging metadata dataframe
     args:
@@ -159,4 +146,5 @@ imaging_matching_criteria:
       class_column: pred
       child_id_column: cpr_child
     action: include
+    
 
