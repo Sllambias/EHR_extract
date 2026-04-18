@@ -307,7 +307,7 @@ conditional_criteria:
   # uterine malformation #TODO missing mfr2
   - name: current_uterine_malformation
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -316,7 +316,7 @@ conditional_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO340", "DQ518", "DQ519"]
