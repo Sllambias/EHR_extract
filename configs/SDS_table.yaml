@@ -300,7 +300,7 @@ conditional_criteria:
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO340", "DQ518", "DQ519"]
-        date_col: FOEDSELSDATO
+        date_col: FoedselsDato_Barn
   # fibroids
   - name: current_fibroids
     key_column: b_cpr

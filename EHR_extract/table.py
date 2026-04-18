@@ -102,7 +102,8 @@ def get_extract_criteria(cfg, main_table):
         left_on = extract_criterion.key_column
         dtype = dtype_from_cfg(extract_criterion.dtype)
         for source in extract_criterion.sources:
-            print("Extract criterion:", extract_criterion.name, source.table)
+            print("Extract criterion:", extract_criterion.name)
+            print("\tTable:", source.table)
             table = load_table(source.table, strict=cfg.strict)
             right_on = source.match_on
 
@@ -131,7 +132,8 @@ def get_conditional_criteria(cfg, main_table):
         max_date = cfg.time_conditionals[time_window].max_date
         condition_matches = set()
         for condition in conditional_criterion.conditions:
-            print("Extracting:", conditional_criterion.name, condition.table)
+            print("Extracting:", conditional_criterion.name)
+            print("\tTable:", condition.table)
             table = load_table(condition.table, strict=cfg.strict)
             right_on = condition.match_on
 
@@ -156,6 +158,7 @@ def get_conditional_criteria(cfg, main_table):
             tmp_table = tmp_table.filter(
                 py_operator(pl.col(condition.column), condition.value)
             )
+            print("\tNumber of matches:", len(tmp_table))
 
             if condition.condition is None:
                 last_condition = set(tmp_table[key_col])
