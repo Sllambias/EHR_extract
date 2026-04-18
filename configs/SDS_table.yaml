@@ -71,6 +71,25 @@ extract_criteria:
         match_on: CPRnummer_Barn
         column: Alder_Mor
     dtype: integer
+  - name: maternal_BMI
+    key_column: b_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: BMI_MODER
+      - table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: BMI_Mor
+    dtype: float
+  - name: smoking_status
+    key_column: b_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: RYGERSTATUS_MODER
+      - table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Tobaksforbrug
   - name: parity
     key_column: b_cpr
     sources:
@@ -302,23 +321,12 @@ conditional_criteria:
         value: ["DO340", "DQ518", "DQ519"]
         date_col: FoedselsDato_Barn
   # fibroids #TODO missing in mfr2
-  # - name: current_fibroids
-  #   key_column: b_cpr
-  #   match_on: m_cpr
-  #   time_window: during_pregnancy
-  #   conditions:
-  #     - condition: 
-  #       table:
-  #         table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
-  #         table2: ${paths.input_dir_SDS}/mfr.csv
-  #         left_on: FK_MFR
-  #         right_on: PK_MFR
-  #       match_on: CPR_MODER
-  #       column: SKSKODE
-  #       operator: "startswith"
-  #       value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
-  #       date_col: FOEDSELSDATO
-      - condition: or
+  - name: current_fibroids
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition: 
         table:
           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
@@ -329,6 +337,17 @@ conditional_criteria:
         operator: "startswith"
         value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
         date_col: FoedselsDato_Barn
+      # - condition: or
+      #   table:
+      #     table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
+      #     table2: ${paths.input_dir_SDS}/mfr.csv
+      #     left_on: FK_MFR
+      #     right_on: PK_MFR
+      #   match_on: CPR_MODER
+      #   column: SKSKODE
+      #   operator: "startswith"
+      #   value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
+      #   date_col: FOEDSELSDATO
   # polyhydramnios
   - name: current_polyhydramnios
     key_column: b_cpr
@@ -522,6 +541,17 @@ conditional_criteria:
         column: MARKOER_IGANGSAETTELSE
         operator: "=="
         value: "1"
+        date_col: FOEDSELSDATO
+      - condition: 
+        table: 
+          table1: ${paths.input_dir_SDS}/igangsaettelse.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: FK_MFR
+          right_on: PK_MFR
+        match_on: CPR_BARN
+        column: SKSKODE
+        operator: "startswith"
+        value: ["KMAC", "BKHD"]
         date_col: FOEDSELSDATO
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
