@@ -97,6 +97,7 @@ def get_extract_criteria(cfg, main_table):
     for extract_criterion in cfg.extract_criteria:
         extract_table = pl.DataFrame()
         left_on = extract_criterion.key_column
+        dtype = dtype_from_cfg(extract_criterion.dtype)
         for source in extract_criterion.sources:
             print("Extract criterion:", extract_criterion.name)
             table = load_table(source.table, strict=cfg.strict)
@@ -108,14 +109,13 @@ def get_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             ).select([left_on, source.column]).rename({source.column: extract_criterion.name})
+            tmp_table = tmp_table.with_columns(
+                pl.col(extract_criterion.name).cast(dtype, strict=False)
+            ).drop_nulls(extract_criterion.name)
             extract_table = extract_table.vstack(tmp_table)
 
         extract_table = check_duplicates(extract_table, extract_criterion.key_column, allow_duplicates=BOOL_ALLOW_MANY_TO_ONE_BABY_ID)
         main_table = main_table.join(extract_table, on=left_on, how="left")
-        dtype = dtype_from_cfg(extract_criterion.dtype)
-        main_table = main_table.with_columns(
-            pl.col(extract_criterion.name).cast(dtype, strict=False)
-        )
     return main_table
 
 def get_conditional_criteria(cfg, main_table):
