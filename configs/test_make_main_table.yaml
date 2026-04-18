@@ -1,6 +1,6 @@
 paths:
-  input_dir_SDS: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
-  input_dir_SP: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/fetal_data/SDS_and_SP_from_population
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/fetal_data/SDS_and_SP_from_population
   population: ${paths.output_dir}/population_test_preterm.yaml.json
   output_dir: outputs 
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.json

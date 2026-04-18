@@ -1,10 +1,10 @@
 paths:
-  input_dir_SDS: SDS/registers_pseudonymized
-  input_dir_SP: SP/tables
-  population: outputs/populations/all.json
-  output_dir: outputs 
-  table_save_path: ${paths.output_dir}/tables/table_${hydra:job.config_name}.json
-  discards_save_path: ${paths.output_dir}/tables/discards_${hydra:job.config_name}.json
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  population: outputs/populations/full_population.json
+  output_dir: outputs/tables
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.json
+  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
 
@@ -41,21 +41,14 @@ time_conditionals:
     max_date:
       date_col: pregnancy_end
       offset_days: 0
-  static:
-    min_date:
-      date_col: null
-      offset_days: 0
-    max_date:
-      date_col: null
-      offset_days: 0
 
 extract_criteria:
   - name: ethnicity
     key_column: m_cpr
     sources:
-      - table: ${paths.input_dir_SDS}/indvandrer_efterkommer.csv.csv
+      - table: ${paths.input_dir_SDS}/indvandrer_efterkommer.csv
         match_on: V_PNR
-        column: country_of_origin
+        column: oprindelses_land_tekst
     dtype: string
   - name: maternal_age
     key_column: b_cpr
