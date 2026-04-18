@@ -1,6 +1,6 @@
 paths:
-  input_dir_SDS: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
-  input_dir_SP: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA_SDS,${oc.env:EHR_EXTRACT_DATA,../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population}}
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA_SP,${oc.env:EHR_EXTRACT_DATA,../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population}}
   output_dir: outputs 
   population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.json
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json

@@ -98,6 +98,7 @@ def get_extract_criteria(cfg, main_table):
         extract_table = pl.DataFrame()
         left_on = extract_criterion.key_column
         for source in extract_criterion.sources:
+            print("Extract criterion:", extract_criterion.name)
             table = load_table(source.table, strict=cfg.strict)
             right_on = source.match_on
 
@@ -127,6 +128,7 @@ def get_conditional_criteria(cfg, main_table):
         max_date = cfg.time_conditionals[time_window].max_date
         condition_matches = set()
         for condition in conditional_criterion.conditions:
+            print("Extracting:", conditional_criterion.name)
             table = load_table(condition.table, strict=cfg.strict)
             right_on = condition.match_on
 
