@@ -90,6 +90,7 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Tobaksforbrug
+    dtype: string
   - name: parity
     key_column: b_cpr
     sources:
