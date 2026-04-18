@@ -4,9 +4,15 @@ paths:
   population: outputs/populations/full_population.json
   output_dir: outputs/tables
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.json
+  summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.json
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
+
+summary_table: 
+  make_table: True
+  ignore_columns: [b_cpr, m_cpr, pregnancy_end, pregnancy_start]
+  n_samples: 100000
 
 base_table: 
   population: ${paths.population}
@@ -145,7 +151,7 @@ conditional_criteria:
     conditions:
       - condition: 
         table:
-          table1: ${paths.input_dir_SDS}/graviditetskomplikationer.csv
+          table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: FK_MFR
           right_on: PK_MFR
