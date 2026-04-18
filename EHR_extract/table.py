@@ -8,6 +8,7 @@ from EHR_extract.custom_find_functions import (
     find_pregnancy_start,
 )
 from EHR_extract.paths import get_config_path
+from EHR_extract.summary import get_summary
 from EHR_extract.utils import (
     filter_numeric_rows,
     get_python_operator,
@@ -27,6 +28,20 @@ custom_functions = {
 }
 
 BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
+
+
+def _dataframe_csv_safe(df: pl.DataFrame) -> pl.DataFrame:
+    """Polars CSV writer rejects Object columns; serialize them as JSON strings."""
+    exprs = []
+    for name in df.columns:
+        if df.schema[name] == pl.Object:
+            exprs.append(
+                pl.col(name).map_elements(
+                    lambda x: json.dumps(x, default=str, ensure_ascii=False),
+                    return_dtype=pl.String,
+                ).alias(name)
+            )
+    return df.with_columns(exprs) if exprs else df
 
 
 def check_duplicates(table, key_column, allow_duplicates=False):
@@ -99,7 +114,7 @@ def get_extract_criteria(cfg, main_table):
         left_on = extract_criterion.key_column
         dtype = dtype_from_cfg(extract_criterion.dtype)
         for source in extract_criterion.sources:
-            print("Extract criterion:", extract_criterion.name)
+            print("Extract criterion:", extract_criterion.name, source.table)
             table = load_table(source.table, strict=cfg.strict)
             right_on = source.match_on
 
@@ -128,7 +143,7 @@ def get_conditional_criteria(cfg, main_table):
         max_date = cfg.time_conditionals[time_window].max_date
         condition_matches = set()
         for condition in conditional_criterion.conditions:
-            print("Extracting:", conditional_criterion.name)
+            print("Extracting:", conditional_criterion.name, condition.table)
             table = load_table(condition.table, strict=cfg.strict)
             right_on = condition.match_on
 
@@ -169,6 +184,7 @@ def get_conditional_criteria(cfg, main_table):
             pl.col(key_col).is_in(list(condition_matches)).alias(condition_name)
         )
     return main_table
+    
 
 def table_from_cfg(cfg):
     main_table, discards = make_main_table(
@@ -177,7 +193,18 @@ def table_from_cfg(cfg):
     )
     main_table = get_extract_criteria(cfg, main_table)
     main_table = get_conditional_criteria(cfg, main_table)
-    
+
+    summary_cfg = cfg.get("summary_table")
+    if summary_cfg is not None and summary_cfg.get("make_table", False):
+        summary_table = get_summary(
+            main_table,
+            list(summary_cfg.ignore_columns),
+            int(summary_cfg.get("n_samples", 10_000)),
+        )
+        print(summary_table)
+    else:
+        summary_table = None
+
     m_cpr_w_ptb = set(main_table.filter(pl.col("current_fibroids") == True)["m_cpr"])
     # m_cpr_multi_entries = set(
     #     main_table.group_by("m_cpr").len().filter(pl.col("len") > 2)["m_cpr"]
@@ -195,7 +222,7 @@ def table_from_cfg(cfg):
         ).head(20)
     )
     # print(main_table.filter(pl.col("m_cpr").is_in(m_cpr_w_ptb)).sort(["m_cpr", "pregnancy_start"]))
-    return main_table, discards
+    return main_table, summary_table, discards
 
 
 @hydra.main(
@@ -204,7 +231,7 @@ def table_from_cfg(cfg):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    table, discards = table_from_cfg(cfg)
+    table, sum_table, discards = table_from_cfg(cfg)
 
     d = {}
     for i in range(len(discards)):
@@ -217,9 +244,12 @@ def main(cfg: DictConfig) -> None:
         }
 
     with open(cfg.paths.table_save_path, "w") as fp:
-        table.write_csv(fp)
+        _dataframe_csv_safe(table).write_csv(fp)
     with open(cfg.paths.discards_save_path, "w") as fp:
         json.dump(d, fp, indent=4)
+    if sum_table is not None:
+        with open(cfg.paths.summary_save_path, "w") as fp:
+            _dataframe_csv_safe(sum_table).write_csv(fp)
 
 if __name__ == "__main__":
     main()

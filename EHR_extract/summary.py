@@ -2,7 +2,7 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import find_close_siblings, find_scantime_ga, find_images_and_timedeltas
+from EHR_extract.custom_find_functions import find_close_births, find_scantime_ga, find_images_and_timedeltas
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     filter_numeric_rows,
@@ -15,7 +15,7 @@ from omegaconf import DictConfig, OmegaConf
 load_dotenv()
 
 custom_functions = {
-    "find_close_siblings": find_close_siblings,
+    "find_close_births": find_close_births,
     "find_images_and_timedeltas": find_images_and_timedeltas,
     "find_scantime_ga": find_scantime_ga,
 }
@@ -68,6 +68,53 @@ def summary_from_cfg(cfg):
                 )
 
     return all_dists
+
+def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=10_000):
+    sampled_table = main_table.drop(ignore_columns)
+    n_draw = min(int(n_samples), sampled_table.height)
+    sampled_table = sampled_table.sample(n=n_draw, shuffle=True)
+    n_row = sampled_table.height
+    rows = []
+    for col in sampled_table.columns:
+        series = sampled_table.get_column(col)
+        dtype = series.dtype
+        if getattr(dtype, "is_float", lambda: False)():
+            missing = series.is_null() | series.is_nan()
+            nan_count = int(missing.sum())
+            nan_pct = float(missing.mean() * 100.0)
+        else:
+            nan_count = int(series.null_count())
+            nan_pct = float(series.is_null().mean() * 100.0)
+
+        if dtype == pl.Boolean:
+            col_summary = float(series.sum() / n_row * 100.0)
+        elif dtype.is_numeric():
+            m = series.mean()
+            col_summary = float(m) if m is not None else float("nan")
+        else:
+            vc = series.value_counts(sort=True)
+            val_col, count_col = vc.columns[0], "count"
+            col_summary = {
+                str(row[val_col]): round(float(row[count_col]) / n_row * 100.0, 3)
+                for row in vc.iter_rows(named=True)
+            }
+        rows.append(
+            {
+                "column": col,
+                "nan_count": nan_count,
+                "nan_pct": nan_pct,
+                "summary": col_summary,
+            }
+        )
+    summary = pl.DataFrame(
+        {
+            "column": [r["column"] for r in rows],
+            "nan_count": [r["nan_count"] for r in rows],
+            "nan_pct": [r["nan_pct"] for r in rows],
+            "summary": pl.Series("summary", [r["summary"] for r in rows], dtype=pl.Object),
+        }
+    )
+    return summary
 
 
 @hydra.main(
