@@ -196,23 +196,6 @@ def table_from_cfg(cfg):
     else:
         summary_table = None
 
-    m_cpr_w_ptb = set(main_table.filter(pl.col("current_fibroids") == True)["m_cpr"])
-    # m_cpr_multi_entries = set(
-    #     main_table.group_by("m_cpr").len().filter(pl.col("len") > 2)["m_cpr"]
-    # )
-    m_cpr_subset = m_cpr_w_ptb #| m_cpr_multi_entries
-    table_w_ptb = main_table.filter(pl.col("m_cpr").is_in(list(m_cpr_subset))).drop(
-    )
-    print(
-        table_w_ptb.sort(
-            by=[
-                "m_cpr",
-                pl.col("pregnancy_start").cast(pl.Date, strict=False),
-            ],
-            nulls_last=True,
-        ).head(20)
-    )
-    # print(main_table.filter(pl.col("m_cpr").is_in(m_cpr_w_ptb)).sort(["m_cpr", "pregnancy_start"]))
     return main_table, summary_table, discards
 
 
