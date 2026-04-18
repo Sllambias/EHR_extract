@@ -17,6 +17,7 @@ from EHR_extract.utils import (
     dtype_from_cfg,
     convert_to_date,
     date_bound_expr,
+    safe_save_df,
 )
 from omegaconf import DictConfig, OmegaConf
 
@@ -29,19 +30,6 @@ custom_functions = {
 
 BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
 
-
-def _dataframe_csv_safe(df: pl.DataFrame) -> pl.DataFrame:
-    """Polars CSV writer rejects Object columns; serialize them as JSON strings."""
-    exprs = []
-    for name in df.columns:
-        if df.schema[name] == pl.Object:
-            exprs.append(
-                pl.col(name).map_elements(
-                    lambda x: json.dumps(x, default=str, ensure_ascii=False),
-                    return_dtype=pl.String,
-                ).alias(name)
-            )
-    return df.with_columns(exprs) if exprs else df
 
 
 def check_duplicates(table, key_column, allow_duplicates=False):
@@ -244,12 +232,15 @@ def main(cfg: DictConfig) -> None:
         }
 
     with open(cfg.paths.table_save_path, "w") as fp:
-        _dataframe_csv_safe(table).write_csv(fp)
+        Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)
+        safe_save_df(table).write_csv(fp)
     with open(cfg.paths.discards_save_path, "w") as fp:
+        Path(cfg.paths.discards_save_path).parent.mkdir(parents=True, exist_ok=True)
         json.dump(d, fp, indent=4)
     if sum_table is not None:
         with open(cfg.paths.summary_save_path, "w") as fp:
-            _dataframe_csv_safe(sum_table).write_csv(fp)
+            Path(cfg.paths.summary_save_path).parent.mkdir(parents=True, exist_ok=True)
+            safe_save_df(sum_table).write_csv(fp)
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 import polars as pl
-
+import json
 
 def load_table_path(path, strict=True, n_rows=None):
     if strict:
@@ -100,3 +100,16 @@ def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:
     if off == 0:
         return base
     return base + pl.duration(days=off)
+
+def safe_save_df(df: pl.DataFrame) -> pl.DataFrame:
+    """Polars CSV writer rejects Object columns; serialize them as JSON strings."""
+    exprs = []
+    for name in df.columns:
+        if df.schema[name] == pl.Object:
+            exprs.append(
+                pl.col(name).map_elements(
+                    lambda x: json.dumps(x, default=str, ensure_ascii=False),
+                    return_dtype=pl.String,
+                ).alias(name)
+            )
+    return df.with_columns(exprs) if exprs else df
