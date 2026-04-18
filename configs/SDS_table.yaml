@@ -31,6 +31,11 @@ base_table:
         birth_date_col: pregnancy_end
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
+    - column: GA_weeks
+      function: find_GA_weeks
+      args:
+        GA_days_col: GA_days
+        GA_weeks_col: GA_weeks
 
 time_conditionals:
   before_pregnancy:
@@ -125,6 +130,17 @@ conditional_criteria:
         operator: "!="
         value: "-1"
         date_col: FoedselsDato_Barn
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SDS}/kejsersnit.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: FK_MFR
+          right_on: PK_MFR
+        match_on: CPR_BARN
+        column: SKSKODE
+        operator: "!="
+        value: ""
+        date_col: FOEDSELSDATO
   - name: previous_c_section
     key_column: b_cpr
     match_on: m_cpr
@@ -144,6 +160,17 @@ conditional_criteria:
         operator: "!="
         value: "-1"
         date_col: FoedselsDato_Barn
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SDS}/kejsersnit.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: FK_MFR
+          right_on: PK_MFR
+        match_on: CPR_MODER
+        column: SKSKODE
+        operator: "!="
+        value: ""
+        date_col: FOEDSELSDATO
   - name: current_fibroids
     key_column: b_cpr
     match_on: m_cpr
@@ -166,7 +193,7 @@ conditional_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Barn
+        match_on: CPRnummer_Mor
         column: DiagnoseKode
         operator: "startswith"
         value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
