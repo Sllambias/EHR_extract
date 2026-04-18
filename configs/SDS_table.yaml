@@ -23,7 +23,7 @@ base_table:
     - table: ${paths.input_dir_SDS}/nyfoedte.csv
       columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
