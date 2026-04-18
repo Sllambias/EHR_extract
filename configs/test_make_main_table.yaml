@@ -1,0 +1,174 @@
+paths:
+  input_dir_SDS: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  input_dir_SP: ../ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
+  population: ${paths.output_dir}/population_test_preterm.yaml.json
+  output_dir: outputs 
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.json
+  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
+
+strict: True 
+
+base_table: 
+  population: ${paths.population}
+  population_column: b_cpr
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns: {CPR_MODER: m_cpr, FOEDSELSDATO: pregnancy_end, GESTATIONSALDER_DAGE: GA_days, CPR_BARN: b_cpr}
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end}
+  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
+  add_columns:
+    - column: pregnancy_start
+      function: find_pregnancy_start
+      args:
+        birth_date_col: pregnancy_end
+        GA_days_col: GA_days
+        pregnancy_start_col: pregnancy_start
+
+time_conditionals:
+  before_pregnancy:
+    min_date:
+      date_col: null
+      offset_days: 0
+    max_date:
+      date_col: pregnancy_start
+      offset_days: -1
+  during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: 0
+    max_date:
+      date_col: pregnancy_end
+      offset_days: 0
+  static:
+    min_date:
+      date_col: null
+      offset_days: 0
+    max_date:
+      date_col: null
+      offset_days: 0
+
+extract_criteria:
+  - name: ethnicity
+    key_column: m_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/CPR_immigration.csv
+        match_on: V_PNR
+        column: fodested_kode
+    dtype: integer
+  - name: maternal_age
+    key_column: b_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: ALDER_MODER
+      - table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Alder_Mor
+    dtype: integer
+
+conditional_criteria:
+  - name: current_ptb
+    key_column: b_cpr
+    match_on: b_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: GESTATIONSALDER_DAGE
+        operator: "<"
+        value: 259
+        date_col: FOEDSELSDATO
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Gestationsalder
+        operator: "<"
+        value: 259
+        date_col: FoedselsDato_Barn
+  - name: previous_ptb
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_MODER
+        column: GESTATIONSALDER_DAGE
+        operator: "<"
+        value: 259
+        date_col: FOEDSELSDATO
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Mor
+        column: Gestationsalder
+        operator: "<"
+        value: 259
+        date_col: FoedselsDato_Barn
+  - name: current_c_section
+    key_column: b_cpr
+    match_on: b_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: MARKOER_KEJSERSNIT
+        operator: "=="
+        value: "1"
+        date_col: FOEDSELSDATO
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Kejsersnit
+        operator: "!="
+        value: "-1"
+        date_col: FoedselsDato_Barn
+  - name: previous_c_section
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_MODER
+        column: MARKOER_KEJSERSNIT
+        operator: "=="
+        value: "1"
+        date_col: FOEDSELSDATO
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Mor
+        column: Kejsersnit
+        operator: "!="
+        value: "-1"
+        date_col: FoedselsDato_Barn
+  - name: current_fibroids
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition: 
+        table:
+          table1: ${paths.input_dir_SDS}/graviditetskomplikationer.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: FK_MFR
+          right_on: PK_MFR
+        match_on: CPR_MODER
+        column: SKSKODE
+        operator: "startswith"
+        value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
+        date_col: FOEDSELSDATO
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Barn
+        column: DiagnoseKode
+        operator: "startswith"
+        value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
+        date_col: FoedselsDato_Barn
