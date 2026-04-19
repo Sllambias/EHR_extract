@@ -118,7 +118,7 @@ conditional_criteria:
     conditions:
       - condition:
         table: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
-        match_on: CPR_BARN
+        match_on: CPRnummer
         column: Graviditet
         operator: "=="
         value: "Ja"
