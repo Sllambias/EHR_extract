@@ -112,12 +112,27 @@ extract_criteria:
 
 conditional_criteria:
   - name: fertility_treatment
-    key_column: m_cpr
+    key_column: b_cpr
     match_on: m_cpr
     time_window: year_before_pregnancy
     conditions:
       - condition:
-        table: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+        table: 
+          table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: CPRnummer
+          right_on: CPRnummer_Mor
+        match_on: CPRnummer
+        column: Graviditet
+        operator: "=="
+        value: "Ja"
+        date_col: Transferering_dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: CPRnummer
+          right_on: CPR_MODER
         match_on: CPRnummer
         column: Graviditet
         operator: "=="
