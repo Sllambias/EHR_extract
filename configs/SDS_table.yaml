@@ -112,8 +112,8 @@ extract_criteria:
 
 conditional_criteria:
   - name: fertility_treatment
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: m_cpr
+    match_on: m_cpr
     time_window: year_before_pregnancy
     conditions:
       - condition:
