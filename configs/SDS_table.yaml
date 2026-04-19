@@ -269,7 +269,7 @@ conditional_criteria:
         operator: "startswith"
         value: ["DZ928C", "DO344B"]
         date_col: FoedselsDato_Barn
-      - condition:
+      - condition: or
         table:
           table1: ${paths.input_dir_SDS}/mor_procedurer.csv
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
