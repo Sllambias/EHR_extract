@@ -52,6 +52,14 @@ time_conditionals:
     max_date:
       date_col: pregnancy_end
       offset_days: 0
+  year_before_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: -365
+    max_date:
+      date_col: pregnancy_start
+      offset_days: 0
+
 
 extract_criteria:
   - name: ethnicity
@@ -103,6 +111,18 @@ extract_criteria:
     dtype: string
 
 conditional_criteria:
+  - name: fertility_treatment
+    key_column: b_cpr
+    match_on: b_cpr
+    time_window: year_before_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+        match_on: CPR_BARN
+        column: Graviditet
+        operator: "=="
+        value: "Ja"
+        date_col: Transferering_dato
   ### Obstetric history
   # parity
   # previous ptb
