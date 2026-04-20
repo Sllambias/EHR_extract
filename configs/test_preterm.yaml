@@ -25,9 +25,17 @@ population:
         CPR_MOR: CPRnummer_Mor
         GA: Gestationsalder
         Birthday: FoedselsDato_Barn
-  
+
+imaging_table:
+  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+  population_key: cpr_child
 
 conditional_criteria:
+  - action: include
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SP}/population.csv
+        match_on: CPR_BARN
   # GA available at birth
   - action: include
     conditions: 
@@ -126,14 +134,14 @@ imaging_matching_criteria:
   # Filter2: GA at scan
   - function: find_images_and_timedeltas
     args: 
-      table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
-      child_id_column: cpr_child
       scan_date_column: study_date
-      image_path_column: "file_path"
-      min_diff_days_scan_to_delivery: -999999999999 #0
-      max_diff_days_scan_to_delivery: 999999999999 #210
-      min_ga_in_days_at_scan: -999999999999 #196
-      max_ga_in_days_at_scan: 999999999999 #259
+      image_path_column: file_path
+      population_ga_in_days_at_delivery_column: GA
+      population_delivery_date_column: Birthday
+      min_diff_days_scan_to_delivery: 0 #0
+      max_diff_days_scan_to_delivery: 99999 #210
+      min_ga_in_days_at_scan: -99999 #196
+      max_ga_in_days_at_scan: 99999 #259
     action: include
   # Only Cervix
   - function: find_images_with_predicted_classes
@@ -142,9 +150,8 @@ imaging_matching_criteria:
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
       classes: [14]
       image_path_column: filename
-      imaging_metadata_image_path_column: file_path 
       class_column: pred
-      child_id_column: cpr_child
+      population_image_path_column: file_path 
     action: include
     
 

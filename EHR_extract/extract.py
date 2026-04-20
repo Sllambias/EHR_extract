@@ -1,22 +1,24 @@
 import hydra
 import json
+import logging
 import polars as pl
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
     find_close_births,
-    find_scantime_ga,
     find_images_and_timedeltas,
-    find_multiple_pregnancies,
     find_images_with_predicted_classes,
+    find_multiple_pregnancies,
+    find_scantime_ga,
+    merge_population_on,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     filter_numeric_rows,
     get_python_operator,
     load_table,
+    merge_population_tables,
     update_population,
     write_imaging_metadata_to_formats,
-    merge_population_tables,
 )
 from omegaconf import DictConfig, OmegaConf
 
@@ -28,35 +30,39 @@ custom_functions = {
     "find_scantime_ga": find_scantime_ga,
     "find_multiple_pregnancies": find_multiple_pregnancies,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
+    "merge_population_on": merge_population_on,
 }
 
 
-def extract_from_cfg(cfg):
+def extract_from_cfg(cfg, population):
     all_discards = []
-    imaging_metadata = None
-    population = merge_population_tables(cfg.population.tables)
+    population_with_img_data = None
 
-    print(
+    logging.info(
         f"Population size: {len(population)} with unique IDs: {population[cfg.population.population_key].n_unique()}",
     )
     for criterion in cfg.conditional_criteria:
         criterion_population = set()
         for condition in criterion.conditions:
             table = load_table(condition.table, strict=cfg.strict)
-            print(
+            logging.info(
                 f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} for table: {condition.table}"
             )
 
             table = table.filter(pl.col(condition.match_on).is_in(population[cfg.population.population_key]))
-            print(
+            logging.info(
                 f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
             )
+
+            if condition.get("operator", None) is None:
+                last_condition_population = set(table[condition.match_on])
+                continue
 
             py_operator = get_python_operator(condition.operator)
             if condition.operator in [">", "<", ">=", "<="]:
                 table = filter_numeric_rows(table, condition.column)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
-            print(
+            logging.info(
                 f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.column} {condition.operator} {condition.value}"
             )
 
@@ -68,7 +74,7 @@ def extract_from_cfg(cfg):
                 criterion_population = last_condition_population
                 last_condition_population = set(table[condition.match_on])
             else:
-                print("wow, weird condition")
+                logging.info("wow, weird condition")
 
         criterion_population = criterion_population.union(last_condition_population)
         population, discards, n_discards, n_population_before_discard = update_population(
@@ -77,10 +83,10 @@ def extract_from_cfg(cfg):
             subset=set(criterion_population),
             action=criterion.action,
         )
-        print(f"Population size: {len(population)} after filtering on criteria {criterion}")
+        logging.info(f"Population size: {len(population)} after filtering on criteria {criterion} \n")
         all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
 
-    print("\n ### Applying custom criteria ### \n")
+    logging.info("\n ### Applying custom criteria ### \n")
     for custom_cfg in cfg.get("custom_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
@@ -93,16 +99,22 @@ def extract_from_cfg(cfg):
         )
         all_discards.append([OmegaConf.to_container(custom_cfg), list(discards), n_discards, n_population_before_discard])
 
-        print(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function}")
-        print("---")
+        logging.info(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function} \n")
 
-    print("\n ### Applying imaging matching criteria ### \n")
+    logging.info("\n ### Applying imaging matching criteria ### \n")
+    if "imaging_table" in cfg.keys():
+        population = merge_population_on(
+            table=cfg.imaging_table.table,
+            merge_key=cfg.imaging_table.population_key,
+            population=population,
+            population_key_column=cfg.population.population_key,
+        )
+
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_ID_matches, imaging_metadata = fn(
+        set_of_ID_matches = fn(
             **args,
-            imaging_metadata=imaging_metadata,
             population=population,
             population_key_column=cfg.population.population_key,
         )
@@ -115,9 +127,8 @@ def extract_from_cfg(cfg):
         )
         all_discards.append([OmegaConf.to_container(custom_cfg), list(discards), n_discards, n_population_before_discard])
 
-        print(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function}")
-        print("---")
-    return population, all_discards, imaging_metadata
+        logging.info(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function} \n")
+    return population, all_discards, population_with_img_data
 
 
 @hydra.main(
@@ -126,7 +137,8 @@ def extract_from_cfg(cfg):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    population, discards, imaging_metadata = extract_from_cfg(cfg)
+    population = merge_population_tables(cfg.population.tables)
+    population, discards, imaging_metadata = extract_from_cfg(cfg, population=population)
 
     d = {}
     for i in range(len(discards)):
