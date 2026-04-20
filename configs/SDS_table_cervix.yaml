@@ -11,19 +11,25 @@ strict: True
 
 summary_table: 
   make_table: True
-  ignore_columns: [b_cpr, m_cpr, pregnancy_end, pregnancy_start]
+  ignore_columns: [b_cpr, m_cpr, pregnancy_end, pregnancy_start, scan_date]
   n_samples: 100000
 
 base_table: 
   population: ${paths.population}
   population_column: b_cpr
   tables:
-    - table: ${paths.input_dir_SDS}/mfr.csv
+    - table: 
+        table1: ${paths.input_dir_SDS}/mfr.csv
+        table2: ${paths.input_dir_SP}/../../data/img_data_link/cervix_population.csv
+        left_on: CPR_BARN
+        right_on: b_cpr
       columns: {CPR_MODER: m_cpr, FOEDSELSDATO: pregnancy_end, GESTATIONSALDER_DAGE: GA_days, CPR_BARN: b_cpr}
-    - table: ${paths.input_dir_SDS}/nyfoedte.csv
-      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end}
-    - table: ../../data/img_data_link/cervix_population.csv
-      columns: {b_cpr: b_cpr, m_cpr: m_cpr, study_date: scan_date}
+    - table: 
+        table1: ${paths.input_dir_SDS}/nyfoedte.csv
+        table2: ${paths.input_dir_SP}/../../data/img_data_link/cervix_population.csv
+        left_on: CPRnummer_Barn
+        right_on: b_cpr
+      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end, study_date: scan_date}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, scan_date]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date, scan_date: date}
   add_columns:
