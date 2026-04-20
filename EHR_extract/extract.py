@@ -132,7 +132,7 @@ def extract_from_cfg(cfg, population):
 
 
 def make_train_test_split(holdout_csv_path, population, file_path_key, prefix):
-    holdout = load_table(holdout_csv_path)
+    holdout = load_table(holdout_csv_path, has_header=False)
     holdout = holdout.with_columns(pl.col("column_1").str.replace_all(prefix, "")).alias("column_1")
     train = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]).not_())
     test = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]))
@@ -163,9 +163,7 @@ def main(cfg: DictConfig) -> None:
 
     population.write_csv(cfg.paths.population_save_path + ".csv")
 
-    train_pop, test_pop = make_train_test_split(
-        cfg.paths.holdout_csv, population, cfg.population.population_key, cfg.paths.prefix
-    )
+    train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.population_key, cfg.prefix)
 
     train_pop.write_csv(cfg.paths.population_save_path + "train.csv")
     test_pop.write_csv(cfg.paths.population_save_path + "test.csv")
