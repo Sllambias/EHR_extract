@@ -219,7 +219,7 @@ def main(cfg: DictConfig) -> None:
 
     with open(cfg.paths.table_save_path, "w") as fp:
         Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)
-        safe_save_df(table).write_csv(fp)
+        table.write_csv(fp)
     with open(cfg.paths.discards_save_path, "w") as fp:
         Path(cfg.paths.discards_save_path).parent.mkdir(parents=True, exist_ok=True)
         json.dump(d, fp, indent=4)
