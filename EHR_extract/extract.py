@@ -131,6 +131,14 @@ def extract_from_cfg(cfg, population):
     return population, all_discards
 
 
+def make_train_test_split(holdout_csv_path, population, file_path_key, prefix):
+    holdout = load_table(holdout_csv_path)
+    holdout = holdout.with_columns(pl.col("column_1").str.replace_all(prefix, "")).alias("column_1")
+    train = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]).not_())
+    test = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]))
+    return train, test
+
+
 @hydra.main(
     config_path=get_config_path(),
     config_name="default",
@@ -153,7 +161,14 @@ def main(cfg: DictConfig) -> None:
     with open(cfg.paths.discards_save_path, "w") as fp:
         json.dump(d, fp, indent=4)
 
-    population.write_csv(cfg.paths.population_save_path)
+    population.write_csv(cfg.paths.population_save_path + ".csv")
+
+    train_pop, test_pop = make_train_test_split(
+        cfg.paths.holdout_csv, population, cfg.population.population_key, cfg.paths.prefix
+    )
+
+    train_pop.write_csv(cfg.paths.population_save_path + "train.csv")
+    test_pop.write_csv(cfg.paths.population_save_path + "test.csv")
 
 
 if __name__ == "__main__":

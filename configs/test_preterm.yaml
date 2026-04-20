@@ -2,13 +2,15 @@ paths:
   input_dir_SDS: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   input_dir_SP: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs 
-  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}.csv
+  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
   distribution_save_path: ${paths.output_dir}/distribution_${hydra:job.config_name}.json
   imaging_metadata_save_path: ${paths.output_dir}/imaging_metadata_${hydra:job.config_name}
   imaging_metadata_output_formats: ["csv",]
-
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/ultrasound_preprocessing/splits/PRETERM_RCT_PT_V2/holdout_test_5pct.csv
+  
 strict: True 
+prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # this should be deleted when splits are updated to include child CPR so we can match on that
 
 population: 
   population_key: CPR_BARN
