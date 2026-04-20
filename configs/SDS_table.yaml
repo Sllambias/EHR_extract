@@ -140,6 +140,25 @@ conditional_criteria:
         date_col: Transferering_dato
   ### Obstetric history
   # parity
+  - name: current_ptb
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_MODER
+        column: GESTATIONSALDER_DAGE
+        operator: "<"
+        value: 259
+        date_col: FOEDSELSDATO
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Mor
+        column: Gestationsalder
+        operator: "<"
+        value: 259
+        date_col: FoedselsDato_Barn
   # previous ptb
   - name: previous_ptb
     key_column: b_cpr
