@@ -19,16 +19,16 @@ base_table:
   population_column: b_cpr
   tables:
     - table: 
-        table1: ${paths.input_dir_SDS}/mfr.csv
-        table2: ../../data/img_data_link/cervix_population.csv
-        left_on: CPR_BARN
-        right_on: CPR_CHILD
+        table1: ../../data/img_data_link/cervix_population.csv
+        table2: ${paths.input_dir_SDS}/mfr.csv
+        left_on: CPR_CHILD
+        right_on: CPR_BARN
       columns: {CPR_MOTHER: m_cpr, CPR_CHILD: b_cpr, Birthday: pregnancy_end, GA: GA_days, study_date: scan_date}
     - table: 
-        table1: ${paths.input_dir_SDS}/nyfoedte.csv
-        table2: ../../data/img_data_link/cervix_population.csv
-        left_on: CPRnummer_Barn
-        right_on: CPR_CHILD
+        table1: ../../data/img_data_link/cervix_population.csv
+        table2: ${paths.input_dir_SDS}/nyfoedte.csv
+        left_on: CPR_CHILD
+        right_on: CPRnummer_Barn
       columns: {CPR_MOTHER: m_cpr, CPR_CHILD: b_cpr, GA: GA_days, Birthday: pregnancy_end, study_date: scan_date}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, scan_date]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date, scan_date: date}
