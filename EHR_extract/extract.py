@@ -36,7 +36,6 @@ custom_functions = {
 
 def extract_from_cfg(cfg, population):
     all_discards = []
-    population_with_img_data = None
 
     logging.info(
         f"Population size: {len(population)} with unique IDs: {population[cfg.population.population_key].n_unique()}",
@@ -45,12 +44,12 @@ def extract_from_cfg(cfg, population):
         criterion_population = set()
         for condition in criterion.conditions:
             table = load_table(condition.table, strict=cfg.strict)
-            logging.info(
+            logging.debug(
                 f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} for table: {condition.table}"
             )
 
             table = table.filter(pl.col(condition.match_on).is_in(population[cfg.population.population_key]))
-            logging.info(
+            logging.debug(
                 f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
             )
 
@@ -62,7 +61,7 @@ def extract_from_cfg(cfg, population):
             if condition.operator in [">", "<", ">=", "<="]:
                 table = filter_numeric_rows(table, condition.column)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
-            logging.info(
+            logging.debug(
                 f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.column} {condition.operator} {condition.value}"
             )
 
@@ -74,7 +73,7 @@ def extract_from_cfg(cfg, population):
                 criterion_population = last_condition_population
                 last_condition_population = set(table[condition.match_on])
             else:
-                logging.info("wow, weird condition")
+                logging.warn("wow, weird condition")
 
         criterion_population = criterion_population.union(last_condition_population)
         population, discards, n_discards, n_population_before_discard = update_population(
@@ -113,22 +112,23 @@ def extract_from_cfg(cfg, population):
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_ID_matches = fn(
+        population, discard_stats = fn(
             **args,
             population=population,
             population_key_column=cfg.population.population_key,
         )
 
-        population, discards, n_discards, n_population_before_discard = update_population(
-            population=population,
-            key=cfg.population.population_key,
-            subset=set_of_ID_matches,
-            action=custom_cfg.action,
+        all_discards.append(
+            [
+                discard_stats["criteria"],
+                discard_stats["discards"],
+                discard_stats["n_discards"],
+                discard_stats["n_population_before_discard"],
+            ]
         )
-        all_discards.append([OmegaConf.to_container(custom_cfg), list(discards), n_discards, n_population_before_discard])
 
         logging.info(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function} \n")
-    return population, all_discards, population_with_img_data
+    return population, all_discards
 
 
 @hydra.main(
@@ -138,7 +138,7 @@ def extract_from_cfg(cfg, population):
 )
 def main(cfg: DictConfig) -> None:
     population = merge_population_tables(cfg.population.tables)
-    population, discards, imaging_metadata = extract_from_cfg(cfg, population=population)
+    population, discards = extract_from_cfg(cfg, population=population)
 
     d = {}
     for i in range(len(discards)):
@@ -154,10 +154,6 @@ def main(cfg: DictConfig) -> None:
         json.dump(d, fp, indent=4)
 
     population.write_csv(cfg.paths.population_save_path)
-    if imaging_metadata is not None:
-        write_imaging_metadata_to_formats(
-            imaging_metadata, cfg.paths.imaging_metadata_output_formats, cfg.paths.imaging_metadata_save_path
-        )
 
 
 if __name__ == "__main__":

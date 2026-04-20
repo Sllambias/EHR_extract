@@ -66,8 +66,9 @@ def find_images_and_timedeltas(
     population_delivery_date_column="Birthday",
     population_ga_in_days_at_delivery_column="GA",
 ):
+    discard_stats = {"n_population_before_discard": len(population)}
     # Calculate absolute difference in days
-    matching = population.with_columns(
+    population = population.with_columns(
         diff_in_days_scan_to_delivery=(
             (
                 pl.col(population_delivery_date_column).str.to_date()
@@ -76,22 +77,29 @@ def find_images_and_timedeltas(
         )
     )
 
-    matching = matching.filter(
+    population = population.filter(
         (min_diff_days_scan_to_delivery < pl.col("diff_in_days_scan_to_delivery"))
         & (pl.col("diff_in_days_scan_to_delivery") < max_diff_days_scan_to_delivery)
     )
 
-    matching = filter_numeric_rows(matching, population_ga_in_days_at_delivery_column)
-    matching = matching.with_columns(
+    population = filter_numeric_rows(population, population_ga_in_days_at_delivery_column)
+    population = population.with_columns(
         GA_in_days_at_scantime=(pl.col(population_ga_in_days_at_delivery_column)).cast(pl.Float64)
         - pl.col("diff_in_days_scan_to_delivery")
     )
-    matching = matching.filter(
+    population = population.filter(
         (min_ga_in_days_at_scan < pl.col("GA_in_days_at_scantime"))
         & (pl.col("GA_in_days_at_scantime") < max_ga_in_days_at_scan)
     )
-    matching_ids = set(matching[population_key_column])
-    return matching_ids
+    population = population.drop(["GA_in_days_at_scantime", "diff_in_days_scan_to_delivery"])
+    discard_stats.update(
+        {
+            "criteria": "find_images_and_timedeltas",
+            "discards": "N/A",
+            "n_discards": discard_stats["n_population_before_discard"] - len(population),
+        }
+    )
+    return population, discard_stats
 
 
 def find_images_with_predicted_classes(
@@ -103,27 +111,35 @@ def find_images_with_predicted_classes(
     population_image_path_column,
     population_key_column,
 ):
+    discard_stats = {"n_population_before_discard": len(population)}
+
     table_path = table
     table = load_table(table)
-    logging.info(f"Table rows total: {len(table)} for table: {table_path}")
+    logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
 
     matched_paths = table.filter(pl.col(class_column).is_in(classes))[image_path_column]
-    logging.info(f"Table rows matching predicted classes: {len(matched_paths)}")
+    logging.debug(f"Table rows matching predicted classes: {len(matched_paths)}")
 
-    matching = population.filter(pl.col(population_image_path_column).is_in(matched_paths))
-    logging.info(f"Table rows matching population: {len(matching)}")
+    population = population.filter(pl.col(population_image_path_column).is_in(matched_paths))
+    logging.debug(f"Table rows matching population: {len(population)}")
 
-    matching_ids = set(matching[population_key_column])
-    return matching_ids
+    discard_stats.update(
+        {
+            "criteria": "find_images_with_predicted_classes",
+            "discards": "N/A",
+            "n_discards": discard_stats["n_population_before_discard"] - len(population),
+        }
+    )
+    return population, discard_stats
 
 
 def find_close_births(table, match_on, mom_column, birth_id_column, delivery_date_column, threshold_days, population):
     # Sort by mother and birth date
     table_path = table
     table = load_table(table)
-    logging.info(f"Table rows total: {len(table)} for table: {table_path}")
+    logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
     table = table.filter(pl.col(match_on).is_in(population))
-    logging.info(
+    logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} after filtering on {match_on}"
     )
 
