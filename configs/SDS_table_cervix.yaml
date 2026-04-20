@@ -23,13 +23,13 @@ base_table:
         table2: ../../data/img_data_link/cervix_population.csv
         left_on: CPR_BARN
         right_on: CPR_CHILD
-      columns: {CPR_MODER: m_cpr, CPR_BARN: b_cpr, Birthday: pregnancy_end, GA: GA_days, study_date: scan_date}
+      columns: {CPR_MOTHER: m_cpr, CPR_CHILD: b_cpr, Birthday: pregnancy_end, GA: GA_days, study_date: scan_date}
     - table: 
         table1: ${paths.input_dir_SDS}/nyfoedte.csv
         table2: ../../data/img_data_link/cervix_population.csv
         left_on: CPRnummer_Barn
         right_on: CPR_CHILD
-      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, GA: GA_days, Birthday: pregnancy_end, study_date: scan_date}
+      columns: {CPR_MOTHER: m_cpr, CPR_CHILD: b_cpr, GA: GA_days, Birthday: pregnancy_end, study_date: scan_date}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, scan_date]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date, scan_date: date}
   add_columns:
