@@ -3,8 +3,8 @@ paths:
   input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
   population: outputs/populations/cervix_population.json
   output_dir: outputs/tables
-  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.json
-  summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.json
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
+  summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
@@ -22,14 +22,14 @@ base_table:
         table1: ${paths.input_dir_SDS}/mfr.csv
         table2: ../../data/img_data_link/cervix_population.csv
         left_on: CPR_BARN
-        right_on: b_cpr
-      columns: {m_cpr: m_cpr, b_cpr: b_cpr, FOEDSELSDATO: pregnancy_end, GESTATIONSALDER_DAGE: GA_days, study_date: scan_date}
+        right_on: CPR_CHILD
+      columns: {CPR_MODER: m_cpr, CPR_BARN: b_cpr, Birthday: pregnancy_end, GA: GA_days, study_date: scan_date}
     - table: 
         table1: ${paths.input_dir_SDS}/nyfoedte.csv
         table2: ../../data/img_data_link/cervix_population.csv
         left_on: CPRnummer_Barn
-        right_on: b_cpr
-      columns: {m_cpr: m_cpr, b_cpr: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end, study_date: scan_date}
+        right_on: CPR_CHILD
+      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, GA: GA_days, Birthday: pregnancy_end, study_date: scan_date}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, scan_date]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date, scan_date: date}
   add_columns:
