@@ -1,1 +1,6 @@
+hydra:
+  output_subdir: log
+  run:
+    dir: ${paths.output_dir}
+
 table: 

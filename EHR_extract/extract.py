@@ -21,6 +21,7 @@ from EHR_extract.utils import (
     write_imaging_metadata_to_formats,
 )
 from omegaconf import DictConfig, OmegaConf
+import os
 
 load_dotenv()
 
@@ -147,7 +148,7 @@ def make_train_test_split(holdout_csv_path, population, file_path_key, prefix):
 def main(cfg: DictConfig) -> None:
     population = merge_population_tables(cfg.population.tables)
     population, discards = extract_from_cfg(cfg, population=population)
-
+    os.makedirs(cfg.paths.output_dir, exist_ok=True)
     d = {}
     for i in range(len(discards)):
         d[i] = {
@@ -158,15 +159,18 @@ def main(cfg: DictConfig) -> None:
             "discards": discards[i][1],
         }
 
-    with open(cfg.paths.discards_save_path, "w") as fp:
+    with open(cfg.paths.discards_save_path + ".json", "w") as fp:
         json.dump(d, fp, indent=4)
 
-    population.write_csv(cfg.paths.population_save_path + ".csv")
+    population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
 
-    train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.population_key, cfg.prefix)
+    if cfg.paths.holdout_csv is not None:
+        train_pop, test_pop = make_train_test_split(
+            cfg.paths.holdout_csv, population, cfg.imaging_table.file_path_key, cfg.prefix
+        )
 
-    train_pop.write_csv(cfg.paths.population_save_path + "train.csv")
-    test_pop.write_csv(cfg.paths.population_save_path + "test.csv")
+        train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
+        test_pop.write_csv(cfg.paths.population_save_path + "_test.csv")
 
 
 if __name__ == "__main__":

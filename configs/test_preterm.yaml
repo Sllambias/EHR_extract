@@ -1,13 +1,15 @@
+defaults:
+  - default@
+  - _self_
+
 paths:
   input_dir_SDS: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
   input_dir_SP: ehr2meds/data/raw/fetal_data/SDS_and_SP_from_population
-  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs 
-  population_save_path: ${paths.output_dir}/population_${hydra:job.config_name}
-  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
-  distribution_save_path: ${paths.output_dir}/distribution_${hydra:job.config_name}.json
-  imaging_metadata_save_path: ${paths.output_dir}/imaging_metadata_${hydra:job.config_name}
-  imaging_metadata_output_formats: ["csv",]
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/ultrasound_preprocessing/splits/PRETERM_RCT_PT_V2/holdout_test_5pct.csv
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: 
   
 strict: True 
 prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # this should be deleted when splits are updated to include child CPR so we can match on that
@@ -31,6 +33,7 @@ population:
 imaging_table:
   table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
   population_key: cpr_child
+  file_path_key: file_path
 
 conditional_criteria:
   - action: include
@@ -153,7 +156,7 @@ imaging_matching_criteria:
       classes: [14]
       image_path_column: filename
       class_column: pred
-      population_image_path_column: file_path 
+      population_image_path_column: ${imaging_table.file_path_key} 
     action: include
     
 
