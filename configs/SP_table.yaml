@@ -21,11 +21,11 @@ base_table:
     - table: 
         table1: ${paths.input_dir_SP}/Population.csv
         table2: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
-        left_on: [MPR_CPR, Fødselstidspunkt]
-        right_on: [MPR_CPR, Dato]
+        left_on: [MOR_CPR, Fødselstidspunkt]
+        right_on: [MOR_CPR, Dato]
       columns: {MOR_CPR: m_cpr, BABY_CPR: b_cpr, Fødselstidspunkt: pregnancy_end, Gestationsalder: GA_weeks}
   key_columns: [b_cpr, m_cpr, GA_weeks, pregnancy_end]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date}
+  dtypes: {b_cpr: string, m_cpr: string, GA_weeks: string, pregnancy_end: date}
   add_columns:
     - column: GA_days
       function: find_GA_days

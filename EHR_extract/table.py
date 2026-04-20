@@ -24,7 +24,6 @@ from omegaconf import DictConfig, OmegaConf
 load_dotenv()
 
 custom_functions = {
-    "find_GA_weeks": find_GA_weeks,
     "find_pregnancy_start": find_pregnancy_start,
     "find_GA_days": find_GA_days,
 }
