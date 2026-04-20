@@ -136,6 +136,13 @@ def find_pregnancy_start(table, birth_date_col, GA_days_col, pregnancy_start_col
     return table
 
 def find_GA_days(table, GA_weeks_col, GA_days_col):
-    extracted = table[GA_weeks_col].cast(pl.String).str.extract(r"(?i)(\d+)\s*w", expand=False)
-    table = table.with_columns(GA_weeks_col = extracted[0].cast(pl.Int64, strict=False)*7).alias(GA_days_col)
+    table = table.with_columns(
+        (
+            pl.col(GA_weeks_col)
+            .cast(pl.String)
+            .str.extract(r"(?i)(\d+)\s*w", group_index=1)
+            .cast(pl.Int64, strict=False)
+            * 7
+        ).alias(GA_days_col)
+    )
     return table
