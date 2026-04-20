@@ -4,8 +4,8 @@ import polars as pl
 from pathlib import Path
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
-    find_GA_weeks,
     find_pregnancy_start,
+    find_GA_days,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
@@ -26,6 +26,7 @@ load_dotenv()
 custom_functions = {
     "find_GA_weeks": find_GA_weeks,
     "find_pregnancy_start": find_pregnancy_start,
+    "find_GA_days": find_GA_days,
 }
 
 BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
