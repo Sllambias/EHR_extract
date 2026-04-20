@@ -28,7 +28,12 @@ def load_table(table_cfg, strict=True, n_rows=None):
     else:
         table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows)
         table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows)
-        left_on, right_on = table_cfg["left_on"], table_cfg["right_on"]
+        left_on = table_cfg["left_on"]
+        right_on = table_cfg["right_on"]
+        if isinstance(left_on, list):
+            left_on = [left_on]
+        if isinstance(right_on, list):
+            right_on = [right_on]
         return table1.join(table2, left_on=left_on, right_on=right_on, how="left")
 
 def get_python_operator(operator_str):

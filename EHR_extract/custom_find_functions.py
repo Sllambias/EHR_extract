@@ -135,8 +135,8 @@ def find_pregnancy_start(table, birth_date_col, GA_days_col, pregnancy_start_col
     )
     return table
 
-def find_GA_weeks(table, GA_days_col, GA_weeks_col):
+def find_GA_days(table, GA_weeks_col, GA_days_col):
     table = table.with_columns(
-        (pl.col(GA_days_col).cast(pl.Int64, strict=False) / 7).alias(GA_weeks_col)
+        (pl.col(GA_weeks_col).cast(pl.Int64, strict=False) * 7).alias(GA_days_col)
     )
     return table
