@@ -19,13 +19,13 @@ base_table:
   population_column: b_cpr
   tables:
     - table: 
-        table1: ../../data/img_data_link/cervix_population.csv
+        table1: ../../data/img_data_link/final_population.csv
         table2: ${paths.input_dir_SDS}/mfr.csv
         left_on: CPR_CHILD
         right_on: CPR_BARN
       columns: {CPR_MOTHER: m_cpr, CPR_CHILD: b_cpr, Birthday: pregnancy_end, GA: GA_days, study_date: scan_date}
     - table: 
-        table1: ../../data/img_data_link/cervix_population.csv
+        table1: ../../data/img_data_link/final_population.csv
         table2: ${paths.input_dir_SDS}/nyfoedte.csv
         left_on: CPR_CHILD
         right_on: CPRnummer_Barn
@@ -39,6 +39,11 @@ base_table:
         birth_date_col: pregnancy_end
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
+    - column: GA_weeks
+      function: find_GA_weeks
+      args:
+        GA_days_col: GA_days
+        GA_weeks_col: GA_weeks
 
 time_conditionals:
   before_pregnancy:

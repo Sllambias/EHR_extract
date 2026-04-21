@@ -6,31 +6,29 @@ from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
     find_pregnancy_start,
     find_GA_days,
+    find_GA_weeks,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
 from EHR_extract.utils import (
-    filter_numeric_rows,
     get_python_operator,
     load_table,
-    update_population,
     dtype_from_cfg,
     convert_to_date,
     date_bound_expr,
     safe_save_df,
 )
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 load_dotenv()
 
 custom_functions = {
     "find_pregnancy_start": find_pregnancy_start,
     "find_GA_days": find_GA_days,
+    "find_GA_weeks": find_GA_weeks,
 }
 
-BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
-
-
+BOOL_ALLOW_MANY_TO_ONE_BABY_ID = False
 
 def check_duplicates(table, key_column, allow_duplicates=False):
     duplicates = table[key_column].value_counts().filter(pl.col("count") > 1)
