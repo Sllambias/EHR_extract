@@ -60,7 +60,9 @@ def match_images_with_child(
     table = table.with_columns(pl.col(birthday_key).str.to_date())
     table = table.with_columns(pl.col(study_date_key).cast(pl.String).str.to_date("%Y%m%d"))
     table = table.with_columns(pl.col(ga_key).str.to_integer(strict=False))
-
+    print("pre unique len", len(table))
+    table = table.unique()
+    print("post unique len", len(table))
     table = table.with_columns(
         image_during_pregnancy=pl.col(study_date_key).is_between(
             pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
