@@ -28,7 +28,7 @@ custom_functions = {
     "find_GA_weeks": find_GA_weeks,
 }
 
-BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
+BOOL_ALLOW_DUPLICATE_BABY_ID = True
 
 def check_duplicates(table, key_column, allow_duplicates=False):
     duplicates = table[key_column].value_counts().filter(pl.col("count") > 1)
@@ -55,7 +55,7 @@ def make_main_table(cfg, strict):
         main_table = main_table.vstack(table_df)
 
     # Check for duplicates    
-    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_MANY_TO_ONE_BABY_ID)
+    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
     
     # Check population size
     if len(population) != len(main_table[cfg.population_column]):
@@ -116,7 +116,7 @@ def get_extract_criteria(cfg, main_table):
             ).drop_nulls(extract_criterion.name)
             extract_table = extract_table.vstack(tmp_table)
 
-        extract_table = check_duplicates(extract_table, extract_criterion.key_column, allow_duplicates=BOOL_ALLOW_MANY_TO_ONE_BABY_ID)
+        extract_table = check_duplicates(extract_table, extract_criterion.key_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
@@ -188,13 +188,29 @@ def table_from_cfg(cfg):
         summary_table = get_summary(
             main_table,
             list(summary_cfg.ignore_columns),
-            int(summary_cfg.get("n_samples", 10_000)),
+            (summary_cfg.get("n_samples", None)),
         )
         print(summary_table)
+
+        print("GA < 259 ")
+        ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) < 259)
+        sum_ptb = get_summary(ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
+        print(sum_ptb)
+
+        print("GA > 259 ")
+        non_ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) >= 259)
+        sum_non_ptb = get_summary(non_ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
+        print(sum_non_ptb)
+
+        extra_tables = {
+            "ptb": sum_ptb,
+            "non_ptb": sum_non_ptb,
+        }
+        
     else:
         summary_table = None
-
-    return main_table, summary_table, discards
+        extra_tables = None
+    return main_table, summary_table, discards, extra_tables
 
 
 @hydra.main(
@@ -203,7 +219,7 @@ def table_from_cfg(cfg):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    table, sum_table, discards = table_from_cfg(cfg)
+    table, sum_table, discards, extra_tables = table_from_cfg(cfg)
 
     d = {}
     for i in range(len(discards)):
@@ -214,6 +230,12 @@ def main(cfg: DictConfig) -> None:
             "n_population_post_discard": discards[i][3],
             "discards": discards[i][1],
         }
+
+    if extra_tables is not None:
+        for key, value in extra_tables.items():
+            with open(cfg.paths.summary_save_path.replace("summary", f"{key}_summary"), "w") as fp:
+                Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(parents=True, exist_ok=True)
+                safe_save_df(value).write_csv(fp)
 
     with open(cfg.paths.table_save_path, "w") as fp:
         Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)

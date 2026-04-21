@@ -12,7 +12,7 @@ strict: True
 summary_table: 
   make_table: True
   ignore_columns: [b_cpr, m_cpr, pregnancy_end, pregnancy_start, scan_date]
-  n_samples: 100000
+  n_samples: null
 
 base_table: 
   population: ${paths.population}
