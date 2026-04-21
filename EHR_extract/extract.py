@@ -108,6 +108,12 @@ def extract_from_cfg(cfg, population):
             table_cfg=cfg.imaging_table,
             population=population,
         )
+        logging.info(
+            f"After matching images with patients: \n"
+            f"Valid image+patient matches: {len(population)} with "
+            f"unique {cfg.population.population_key}: {population[cfg.population.population_key].n_unique()} "
+            f"and unique FILE_PATH: {population['FILE_PATH'].n_unique()}"
+        )
 
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
@@ -126,8 +132,12 @@ def extract_from_cfg(cfg, population):
                 discard_stats["n_population_before_discard"],
             ]
         )
-
-        logging.info(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function} \n")
+        logging.info(
+            f"After filtering on custom criteria: {custom_cfg.function} \n"
+            f"Valid image+patient matches: {len(population)} with "
+            f"unique {cfg.population.population_key}: {population[cfg.population.population_key].n_unique()} "
+            f"and unique FILE_PATH: {population['FILE_PATH'].n_unique()}"
+        )
     return population, all_discards
 
 
