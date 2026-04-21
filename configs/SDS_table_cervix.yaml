@@ -559,8 +559,8 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Kejsersnit
-        operator: "!="
-        value: "-1"
+        operator: "startswith"
+        value: ["KMCA"]
         date_col: FoedselsDato_Barn
       - condition: or
         table: 
@@ -571,7 +571,7 @@ conditional_criteria:
         match_on: CPR_BARN
         column: SKSKODE
         operator: "startswith"
-        value: "KMCA"
+        value: ["KMCA"]
         date_col: FOEDSELSDATO
   # labor induction
   - name: current_induced_labor
