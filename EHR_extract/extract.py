@@ -175,7 +175,7 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.paths.holdout_csv is not None:
         train_pop, test_pop = make_train_test_split(
-            cfg.paths.holdout_csv, population, cfg.imaging_table.file_path_key, cfg.prefix
+            cfg.paths.holdout_csv, population, cfg.population.file_path_key, cfg.prefix
         )
 
         train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")

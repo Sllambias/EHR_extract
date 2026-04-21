@@ -16,6 +16,7 @@ prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # t
 
 population: 
   population_key: CPR_BARN
+  file_path_key: FILE_PATH
   tables: 
     - table: ${paths.input_dir_SDS}/mfr.csv
       columns:
@@ -142,7 +143,7 @@ imaging_matching_criteria:
   - function: find_images_and_timedeltas
     args: 
       scan_date_column: STUDY_DATE
-      image_path_column: file_path
+      image_path_column: ${population.file_path_key}
       population_ga_in_days_at_delivery_column: GA
       population_delivery_date_column: BIRTHDAY
       min_diff_days_scan_to_delivery: 0 #0
@@ -157,7 +158,7 @@ imaging_matching_criteria:
       classes: [14]
       image_path_column: filename
       class_column: pred
-      population_image_path_column: FILE_PATH
+      population_image_path_column: ${population.file_path_key}
     action: include
     
 
