@@ -69,9 +69,12 @@ def summary_from_cfg(cfg):
 
     return all_dists
 
-def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=10_000):
+def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
+    if n_samples is None:
+        n_samples = main_table.height
     sampled_table = main_table.drop(ignore_columns)
     n_draw = min(int(n_samples), sampled_table.height)
+    print(f"Sampling {n_draw} rows from {sampled_table.height} rows")
     sampled_table = sampled_table.sample(n=n_draw, shuffle=True)
     n_row = sampled_table.height
     rows = []
