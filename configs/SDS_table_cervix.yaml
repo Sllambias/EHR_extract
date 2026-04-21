@@ -562,17 +562,17 @@ conditional_criteria:
         operator: "startswith"
         value: ["KMCA"]
         date_col: FoedselsDato_Barn
-      - condition: or
-        table: 
-          table1: ${paths.input_dir_SDS}/kejsersnit.csv
-          table2: ${paths.input_dir_SDS}/mfr.csv
-          left_on: FK_MFR
-          right_on: PK_MFR
-        match_on: CPR_BARN
-        column: SKSKODE
-        operator: "startswith"
-        value: ["KMCA"]
-        date_col: FOEDSELSDATO
+      # - condition: or
+      #   table: 
+      #     table1: ${paths.input_dir_SDS}/kejsersnit.csv
+      #     table2: ${paths.input_dir_SDS}/mfr.csv
+      #     left_on: FK_MFR
+      #     right_on: PK_MFR
+      #   match_on: CPR_BARN
+      #   column: SKSKODE
+      #   operator: "startswith"
+      #   value: ["KMCA"]
+      #   date_col: FOEDSELSDATO
   # labor induction
   - name: current_induced_labor
     key_column: b_cpr
@@ -586,17 +586,17 @@ conditional_criteria:
         operator: "=="
         value: "1"
         date_col: FOEDSELSDATO
-      - condition: 
-        table: 
-          table1: ${paths.input_dir_SDS}/igangsaettelse.csv
-          table2: ${paths.input_dir_SDS}/mfr.csv
-          left_on: FK_MFR
-          right_on: PK_MFR
-        match_on: CPR_BARN
-        column: SKSKODE
-        operator: "startswith"
-        value: ["KMAC", "BKHD"]
-        date_col: FOEDSELSDATO
+      # - condition: 
+      #   table: 
+      #     table1: ${paths.input_dir_SDS}/igangsaettelse.csv
+      #     table2: ${paths.input_dir_SDS}/mfr.csv
+      #     left_on: FK_MFR
+      #     right_on: PK_MFR
+      #   match_on: CPR_BARN
+      #   column: SKSKODE
+      #   operator: "startswith"
+      #   value: ["KMAC", "BKHD"]
+      #   date_col: FOEDSELSDATO
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
