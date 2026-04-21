@@ -39,11 +39,6 @@ base_table:
         birth_date_col: pregnancy_end
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
-    - column: GA_weeks
-      function: find_GA_weeks
-      args:
-        GA_days_col: GA_days
-        GA_weeks_col: GA_weeks
 
 time_conditionals:
   before_pregnancy:
