@@ -28,7 +28,7 @@ custom_functions = {
     "find_GA_weeks": find_GA_weeks,
 }
 
-BOOL_ALLOW_MANY_TO_ONE_BABY_ID = False
+BOOL_ALLOW_MANY_TO_ONE_BABY_ID = True
 
 def check_duplicates(table, key_column, allow_duplicates=False):
     duplicates = table[key_column].value_counts().filter(pl.col("count") > 1)
