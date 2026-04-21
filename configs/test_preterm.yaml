@@ -22,18 +22,20 @@ population:
         CPR_BARN: CPR_BARN
         CPR_MOR: CPR_MODER
         GA: GESTATIONSALDER_DAGE
-        Birthday: FOEDSELSDATO
+        BIRTHDAY: FOEDSELSDATO
     - table: ${paths.input_dir_SDS}/nyfoedte.csv
       columns:
         CPR_BARN: CPRnummer_Barn
         CPR_MOR: CPRnummer_Mor
         GA: Gestationsalder
-        Birthday: FoedselsDato_Barn
+        BIRTHDAY: FoedselsDato_Barn
 
 imaging_table:
   table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
-  population_key: cpr_child
-  file_path_key: file_path
+  columns:
+    CPR_MOR: cpr_mother
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
 
 conditional_criteria:
   - action: include
@@ -139,10 +141,10 @@ imaging_matching_criteria:
   # Filter2: GA at scan
   - function: find_images_and_timedeltas
     args: 
-      scan_date_column: study_date
+      scan_date_column: STUDY_DATE
       image_path_column: file_path
       population_ga_in_days_at_delivery_column: GA
-      population_delivery_date_column: Birthday
+      population_delivery_date_column: BIRTHDAY
       min_diff_days_scan_to_delivery: 0 #0
       max_diff_days_scan_to_delivery: 99999 #210
       min_ga_in_days_at_scan: -99999 #196
@@ -150,13 +152,12 @@ imaging_matching_criteria:
     action: include
   # Only Cervix
   - function: find_images_with_predicted_classes
-    # requires that "find_images_and_timedeltas" is run first to generate imaging metadata dataframe
     args:
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
       classes: [14]
       image_path_column: filename
       class_column: pred
-      population_image_path_column: ${imaging_table.file_path_key} 
+      population_image_path_column: FILE_PATH
     action: include
     
 

@@ -46,6 +46,31 @@ def find_scantime_ga(
     raise NotImplementedError
 
 
+def match_images_with_child(
+    population, table_cfg, study_date_key="STUDY_DATE", mom_key="CPR_MOR", birthday_key="BIRTHDAY", ga_key="GA"
+):
+    """
+    Barn CPR periode fra  fødselsdato - GA i dage til fødselsdato og så er alle billeder fra mor i den periode tilskrevet
+    barns CPR. Så kan tvillinger også få tildelt samme billeder.
+    """
+    table = load_table(table_cfg.table)
+    table = table.select(list(table_cfg.columns.values()))
+    table = table.rename({v: k for k, v in table_cfg.columns.items()})
+    table = table.join(population, left_on=mom_key, right_on=mom_key)
+    table = table.with_columns(pl.col(birthday_key).str.to_date())
+    table = table.with_columns(pl.col(study_date_key).cast(pl.String).str.to_date("%Y%m%d"))
+    table = table.with_columns(pl.col(ga_key).str.to_integer())
+
+    table = table.with_columns(
+        image_during_pregnancy=pl.col(study_date_key).is_between(
+            pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
+        )
+    )
+    table = table.filter(pl.col("image_during_pregnancy"))
+    logging.info(f"Population size: {len(table)} after matching with images \n")
+    return table
+
+
 def merge_population_on(population, table, merge_key, population_key_column):
     logging.info(f"Merging population of size {len(population)} with {table}")
     table = load_table(table)
@@ -63,18 +88,13 @@ def find_images_and_timedeltas(
     max_ga_in_days_at_scan,
     population,
     population_key_column,
-    population_delivery_date_column="Birthday",
+    population_delivery_date_column="BIRTHDAY",
     population_ga_in_days_at_delivery_column="GA",
 ):
     discard_stats = {"n_population_before_discard": len(population)}
     # Calculate absolute difference in days
     population = population.with_columns(
-        diff_in_days_scan_to_delivery=(
-            (
-                pl.col(population_delivery_date_column).str.to_date()
-                - pl.col(scan_date_column).cast(pl.String).str.to_date(format="%Y%m%d")
-            ).dt.total_days()
-        )
+        diff_in_days_scan_to_delivery=((pl.col(population_delivery_date_column) - pl.col(scan_date_column)).dt.total_days())
     )
 
     population = population.filter(

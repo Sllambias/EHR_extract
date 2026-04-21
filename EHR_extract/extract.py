@@ -1,6 +1,7 @@
 import hydra
 import json
 import logging
+import os
 import polars as pl
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
@@ -9,6 +10,7 @@ from EHR_extract.custom_find_functions import (
     find_images_with_predicted_classes,
     find_multiple_pregnancies,
     find_scantime_ga,
+    match_images_with_child,
     merge_population_on,
 )
 from EHR_extract.paths import get_config_path
@@ -18,10 +20,8 @@ from EHR_extract.utils import (
     load_table,
     merge_population_tables,
     update_population,
-    write_imaging_metadata_to_formats,
 )
 from omegaconf import DictConfig, OmegaConf
-import os
 
 load_dotenv()
 
@@ -32,6 +32,7 @@ custom_functions = {
     "find_multiple_pregnancies": find_multiple_pregnancies,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
     "merge_population_on": merge_population_on,
+    "match_images_with_child": match_images_with_child,
 }
 
 
@@ -103,11 +104,9 @@ def extract_from_cfg(cfg, population):
 
     logging.info("\n ### Applying imaging matching criteria ### \n")
     if "imaging_table" in cfg.keys():
-        population = merge_population_on(
-            table=cfg.imaging_table.table,
-            merge_key=cfg.imaging_table.population_key,
+        population = match_images_with_child(
+            table_cfg=cfg.imaging_table,
             population=population,
-            population_key_column=cfg.population.population_key,
         )
 
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
