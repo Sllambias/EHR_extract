@@ -1,0 +1,63 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv
+  
+strict: True 
+prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # this should be deleted when splits are updated to include child CPR so we can match on that
+
+population: 
+  population_key: CPR_BARN
+  file_path_key: FILE_PATH
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
+
+imaging_table:
+  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+  columns:
+    CPR_MOR: cpr_mother
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+    
+imaging_matching_criteria:
+  # Filter1: Scan-to-delivery interval
+  # Filter2: GA at scan
+  - function: find_images_within_time_windows
+    args: 
+      scan_date_column: STUDY_DATE
+      image_path_column: ${population.file_path_key}
+      population_ga_in_days_at_delivery_column: GA
+      population_delivery_date_column: BIRTHDAY
+      min_diff_days_scan_to_delivery: -99999 #0
+      max_diff_days_scan_to_delivery: 99999 #210
+      min_ga_in_days_at_scan: -99999 #196
+      max_ga_in_days_at_scan: 99999 #259
+  # Only Cervix (14)
+  - function: find_images_with_predicted_classes
+    args:
+      table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
+      classes: [10,11,12,13,14]
+      image_path_column: filename
+      class_column: pred
+      population_image_path_column: ${population.file_path_key}
+    
+

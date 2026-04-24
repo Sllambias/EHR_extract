@@ -6,10 +6,9 @@ import polars as pl
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
     find_close_births,
-    find_images_and_timedeltas,
     find_images_with_predicted_classes,
-    find_multiple_pregnancies,
-    find_scantime_ga,
+    find_images_within_time_windows,
+    find_multiple_births,
     match_images_with_child,
     merge_population_on,
 )
@@ -27,12 +26,11 @@ load_dotenv()
 
 custom_functions = {
     "find_close_births": find_close_births,
-    "find_images_and_timedeltas": find_images_and_timedeltas,
-    "find_scantime_ga": find_scantime_ga,
-    "find_multiple_pregnancies": find_multiple_pregnancies,
+    "find_images_within_time_windows": find_images_within_time_windows,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
     "merge_population_on": merge_population_on,
     "match_images_with_child": match_images_with_child,
+    "find_multiple_births": find_multiple_births,
 }
 
 
@@ -42,17 +40,19 @@ def extract_from_cfg(cfg, population):
     logging.info(
         f"Population size: {len(population)} with unique IDs: {population[cfg.population.population_key].n_unique()}",
     )
-    for criterion in cfg.conditional_criteria:
+    for criterion in cfg.get("conditional_criteria", {}):
         criterion_population = set()
         for condition in criterion.conditions:
             table = load_table(condition.table, strict=cfg.strict)
             logging.debug(
-                f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} for table: {condition.table}"
+                f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
+                    for table: {condition.table}"
             )
 
             table = table.filter(pl.col(condition.match_on).is_in(population[cfg.population.population_key]))
             logging.debug(
-                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.match_on}"
+                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+                after filtering on {condition.match_on}"
             )
 
             if condition.get("operator", None) is None:
@@ -64,7 +64,8 @@ def extract_from_cfg(cfg, population):
                 table = filter_numeric_rows(table, condition.column)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
             logging.debug(
-                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} after filtering on {condition.column} {condition.operator} {condition.value}"
+                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+                    after filtering on {condition.column} {condition.operator} {condition.value}"
             )
 
             if condition.condition is None:
@@ -144,8 +145,9 @@ def extract_from_cfg(cfg, population):
 def make_train_test_split(holdout_csv_path, population, file_path_key, prefix):
     holdout = load_table(holdout_csv_path, has_header=False)
     holdout = holdout.with_columns(pl.col("column_1").str.replace_all(prefix, ""))
-    train = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]).not_())
-    test = population.filter(pl.col(file_path_key).is_in(holdout["column_1"]))
+    holdout = holdout.get_column("column_1").to_list()
+    train = population.filter(~pl.col(file_path_key).is_in(holdout))
+    test = population.filter(pl.col(file_path_key).is_in(holdout))
     return train, test
 
 
@@ -178,6 +180,12 @@ def main(cfg: DictConfig) -> None:
             cfg.paths.holdout_csv, population, cfg.population.file_path_key, cfg.prefix
         )
 
+        intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
+        if len(intersection) > 0:
+            logging.warn(
+                "leak detected in train and test splits. Removing leaked samples from TEST but this should be investigated"
+            )
+            test_pop = test_pop.filter(~pl.col(cfg.population.population_key).is_in(intersection))
         train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
         test_pop.write_csv(cfg.paths.population_save_path + "_test.csv")
 

@@ -2,15 +2,12 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import find_close_siblings, find_scantime_ga, find_images_and_timedeltas
+from EHR_extract.custom_find_functions import find_close_siblings, find_images_and_timedeltas, find_scantime_ga
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
-    filter_numeric_rows,
-    get_python_operator,
     load_table,
-    update_population,
 )
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 load_dotenv()
 

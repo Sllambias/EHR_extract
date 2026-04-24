@@ -1,0 +1,147 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv
+  
+strict: True 
+prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # this should be deleted when splits are updated to include child CPR so we can match on that
+
+population: 
+  population_key: CPR_BARN
+  file_path_key: FILE_PATH
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
+
+conditional_criteria:
+  - action: include
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SP}/population.csv
+        match_on: CPR_BARN
+  # GA available at birth
+  - action: include
+    conditions: 
+      - condition: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: GESTATIONSALDER_DAGE
+        operator: ">"
+        value: 0
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Gestationsalder
+        operator: ">"
+        value: 0
+  # Only live birth
+  - action: include
+    conditions:
+      - condition: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: LEVENDE_ELLER_DOEDFOEDT
+        operator: "=="
+        value: Levendefødt
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: LevendefoedtDoedfoedt
+        operator: "=="
+        value: "1"
+  # Not C-section (kejsersnit)
+  - action: include
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Kejsersnit
+        operator: "=="
+        value: "-1"
+      - condition: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: MARKOER_KEJSERSNIT
+        operator: "!="
+        value: "1"
+  # Not induced
+  - action: exclude
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: MARKOER_IGANGSAETTELSE
+        operator: "=="
+        value: "1"
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_Ballonkateter
+        operator: "=="
+        value: "Ja"
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_Medicinsk
+        operator: "=="
+        value: "Ja"
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Igangsaettelse_HSP
+        operator: "=="
+        value: "Ja"
+
+custom_criteria:
+  # Remove multiple (twin etc.) births
+  - function: find_multiple_births
+    args: 
+      table: ${paths.input_dir_SDS}/nyfoedte.csv
+      match_on: CPRnummer_Barn
+      birth_id_column: DW_EK_Foedsel
+    action: exclude
+  - function: find_multiple_births
+    args: 
+      table: ${paths.input_dir_SDS}/mfr.csv
+      match_on: CPR_BARN
+      birth_id_column: FOEDSELSLOEBENUMMER
+    action: exclude
+  # Remove close pregnancies
+  - function: find_close_births
+    args:
+      table: ${paths.input_dir_SDS}/nyfoedte.csv
+      match_on: CPRnummer_Barn
+      mom_column: CPRnummer_Mor
+      birth_id_column: DW_EK_Foedsel
+      delivery_date_column: FoedselsDato_Barn
+      threshold_days: 280
+    action: exclude
+  - function: find_close_births
+    args:
+      table: ${paths.input_dir_SDS}/mfr.csv
+      match_on: CPR_BARN
+      mom_column: CPR_MODER
+      birth_id_column: FOEDSELSLOEBENUMMER
+      delivery_date_column: FOEDSELSDATO
+      threshold_days: 280
+    action: exclude
+    
+

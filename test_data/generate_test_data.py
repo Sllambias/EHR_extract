@@ -61,6 +61,20 @@ def generate_img_type_csv(num_rows, output_path, sample_from):
     return df
 
 
+def generate_holdout_csv(num_rows, output_path, sample_from):
+    # Generate test data to get file paths
+    test_df = polars.read_csv(sample_from)
+
+    # Sample file paths from the generated data
+    file_paths = test_df["file_path"].to_list()
+    # Create img_type data with random class from 1-30
+    data = [random.choice(file_paths) for _ in range(num_rows)]
+
+    # Create DataFrame and save to CSV
+    df = polars.DataFrame(data)
+    df.write_csv(output_path)
+
+
 if __name__ == "__main__":
     output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
     generate_test_csv(1000, output_csv_path)
@@ -68,4 +82,9 @@ if __name__ == "__main__":
     img_type_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv"
     generate_img_type_csv(
         1000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
+    )
+
+    holdout_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv"
+    generate_holdout_csv(
+        50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
     )
