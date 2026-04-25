@@ -25,7 +25,7 @@ def generate_test_csv(num_rows, output_path):
 
     data = {
         "cpr_mother": [random.choice(cpr_mor_values[:50]) for _ in range(num_rows)],
-        "cpr_child": [random.choice(cpr_child_values[:50]) for _ in range(num_rows)],
+        # "cpr_child": [random.choice(cpr_child_values[:50]) for _ in range(num_rows)],
         "file_path": [
             f"/images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
             for _ in range(num_rows)

@@ -10,7 +10,7 @@ def match_images_with_child(
     Barn CPR periode fra  fødselsdato - GA i dage til fødselsdato og så er alle billeder fra mor i den periode tilskrevet
     barns CPR. Så kan tvillinger også få tildelt samme billeder.
     """
-    table = load_table(table_cfg.table)
+    table = load_table(table_cfg.table, strict=False)
     table = table.select(list(table_cfg.columns.values()))
     table = table.rename({v: k for k, v in table_cfg.columns.items()})
     table = table.join(population, left_on=mom_key, right_on=mom_key)
