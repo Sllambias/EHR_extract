@@ -189,7 +189,7 @@ conditional_bool_criteria:
         column: Diagnosekode
         operator: "startswith"
         value: ["DZ314", "DZ318", "DZ319"]
-        date_col: ServiceDate
+        date_col: Noteret_dato
 
 
 #   ### Obstetric history
