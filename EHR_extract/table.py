@@ -125,7 +125,7 @@ def get_extract_criteria(cfg, main_table):
     return main_table
 
 def get_conditional_extract_criteria(cfg, main_table):
-    for conditional_extract_criterion in cfg.conditional_criteria:
+    for conditional_extract_criterion in cfg.conditional_extract_criteria:
         extract_table = pl.DataFrame()
         left_on = conditional_extract_criterion.match_on
         time_window = conditional_extract_criterion.time_window
@@ -164,7 +164,7 @@ def get_conditional_extract_criteria(cfg, main_table):
     return main_table
 
 def get_conditional_bool_criteria(cfg, main_table):
-    for conditional_criterion in cfg.conditional_criteria:
+    for conditional_criterion in cfg.conditional_bool_criteria:
         left_on = conditional_criterion.match_on
         key_col = conditional_criterion.key_column
         condition_name = conditional_criterion.name
