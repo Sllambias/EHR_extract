@@ -66,12 +66,12 @@ def generate_holdout_csv(num_rows, output_path, sample_from):
     test_df = polars.read_csv(sample_from)
 
     # Sample file paths from the generated data
-    file_paths = test_df["file_path"].to_list()
+    file_paths = test_df["cpr_mother"].to_list()
     # Create img_type data with random class from 1-30
     data = [random.choice(file_paths) for _ in range(num_rows)]
 
     # Create DataFrame and save to CSV
-    df = polars.DataFrame(data)
+    df = polars.DataFrame({"CPR_MOR": data})
     df.write_csv(output_path)
 
 

@@ -142,12 +142,11 @@ def extract_from_cfg(cfg, population):
     return population, all_discards
 
 
-def make_train_test_split(holdout_csv_path, population, file_path_key, prefix):
-    holdout = load_table(holdout_csv_path, has_header=False)
-    holdout = holdout.with_columns(pl.col("column_1").str.replace_all(prefix, ""))
-    holdout = holdout.get_column("column_1").to_list()
-    train = population.filter(~pl.col(file_path_key).is_in(holdout))
-    test = population.filter(pl.col(file_path_key).is_in(holdout))
+def make_train_test_split(holdout_csv_path, population, split_key, prefix):
+    holdout = load_table(holdout_csv_path)
+    holdout = holdout.get_column(split_key).to_list()
+    train = population.filter(~pl.col(split_key).is_in(holdout))
+    test = population.filter(pl.col(split_key).is_in(holdout))
     return train, test
 
 
@@ -176,9 +175,7 @@ def main(cfg: DictConfig) -> None:
     population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
 
     if cfg.paths.holdout_csv is not None:
-        train_pop, test_pop = make_train_test_split(
-            cfg.paths.holdout_csv, population, cfg.population.file_path_key, cfg.prefix
-        )
+        train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key, cfg.prefix)
 
         intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
         if len(intersection) > 0:

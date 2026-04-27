@@ -16,6 +16,7 @@ prefix: /projects/users/data/UCPH/DeepFetal/ultrasound/PNG_processed_no_OCR/ # t
 
 population: 
   population_key: CPR_BARN
+  split_key: CPR_MOR
   file_path_key: FILE_PATH
   tables: 
     - table: ${paths.input_dir_SDS}/mfr.csv
