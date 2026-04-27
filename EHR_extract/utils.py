@@ -70,10 +70,10 @@ def write_imaging_metadata_to_formats(imaging_dataframe, output_formats, path):
             raise NotImplementedError(f"funky output arg: {output_format}")
 
 
-def merge_population_tables(table_cfgs: list):
+def merge_population_tables(table_cfgs: list, strict=True):
     population = pl.DataFrame()
     for table_cfg in table_cfgs:
-        tab = load_table(table_cfg.table)
+        tab = load_table(table_cfg.table, strict=strict)
         tab = tab.select(list(table_cfg.columns.values()))
         tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
         population = population.vstack(tab)
