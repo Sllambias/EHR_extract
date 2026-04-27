@@ -163,7 +163,8 @@ def get_conditional_extract_criteria(cfg, main_table):
                 tmp_table = tmp_table.filter(
                     py_operator(pl.col(condition.filter.column), condition.filter.value)
                 )
-            extract_table = extract_table.vstack(tmp_table).select([left_on, conditional_extract_criterion.name])
+            tmp_table = tmp_table.select([left_on, condition.column]).rename({condition.column: conditional_extract_criterion.name})
+            extract_table = extract_table.vstack(tmp_table)
             main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
