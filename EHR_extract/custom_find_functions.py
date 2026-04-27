@@ -212,7 +212,7 @@ def get_time_difference(table, start_date_col, end_date_col, time_difference_col
 
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
     m_table = load_table(m_table_path)
-    merged_table = table.join(m_table, left_on=maternal_id_col, right_on=maternal_id_col)
+    merged_table = table.join(m_table, left_on='m_cpr', right_on=maternal_id_col)
     merged_table = get_time_difference(
         merged_table,
         maternal_birth_date_col,
