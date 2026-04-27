@@ -145,6 +145,9 @@ def get_conditional_extract_criteria(cfg, main_table):
                 how="left",
             )
 
+            print(tmp_table.head())
+            print(tmp_table.columns)
+
             # Filter on time 
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)
@@ -160,7 +163,7 @@ def get_conditional_extract_criteria(cfg, main_table):
                 tmp_table = tmp_table.filter(
                     py_operator(pl.col(condition.filter.column), condition.filter.value)
                 )
-            extract_table = extract_table.vstack(tmp_table)
+            extract_table = extract_table.vstack(tmp_table).select([left_on, conditional_extract_criterion.name])
             main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
