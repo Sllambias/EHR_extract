@@ -65,7 +65,7 @@ extract_criteria:
     key_column: m_cpr
     sources:
       - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
-        match_on: m_cpr
+        match_on: MOR_CPR
         column: ethnicity
     dtype: string
   # - name: maternal_age
