@@ -9,7 +9,7 @@ date = datetime.today().strftime("%Y-%m-%d")
 conn = sqlite3.connect(db_path)
 
 query = """
-    SELECT t1.file_path, t1.no_ocr_preprocessed_file_path,t1.study_date, t1.physical_delta_x, t1.physical_delta_y, t2.phair_hash
+    SELECT t1.file_path, t1.no_ocr_preprocessed_file_path, t1.study_date, t1.physical_delta_x, t1.physical_delta_y, t2.phair_hash
     FROM metadata_cache t1
     JOIN cpr_hashes t2 ON t1.file_hash = t2.xxhash
 """
