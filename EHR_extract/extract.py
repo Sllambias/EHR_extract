@@ -142,7 +142,7 @@ def extract_from_cfg(cfg, population):
     return population, all_discards
 
 
-def make_train_test_split(holdout_csv_path, population, split_key, prefix):
+def make_train_test_split(holdout_csv_path, population, split_key):
     holdout = load_table(holdout_csv_path)
     holdout = holdout.get_column(split_key).to_list()
     train = population.filter(~pl.col(split_key).is_in(holdout))
