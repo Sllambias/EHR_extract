@@ -125,6 +125,9 @@ extract_criteria:
   #       column: Paritet
   #   dtype: string
 
+
+conditional_extract_criteria:
+
 conditional_bool_criteria:
   - name: fertility_treatment
     key_column: b_cpr
