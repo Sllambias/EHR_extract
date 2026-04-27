@@ -118,7 +118,7 @@ extract_criteria:
         column: Paritet
     dtype: string
 
-conditional_criteria:
+conditional_bool_criteria:
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
@@ -212,13 +212,6 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_MODER
         column: PPROM
-        operator: "startswith"
-        value: ["DO4"]
-        date_col: FOEDSELSDATO
-      - condition: or
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_MODER
-        column: PROM
         operator: "startswith"
         value: ["DO4"]
         date_col: FOEDSELSDATO
@@ -500,13 +493,6 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: PPROM
-        operator: "startswith"
-        value: ["DO4"]
-        date_col: FOEDSELSDATO
-      - condition: or
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PROM
         operator: "startswith"
         value: ["DO4"]
         date_col: FOEDSELSDATO

@@ -124,7 +124,46 @@ def get_extract_criteria(cfg, main_table):
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
-def get_conditional_criteria(cfg, main_table):
+def get_conditional_extract_criteria(cfg, main_table):
+    for conditional_extract_criterion in cfg.conditional_criteria:
+        extract_table = pl.DataFrame()
+        left_on = conditional_extract_criterion.match_on
+        time_window = conditional_extract_criterion.time_window
+        min_date = cfg.time_conditionals[time_window].min_date
+        max_date = cfg.time_conditionals[time_window].max_date
+        for condition in conditional_extract_criterion.conditions:
+            print("Extracting:", conditional_extract_criterion.name)
+            print("\tTable:", condition.table)
+            table = load_table(condition.table, strict=cfg.strict)
+            right_on = condition.match_on
+
+            tmp_table = main_table.join(
+                table.select([right_on, condition.column, condition.date_col]),
+                left_on=left_on,
+                right_on=right_on,
+                how="left",
+            )
+
+            # Filter on time 
+            event_d = convert_to_date(condition.date_col)
+            lo = date_bound_expr(**min_date)
+            if lo is not None:
+                tmp_table = tmp_table.filter(event_d >= lo)
+            hi = date_bound_expr(**max_date)
+            if hi is not None:
+                tmp_table = tmp_table.filter(event_d <= hi)
+
+            # Filter on operator
+            if condition.filter is not None:
+                py_operator = get_python_operator(condition.filter.operator)
+                tmp_table = tmp_table.filter(
+                    py_operator(pl.col(condition.filter.column), condition.filter.value)
+                )
+            extract_table = extract_table.vstack(tmp_table)
+            main_table = main_table.join(extract_table, on=left_on, how="left")
+    return main_table
+
+def get_conditional_bool_criteria(cfg, main_table):
     for conditional_criterion in cfg.conditional_criteria:
         left_on = conditional_criterion.match_on
         key_col = conditional_criterion.key_column
@@ -185,7 +224,8 @@ def table_from_cfg(cfg):
         strict=cfg.strict,
     )
     main_table = get_extract_criteria(cfg, main_table)
-    main_table = get_conditional_criteria(cfg, main_table)
+    main_table = get_conditional_bool_criteria(cfg, main_table)
+    main_table = get_conditional_extract_criteria(cfg, main_table)
 
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
