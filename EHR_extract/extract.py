@@ -175,7 +175,7 @@ def main(cfg: DictConfig) -> None:
     population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
 
     if cfg.paths.holdout_csv is not None:
-        train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key, cfg.prefix)
+        train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key)
 
         intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
         if len(intersection) > 0:
