@@ -194,31 +194,22 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     )
     return table
 
-def get_time_difference(table, start_date_col, end_date_col, time_difference_col, unit="days"):
-    table = table.with_columns(
-        (pl.col(end_date_col).cast(pl.Date, strict=False) - pl.col(start_date_col).cast(pl.Date, strict=False)).dt.total_days().alias(time_difference_col)
-    )
-    if unit == "days":
-        return table
-    elif unit == "weeks":
-        return table.with_columns(
-            (pl.col(time_difference_col).cast(pl.Int64, strict=False) / 7).alias(time_difference_col)
-        )
-    elif unit == "months":
-        return table.with_columns(
-            (pl.col(time_difference_col).cast(pl.Int64, strict=False) / 30).alias(time_difference_col)
-        )
-    return table
-
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
-    m_table = load_table(m_table_path)
-    merged_table = table.join(m_table, left_on='m_cpr', right_on=maternal_id_col)
-    merged_table = get_time_difference(
-        merged_table,
-        maternal_birth_date_col,
-        baby_birth_date_col,
-        maternal_age_col,
-        unit="years",
+    base_cols = table.columns
+    m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
+
+    merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
+
+    baby_d = pl.col(baby_birth_date_col).cast(pl.Date, strict=False)
+    mom_d = pl.col(maternal_birth_date_col).cast(pl.Date, strict=False)
+
+    years = baby_d.dt.year() - mom_d.dt.year()
+    had_birthday = (baby_d.dt.month() > mom_d.dt.month()) | (
+        (baby_d.dt.month() == mom_d.dt.month()) & (baby_d.dt.day() >= mom_d.dt.day())
     )
-    table = table.with_columns(pl.col(maternal_age_col).cast(pl.Int64, strict=False))
-    return table
+    merged = merged.with_columns(
+        (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
+    )
+
+    # Keep only original columns + the newly created age column.
+    return merged.select(base_cols + [maternal_age_col])
