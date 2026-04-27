@@ -116,7 +116,17 @@ def dtype_from_cfg(dtype):
 
 def convert_to_date(name: str) -> pl.Expr:
     """Coerce a column to pl.Date for comparisons (nulls and bad values stay null)."""
-    return pl.col(name).cast(pl.Date, strict=False)
+    s = pl.col(name)
+    return pl.coalesce(
+        [
+            # Already Date/Datetime or directly castable to Date (e.g. "YYYY-MM-DD").
+            s.cast(pl.Date, strict=False),
+            # Common timestamp string: "YYYY-MM-DD HH:MM:SS" -> Datetime -> Date
+            s.cast(pl.String)
+            .str.strptime(pl.Datetime, "%Y-%m-%d %H:%M:%S", strict=False)
+            .dt.date(),
+        ]
+    )
 
 
 def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:

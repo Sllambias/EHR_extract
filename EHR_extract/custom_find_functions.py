@@ -160,7 +160,7 @@ def find_multiple_births(table, match_on, birth_id_column, population):
 def find_pregnancy_start(table, birth_date_col, GA_days_col, pregnancy_start_col):
     table = table.with_columns(
         (
-            pl.col(birth_date_col).str.to_date()
+            pl.col(birth_date_col).cast(pl.Date, strict=False)
             - pl.duration(days=pl.col(GA_days_col).cast(pl.Int64, strict=False))
         ).alias(pregnancy_start_col)
     )

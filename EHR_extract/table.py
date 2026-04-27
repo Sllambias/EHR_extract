@@ -54,6 +54,8 @@ def make_main_table(cfg, strict):
     main_table = pl.DataFrame()
     for table in cfg.tables:
         table_df = load_table(table.table, strict=strict)
+        print(table_df.head())
+        print(table_df.columns)
         table_df = table_df.rename(table.columns)[cfg.key_columns]
         table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
         main_table = main_table.vstack(table_df)
@@ -77,9 +79,10 @@ def make_main_table(cfg, strict):
         if key == cfg.population_column:
             continue
         dtype = dtype_from_cfg(cfg.dtypes[key])
-        subset_table = main_table.with_columns(
-            pl.col(key).cast(dtype, strict=False)
-        )
+        if dtype == pl.Date:
+            subset_table = main_table.with_columns(convert_to_date(key).alias(key))
+        else:
+            subset_table = main_table.with_columns(pl.col(key).cast(dtype, strict=False))
         subset_table = subset_table.drop_nulls(key)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
@@ -89,12 +92,27 @@ def make_main_table(cfg, strict):
             len(population),
             len(subset_population),
         ])
+        main_table = subset_table
     
     # Add the customs columns
     for column in cfg.add_columns:
         fn = custom_functions[column.function]
         args = column.args
-        main_table = fn(**args, table=main_table)
+        dtype = dtype_from_cfg(column.dtype)
+        if dtype == pl.Date:
+            subset_table = fn(**args, table=main_table).with_columns(convert_to_date(column.column).alias(column.column))
+        else:
+            subset_table = fn(**args, table=main_table).with_columns(pl.col(column.column).cast(dtype, strict=False))
+        subset_table = subset_table.drop_nulls(column.column)
+        population = set(main_table[cfg.population_column])
+        subset_population = set(subset_table[cfg.population_column])
+        all_discards.append([
+            column.column,
+            list(population.difference(subset_population)),
+            len(population),
+            len(subset_population),
+        ])
+        main_table = subset_table
 
     return main_table, all_discards
 
@@ -125,7 +143,6 @@ def get_extract_criteria(cfg, main_table):
     return main_table
 
 def get_conditional_extract_criteria(cfg, main_table):
-    print(main_table.columns)
     for conditional_extract_criterion in cfg.conditional_extract_criteria:
         extract_table = pl.DataFrame()
         left_on = conditional_extract_criterion.match_on
@@ -144,10 +161,6 @@ def get_conditional_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
-
-            print(tmp_table.head())
-            print(tmp_table.columns)
-
             # Filter on time 
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)

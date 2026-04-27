@@ -29,6 +29,7 @@ base_table:
         birth_date_col: pregnancy_end
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
+      dtype: date
     - column: GA_140_date
       function: find_date_at_GA
       args:
@@ -36,6 +37,7 @@ base_table:
         GA_days_col: GA_days
         GA_number: 140
         date_col: GA_140_date
+      dtype: date
     - column: maternal_age
       function: find_maternal_age
       args:
@@ -48,6 +50,7 @@ base_table:
         maternal_id_col: MOR_CPR
         baby_birth_date_col: pregnancy_start
         maternal_age_col: maternal_age
+      dtype: integer
 
 time_conditionals:
   before_pregnancy:
