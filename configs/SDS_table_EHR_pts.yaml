@@ -126,7 +126,7 @@ extract_criteria:
   #   dtype: string
 
 
-conditional_extract_criteria:
+conditional_extract_criteria: []
 
 conditional_bool_criteria:
   - name: fertility_treatment
