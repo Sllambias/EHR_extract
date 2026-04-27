@@ -139,7 +139,7 @@ def get_conditional_extract_criteria(cfg, main_table):
             right_on = condition.match_on
 
             tmp_table = main_table.join(
-                table.select([right_on, condition.column, condition.date_col]),
+                table,
                 left_on=left_on,
                 right_on=right_on,
                 how="left",
