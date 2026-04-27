@@ -7,6 +7,7 @@ from EHR_extract.custom_find_functions import (
     find_pregnancy_start,
     find_GA_days,
     find_GA_weeks,
+    find_date_at_GA,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
@@ -26,6 +27,7 @@ custom_functions = {
     "find_pregnancy_start": find_pregnancy_start,
     "find_GA_days": find_GA_days,
     "find_GA_weeks": find_GA_weeks,
+    "find_date_at_GA": find_date_at_GA,
 }
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = True

@@ -36,6 +36,13 @@ base_table:
       args:
         GA_days_col: GA_days
         GA_weeks_col: GA_weeks
+    - column: GA_140_date
+      function: find_date_at_GA
+      args:
+        birth_date_col: pregnancy_end
+        GA_days_col: GA_days
+        GA_number: 140
+        date_col: GA_140_date
 
 time_conditionals:
   before_pregnancy:

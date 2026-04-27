@@ -1,7 +1,7 @@
 import polars as pl
 import json
 
-def load_table_path(path, strict=True, n_rows=None):
+def load_table_path(path, strict=True, n_rows=None, has_header=True):
     if strict:
         ignore_errors = False
     else:
@@ -24,12 +24,12 @@ def expr_startswith(col: pl.Expr, val) -> pl.Expr:
         [s.str.starts_with(p) for p in val]
     )
 
-def load_table(table_cfg, strict=True, n_rows=None):
+def load_table(table_cfg, strict=True, n_rows=None, has_header=True):
     if isinstance(table_cfg, str):
-        return load_table_path(table_cfg, strict=strict, n_rows=n_rows)
+        return load_table_path(table_cfg, strict=strict, n_rows=n_rows, has_header=has_header)
     else:
-        table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows)
-        table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows)
+        table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows, has_header=has_header)
+        table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows, has_header=has_header)
         left_on = table_cfg["left_on"]
         right_on = table_cfg["right_on"]
         if isinstance(left_on, list):
