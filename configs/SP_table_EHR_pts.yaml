@@ -99,7 +99,7 @@ extract_criteria:
           left_on: [BABY_Fødsel_ID]
           right_on: [BABY_Fødsel_ID]
         match_on: BABY_CPR
-        column: BMI_before_pregnancy
+        column: "Vægt før graviditet"
     dtype: float
   # - name: smoking_status
   #   key_column: b_cpr
