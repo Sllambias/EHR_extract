@@ -117,7 +117,7 @@ def get_extract_criteria(cfg, main_table):
             ).select([left_on, source.column]).rename({source.column: extract_criterion.name})
             tmp_table = tmp_table.with_columns(
                 pl.col(extract_criterion.name).cast(dtype, strict=False)
-            ).drop_nulls(extract_criterion.name)
+            ).drop_nulls(extract_criterion.name).select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
 
         extract_table = check_duplicates(extract_table, extract_criterion.key_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
@@ -125,6 +125,7 @@ def get_extract_criteria(cfg, main_table):
     return main_table
 
 def get_conditional_extract_criteria(cfg, main_table):
+    print(main_table.columns)
     for conditional_extract_criterion in cfg.conditional_extract_criteria:
         extract_table = pl.DataFrame()
         left_on = conditional_extract_criterion.match_on
@@ -224,9 +225,15 @@ def table_from_cfg(cfg):
         strict=cfg.strict,
     )
     main_table = get_extract_criteria(cfg, main_table)
-    main_table = get_conditional_bool_criteria(cfg, main_table)
+    print("After extract criteria:", main_table.columns)
+    print(main_table.head())
     main_table = get_conditional_extract_criteria(cfg, main_table)
-
+    print("After conditional extract criteria:", main_table.columns)
+    print(main_table.head())
+    main_table = get_conditional_bool_criteria(cfg, main_table)
+    print("After conditional bool criteria:", main_table.columns)
+    print(main_table.head())
+    
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
         summary_table = get_summary(
