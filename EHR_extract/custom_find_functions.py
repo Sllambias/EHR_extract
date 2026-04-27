@@ -210,10 +210,14 @@ def get_time_difference(table, start_date_col, end_date_col, time_difference_col
         )
     return table
 
-def find_maternal_age(table, m_table_path, maternal_birth_date_col, maternal_id_col, baby_birth_date_col, maternal_age_col):
+def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
     m_table = load_table(m_table_path)
-    merged_table = table.join(m_table, left_on='m_cpr', right_on=maternal_id_col)
-    baby_d = pl.col(baby_birth_date_col).cast(pl.Date, strict=False)
-    mom_d = pl.col(maternal_birth_date_col).cast(pl.Date, strict=False)
-    merged_table = get_time_difference(merged_table, mom_d, baby_d, maternal_age_col, unit="years")
+    merged_table = table.join(m_table, left_on=maternal_id_col, right_on=maternal_id_col)
+    merged_table = get_time_difference(
+        merged_table,
+        maternal_birth_date_col,
+        baby_birth_date_col,
+        maternal_age_col,
+        unit="years",
+    )
     return merged_table
