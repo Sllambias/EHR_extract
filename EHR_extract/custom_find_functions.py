@@ -220,4 +220,5 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
         maternal_age_col,
         unit="years",
     )
-    return merged_table
+    table = table.with_columns(pl.col(maternal_age_col).cast(pl.Int64, strict=False))
+    return table

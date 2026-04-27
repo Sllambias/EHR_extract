@@ -224,6 +224,8 @@ def table_from_cfg(cfg):
         cfg.base_table,
         strict=cfg.strict,
     )
+    print("After main table:", main_table.columns)
+    print(main_table.head())
     main_table = get_extract_criteria(cfg, main_table)
     print("After extract criteria:", main_table.columns)
     print(main_table.head())
@@ -233,7 +235,7 @@ def table_from_cfg(cfg):
     main_table = get_conditional_bool_criteria(cfg, main_table)
     print("After conditional bool criteria:", main_table.columns)
     print(main_table.head())
-    
+
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
         summary_table = get_summary(
