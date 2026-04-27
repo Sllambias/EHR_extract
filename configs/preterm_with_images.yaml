@@ -32,7 +32,7 @@ population:
         BIRTHDAY: FoedselsDato_Barn
 
 imaging_table:
-  table: /projects/users/people/seblla/images_and_moms.csv
+  table: /projects/users/people/seblla/all_images_2026-04-25.csv
   columns:
     CPR_MOR: CPR_MOTHER
     FILE_PATH: file_path
