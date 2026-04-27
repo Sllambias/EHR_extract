@@ -122,34 +122,34 @@ extract_criteria:
 #         column: Paritet
 #     dtype: string
 
-# conditional_criteria:
-#   - name: fertility_treatment
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: year_before_pregnancy
-#     conditions:
-#       - condition:
-#         table: 
-#           table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
-#           table2: ${paths.input_dir_SDS}/nyfoedte.csv
-#           left_on: CPRnummer
-#           right_on: CPRnummer_Mor
-#         match_on: CPRnummer
-#         column: Graviditet
-#         operator: "=="
-#         value: "Ja"
-#         date_col: Transferering_dato
-#       - condition: or
-#         table: 
-#           table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
-#           table2: ${paths.input_dir_SDS}/mfr.csv
-#           left_on: CPRnummer
-#           right_on: CPR_MODER
-#         match_on: CPRnummer
-#         column: Graviditet
-#         operator: "=="
-#         value: "Ja"
-#         date_col: Transferering_dato
+conditional_criteria:
+  - name: fertility_treatment
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: year_before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: ProcedureCode
+        operator: "startswith"
+        value: ["BBHG38", "BJFL0", "AFV01G"]
+        date_col: ServiceDate
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: DiagnoseCode
+        operator: "startswith"
+        value: ["DZ314", "DZ318", "DZ319"]
+        date_col: ServiceDate
 #   ### Obstetric history
 #   # parity
 #   - name: current_ptb
