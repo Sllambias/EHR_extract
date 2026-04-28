@@ -206,6 +206,11 @@ def get_conditional_bool_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
+            # Filter on operator
+            py_operator = get_python_operator(condition.operator)
+            tmp_table = tmp_table.filter(
+                py_operator(pl.col(condition.column), condition.value)
+            )
 
             # Filter on time 
             event_d = convert_to_date(condition.date_col)
@@ -215,12 +220,6 @@ def get_conditional_bool_criteria(cfg, main_table):
             hi = date_bound_expr(**max_date)
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
-
-            # Filter on operator
-            py_operator = get_python_operator(condition.operator)
-            tmp_table = tmp_table.filter(
-                py_operator(pl.col(condition.column), condition.value)
-            )
             print("\tNumber of matches:", len(tmp_table))
 
             if condition.condition is None:
