@@ -40,6 +40,19 @@ base_table:
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
       dtype: date
+    - column: maternal_age
+      function: find_maternal_age
+      args:
+        m_table_path: 
+          table1: ${paths.input_dir_SP}/Population.csv
+          table2: ${paths.input_dir_SP}/Mor - CPMI - Patientinfo.csv
+          left_on: [CPR_MOR]
+          right_on: [MOR_CPR]
+        maternal_birth_date_col: Fødselsdato
+        maternal_id_col: CPR_MOR
+        baby_birth_date_col: pregnancy_start
+        maternal_age_col: maternal_age
+      dtype: integer
 
 time_conditionals:
   before_pregnancy:
@@ -73,6 +86,8 @@ extract_criteria:
         match_on: MOR_CPR
         column: Etnicitet
     dtype: string
+
+conditional_bool_criteria: []
 
 conditional_extract_criteria:
    ### Obstetric history

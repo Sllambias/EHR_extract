@@ -195,10 +195,15 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     return table
 
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
+    print("In maternal age function")
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
 
+    print("m_table", m_table.head())
+    print("table", table.head())
+
     merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
+    print("merged", merged.head())
 
     baby_d = pl.col(baby_birth_date_col).cast(pl.Date, strict=False)
     mom_d = pl.col(maternal_birth_date_col).cast(pl.Date, strict=False)

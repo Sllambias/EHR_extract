@@ -21,7 +21,7 @@ base_table:
     - table: ../../data/img_data_link/ptb_population/preterm_only_SP_without_images_population_train_and_test.csv
       columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date}
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
