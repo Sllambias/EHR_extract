@@ -5,7 +5,7 @@ defaults:
 paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
-  output_dir: /projects/users/people/seblla/repos/EHR_extract/outputs/${hydra:job.config_name}
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
