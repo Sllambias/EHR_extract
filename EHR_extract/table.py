@@ -62,8 +62,6 @@ def make_main_table(cfg, strict):
     main_table = pl.DataFrame()
     for table in cfg.tables:
         table_df = load_table(table.table, strict=strict)
-        print(table_df.head())
-        print(table_df.columns)
         table_df = table_df.rename(table.columns)[cfg.key_columns]
         table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
         main_table = main_table.vstack(table_df)
@@ -106,11 +104,7 @@ def make_main_table(cfg, strict):
         dtype = dtype_from_cfg(column.dtype)
         subset_table = fn(**args, table=main_table)
         subset_table = cast_types(subset_table, dtype, column.column)
-        print("subset_table", subset_table.head())
-        print("subset_table columns", subset_table.columns)
         subset_table = subset_table.drop_nulls(column.column)
-        print("subset_table after drop_nulls", subset_table.head())
-        print("subset_table columns after drop_nulls", subset_table.columns)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
         all_discards.append([
@@ -168,6 +162,13 @@ def get_conditional_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
+            # Filter on operator
+            if condition.filter is not None:
+                py_operator = get_python_operator(condition.filter.operator)
+                tmp_table = tmp_table.filter(
+                    py_operator(pl.col(condition.filter.column), condition.filter.value)
+                )
+
             # Filter on time 
             event_d = convert_to_date(condition.date_col, date_format="%Y-%m-%d")
             lo = date_bound_expr(**min_date)
@@ -177,12 +178,6 @@ def get_conditional_extract_criteria(cfg, main_table):
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
 
-            # Filter on operator
-            if condition.filter is not None:
-                py_operator = get_python_operator(condition.filter.operator)
-                tmp_table = tmp_table.filter(
-                    py_operator(pl.col(condition.filter.column), condition.filter.value)
-                )
             tmp_table = tmp_table.select([left_on, condition.column]).rename({condition.column: conditional_extract_criterion.name})
             extract_table = extract_table.vstack(tmp_table)
             main_table = main_table.join(extract_table, on=left_on, how="left")
@@ -257,8 +252,6 @@ def table_from_cfg(cfg):
     print("After conditional extract criteria:", main_table.columns)
     print(main_table.head())
     main_table = get_conditional_bool_criteria(cfg, main_table)
-    print("After conditional bool criteria:", main_table.columns)
-    print(main_table.head())
 
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
@@ -269,15 +262,15 @@ def table_from_cfg(cfg):
         )
         print(summary_table)
 
-        print("GA < 259 ")
         ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) < 259)
         sum_ptb = get_summary(ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
-        print(sum_ptb)
+        # print("GA < 259 ")
+        # print(sum_ptb)
 
-        print("GA > 259 ")
         non_ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) >= 259)
         sum_non_ptb = get_summary(non_ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
-        print(sum_non_ptb)
+        # print("GA > 259 ")
+        # print(sum_non_ptb)
 
         extra_tables = {
             "ptb": sum_ptb,
