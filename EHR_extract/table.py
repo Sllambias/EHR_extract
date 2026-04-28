@@ -162,8 +162,6 @@ def get_conditional_extract_criteria(cfg, main_table):
                 table = table.filter(
                     py_operator(pl.col(condition.filter.column), condition.filter.value)
                 )
-            print("table after filter", table.head())
-            print(len(table))
 
             # Merge
             tmp_table = main_table.join(
@@ -172,8 +170,6 @@ def get_conditional_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
-            print("tmp_table after merge", tmp_table.head())
-            print(len(tmp_table))
 
             # Filter on time 
             event_d = convert_to_date(condition.date_col, date_format="%Y-%m-%d")
@@ -183,9 +179,7 @@ def get_conditional_extract_criteria(cfg, main_table):
             hi = date_bound_expr(**max_date)
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
-            print("tmp_table after time filter", tmp_table.head())
-            print(len(tmp_table))
-            
+
             tmp_table = tmp_table.select([left_on, condition.column]).rename({condition.column: conditional_extract_criterion.name})
             extract_table = extract_table.vstack(tmp_table)
             main_table = main_table.join(extract_table, on=left_on, how="left")

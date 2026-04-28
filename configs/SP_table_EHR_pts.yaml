@@ -144,28 +144,28 @@ conditional_extract_criteria:
         date_col: "Kontakt dato"
         filter: null
 
-  ### Cervical conditions
-  - name: cervical_length
-    key_column: b_cpr
-    match_on: m_cpr
-    time_window: during_pregnancy
-    conditions:
-      - condition:
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: MOR_CPR
-        column: Værdi 
-        date_col: Registreringstidspunkt
-        filter: 
-          column: Registrering
-          operator: "=="
-          value: "Cervix i mm"
+  # ### Cervical conditions
+  # - name: cervical_length
+  #   key_column: b_cpr
+  #   match_on: m_cpr
+  #   time_window: during_pregnancy
+  #   conditions:
+  #     - condition:
+  #       table: 
+  #         table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+  #         table2: ${paths.input_dir_SP}/Population.csv
+  #         left_on: [MOR_CPR]
+  #         right_on: [MOR_CPR]
+  #       match_on: MOR_CPR
+  #       column: Værdi 
+  #       date_col: Registreringstidspunkt
+  #       filter: 
+  #         column: Registrering
+  #         operator: "=="
+  #         value: "Cervix i mm"
 
- ### Obstetric history
 conditional_bool_criteria:
+  ### Maternal characteristics
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
@@ -193,7 +193,33 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["DZ314", "DZ318", "DZ319"]
         date_col: Noteret_dato
-
+  ### Obstetric history
+  - name: previous_ptb
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DZ358B", "DO609", "DO601"]
+        date_col: Noteret_dato
+      - condition: or
+        table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+        match_on: MOR_CPR
+        column: Præterm
+        operator: ">="
+        value: 1
+        date_col: "Kontakt dato"
+      - condition: or 
+        table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+        match_on: MOR_CPR
+        column: Gestationsalder
+        operator: "not_startswith"
+        value: ["38", "39", "40", "41", "42", "43"]
+        date_col: Dato
 
 #   ### Obstetric history
 #   # parity
