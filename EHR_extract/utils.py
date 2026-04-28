@@ -120,7 +120,7 @@ def dtype_from_cfg(dtype):
 def convert_to_date(
     name: str,
     date_format: str = "%Y-%m-%d",
-    datetime_format: str | None = "%Y-%m-%d %H:%M:%S",
+    datetime_format: str | None = "%Y-%m-%d %H:%M:%S%.f",
 ) -> pl.Expr:
     """Force a column to `pl.Date` (optionally accepting datetimes and dropping time)."""
     s = pl.col(name)
