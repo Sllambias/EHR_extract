@@ -305,7 +305,7 @@ conditional_bool_criteria:
         value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
         date_col: Noteret_dato
   # TODO get the info from history
-  - name: previous_c_section: 
+  - name: previous_c_section
     key_column: b_cpr
     match_on: m_cpr
     time_window: before_pregnancy
