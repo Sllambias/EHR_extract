@@ -197,8 +197,12 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
+    print("m_table", m_table.head())
+    print("m_table columns", m_table.columns)
 
     merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
+    print("merged", merged.head())
+    print("merged columns", merged.columns)
 
     # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
     baby_d = convert_to_date(baby_birth_date_col)
@@ -211,6 +215,10 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
+    print("merged after with columns", merged.head())
+    print("merged after with columns columns", merged.columns)
+    print("merged after select", merged.select(base_cols + [maternal_age_col]).head())
+    print("merged after select columns", merged.select(base_cols + [maternal_age_col]).columns)
 
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
