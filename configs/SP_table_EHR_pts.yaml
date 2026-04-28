@@ -67,12 +67,12 @@ time_conditionals:
     max_date:
       date_col: GA_140_date
       offset_days: 0
-  year_before_pregnancy:
+  year_before_pregnancy_and_during_pregnancy:
     min_date:
       date_col: pregnancy_start
       offset_days: -365
     max_date:
-      date_col: pregnancy_start
+      date_col: pregnancy_end
       offset_days: 0
 
 extract_criteria:
@@ -169,7 +169,7 @@ conditional_bool_criteria:
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
-    time_window: year_before_pregnancy
+    time_window: year_before_pregnancy_and_during_pregnancy
     conditions:
       - condition:
         table: 
@@ -191,8 +191,20 @@ conditional_bool_criteria:
         match_on: MOR_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DZ314", "DZ318", "DZ319"]
+        value: ["DZ314", "DZ318", "DZ319"] # fertility treatment
         date_col: Noteret_dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO003B", "DZ321H", "DZ358F"] # IVF pregnancy
+        date_col: Noteret_dato
+
   ### Obstetric history
   - name: previous_ptb
     key_column: b_cpr
@@ -200,26 +212,131 @@ conditional_bool_criteria:
     time_window: before_pregnancy
     conditions:
       - condition:
-        table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
         match_on: MOR_CPR
         column: Diagnosekode
         operator: "startswith"
         value: ["DZ358B", "DO609", "DO601"]
         date_col: Noteret_dato
       - condition: or
-        table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
         match_on: MOR_CPR
         column: Præterm
         operator: ">="
         value: 1
         date_col: "Kontakt dato"
       - condition: or 
-        table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
         match_on: MOR_CPR
         column: Gestationsalder
-        operator: "not_startswith"
-        value: ["38", "39", "40", "41", "42", "43"]
+        operator: "startswith"
+        value: ["23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36"]
         date_col: Dato
+  - name: previous_late_miscarriage
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Gestationsalder
+        operator: "startswith"
+        value: ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"]
+        date_col: Dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DZ351A"]
+        date_col: Noteret_dato
+  - name: previous_pprom        
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO422", "DO420", "DO424"]
+        date_col: Noteret_dato
+    #TODO add values from measurements
+  - name_ previous_short_cervix  
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
+        date_col: Noteret_dato
+  # TODO get the info from history
+  - name: previous_c_section: 
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: ProcedureCode
+        operator: "startswith"
+        value: ["KMCA10A", "KMCA10D", "KMCA10E"]
+        date_col: ServiceDate
+  - name: previous_preclampsia
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
+        date_col: Noteret_dato
 
 #   ### Obstetric history
 #   # parity

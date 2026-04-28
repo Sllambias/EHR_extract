@@ -57,8 +57,6 @@ def get_python_operator(operator_str):
         return lambda col, val: col.cast(pl.Float64, strict=False) <= val
     elif operator_str == "startswith":
         return expr_startswith
-    elif operator_str == "not_startswith":
-        return lambda col, val: not expr_startswith(col, val)
     else:
         raise NotImplementedError(f"Unknown operator: {operator_str}")
 

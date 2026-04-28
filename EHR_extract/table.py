@@ -200,18 +200,19 @@ def get_conditional_bool_criteria(cfg, main_table):
             table = load_table(condition.table, strict=cfg.strict)
             right_on = condition.match_on
 
+            # Filter on operator
+            py_operator = get_python_operator(condition.operator)
+            table = table.filter(
+                py_operator(pl.col(condition.column), condition.value)
+            )
+
+            # Merge
             tmp_table = main_table.join(
                 table.select([right_on, condition.column, condition.date_col]),
                 left_on=left_on,
                 right_on=right_on,
                 how="left",
             )
-            # Filter on operator
-            py_operator = get_python_operator(condition.operator)
-            tmp_table = tmp_table.filter(
-                py_operator(pl.col(condition.column), condition.value)
-            )
-
             # Filter on time 
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)
