@@ -100,6 +100,7 @@ def merge_population_tables(table_cfgs: list):
         tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
         population = population.vstack(tab)
     return population
+    
 def dtype_from_cfg(dtype):
     if dtype == "string":
         return pl.String
@@ -111,30 +112,43 @@ def dtype_from_cfg(dtype):
         return pl.Boolean
     elif dtype == "date":
         return pl.Date
+    elif dtype == "datetime":
+        return pl.Datetime
     else:
         raise NotImplementedError(f"Unknown dtype: {dtype}")
 
-def convert_to_date(name: str) -> pl.Expr:
-    """Coerce a column to pl.Date for comparisons (nulls and bad values stay null)."""
+def convert_to_date(
+    name: str,
+    date_format: str = "%Y-%m-%d",
+    datetime_format: str | None = "%Y-%m-%d %H:%M:%S",
+) -> pl.Expr:
+    """Force a column to `pl.Date` (optionally accepting datetimes and dropping time)."""
     s = pl.col(name)
-    return pl.coalesce(
-        [
-            # Already Date/Datetime or directly castable to Date (e.g. "YYYY-MM-DD").
-            s.cast(pl.Date, strict=False),
-            # Common timestamp string: "YYYY-MM-DD HH:MM:SS" -> Datetime -> Date
-            s.cast(pl.String)
-            .str.strptime(pl.Datetime, "%Y-%m-%d %H:%M:%S", strict=False)
-            .dt.date(),
-        ]
-    )
+    s_str = s.cast(pl.String)
+    typed = s.cast(pl.Date, strict=False)
+    parsed_date = s_str.str.strptime(pl.Date, date_format, strict=False)
+    if datetime_format is None:
+        return pl.coalesce([typed, parsed_date])
+    parsed_dt_as_date = s_str.str.strptime(pl.Datetime, datetime_format, strict=False).dt.date()
+    return pl.coalesce([typed, parsed_date, parsed_dt_as_date])
 
+def convert_to_datetime(
+    name: str,
+    datetime_format: str = "%Y-%m-%d %H:%M:%S",
+) -> pl.Expr:
+    """Force a column to `pl.Datetime` using an explicit format."""
+    s = pl.col(name)
+    s_str = s.cast(pl.String)
+    typed = s.cast(pl.Datetime, strict=False)
+    parsed_dt = s_str.str.strptime(pl.Datetime, datetime_format, strict=False)
+    return pl.coalesce([typed, parsed_dt])
 
 def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:
     """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date) (YAML: column + offset_days)."""
     if date_col is None:
         return None
     off = int(offset_days) if offset_days is not None else 0
-    base = convert_to_date(date_col)
+    base = convert_to_date(date_col, date_format="%Y-%m-%d")
     if off == 0:
         return base
     return base + pl.duration(days=off)

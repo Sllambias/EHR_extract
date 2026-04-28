@@ -1,6 +1,6 @@
 import logging
 import polars as pl
-from EHR_extract.utils import filter_numeric_rows, load_table
+from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date
 
 
 def match_images_with_child(
@@ -195,18 +195,14 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     return table
 
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
-    print("In maternal age function")
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
 
-    print("m_table", m_table.head())
-    print("table", table.head())
-
     merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
-    print("merged", merged.head())
 
-    baby_d = pl.col(baby_birth_date_col).cast(pl.Date, strict=False)
-    mom_d = pl.col(maternal_birth_date_col).cast(pl.Date, strict=False)
+    # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
+    baby_d = convert_to_date(baby_birth_date_col)
+    mom_d = convert_to_date(maternal_birth_date_col)
 
     years = baby_d.dt.year() - mom_d.dt.year()
     had_birthday = (baby_d.dt.month() > mom_d.dt.month()) | (
@@ -215,9 +211,6 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
-
-    print("with maternal age", merged.head())
-    print("after select", merged.select(base_cols + [maternal_age_col]).head())
 
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])

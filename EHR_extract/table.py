@@ -18,6 +18,7 @@ from EHR_extract.utils import (
     dtype_from_cfg,
     convert_to_date,
     date_bound_expr,
+    convert_to_datetime,
     safe_save_df,
 )
 from omegaconf import DictConfig
@@ -43,6 +44,13 @@ def check_duplicates(table, key_column, allow_duplicates=False):
             table = table.group_by(key_column).agg(pl.col("*").first())
             assert(len(table[key_column].unique()) == len(table[key_column]))
     return table
+
+def cast_types(table, dtype, column):
+    if dtype == pl.Date:
+        return table.with_columns(convert_to_date(column).alias(column))
+    if dtype == pl.Datetime:
+        return table.with_columns(convert_to_datetime(column).alias(column))
+    return table.with_columns(pl.col(column).cast(dtype, strict=False))
 
 def make_main_table(cfg, strict):
     all_discards = []
@@ -79,10 +87,7 @@ def make_main_table(cfg, strict):
         if key == cfg.population_column:
             continue
         dtype = dtype_from_cfg(cfg.dtypes[key])
-        if dtype == pl.Date:
-            subset_table = main_table.with_columns(convert_to_date(key).alias(key))
-        else:
-            subset_table = main_table.with_columns(pl.col(key).cast(dtype, strict=False))
+        subset_table = cast_types(main_table, dtype, key)
         subset_table = subset_table.drop_nulls(key)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
@@ -99,10 +104,8 @@ def make_main_table(cfg, strict):
         fn = custom_functions[column.function]
         args = column.args
         dtype = dtype_from_cfg(column.dtype)
-        if dtype == pl.Date:
-            subset_table = fn(**args, table=main_table).with_columns(convert_to_date(column.column).alias(column.column))
-        else:
-            subset_table = fn(**args, table=main_table).with_columns(pl.col(column.column).cast(dtype, strict=False))
+        subset_table = fn(**args, table=main_table)
+        subset_table = cast_types(subset_table, dtype, column.column)
         print("subset_table", subset_table.head())
         print("subset_table columns", subset_table.columns)
         subset_table = subset_table.drop_nulls(column.column)
@@ -166,7 +169,7 @@ def get_conditional_extract_criteria(cfg, main_table):
                 how="left",
             )
             # Filter on time 
-            event_d = convert_to_date(condition.date_col)
+            event_d = convert_to_date(condition.date_col, date_format="%Y-%m-%d")
             lo = date_bound_expr(**min_date)
             if lo is not None:
                 tmp_table = tmp_table.filter(event_d >= lo)
