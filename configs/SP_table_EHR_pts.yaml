@@ -288,7 +288,7 @@ conditional_bool_criteria:
         value: ["DO422", "DO420", "DO424"]
         date_col: Noteret_dato
     #TODO add values from measurements
-  - name_ previous_short_cervix  
+  - name: previous_short_cervix  
     key_column: b_cpr
     match_on: m_cpr
     time_window: before_pregnancy
