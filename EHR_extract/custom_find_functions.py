@@ -216,5 +216,8 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
 
+    print("with maternal age", merged.head())
+    print("after select", merged.select(base_cols + [maternal_age_col]).head())
+
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])

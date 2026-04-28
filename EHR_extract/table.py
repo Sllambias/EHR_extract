@@ -103,7 +103,11 @@ def make_main_table(cfg, strict):
             subset_table = fn(**args, table=main_table).with_columns(convert_to_date(column.column).alias(column.column))
         else:
             subset_table = fn(**args, table=main_table).with_columns(pl.col(column.column).cast(dtype, strict=False))
+        print("subset_table", subset_table.head())
+        print("subset_table columns", subset_table.columns)
         subset_table = subset_table.drop_nulls(column.column)
+        print("subset_table after drop_nulls", subset_table.head())
+        print("subset_table columns after drop_nulls", subset_table.columns)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
         all_discards.append([
