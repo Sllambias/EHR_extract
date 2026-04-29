@@ -292,6 +292,9 @@ def extract_latest_value(
         how="left",
     )
 
+    print("at merge", tmp_table.head())
+    print("at merge columns", tmp_table.columns)
+
     # Filter on time
     event_d = convert_to_date(date_col)
     lo = date_bound_expr(**min_date)
@@ -300,14 +303,20 @@ def extract_latest_value(
     hi = date_bound_expr(**max_date)
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
+    print("at filter on time", tmp_table.head())
+    print("at filter on time columns", tmp_table.columns)
 
     # Filter on type
     dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
-    
+    print("at filter on type", tmp_table.head())
+    print("at filter on type columns", tmp_table.columns)
+
     # Take latest by sorting on the parsed event date.
     tmp_table = tmp_table.sort([left_on, date_col])
     tmp_table = tmp_table.group_by(left_on).agg(pl.col("*").last())
     tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+    print("at select", tmp_table.head())
+    print("at select columns", tmp_table.columns)
 
     return main_table.join(tmp_table, on=left_on, how="left")
