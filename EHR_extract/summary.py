@@ -77,12 +77,15 @@ def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
         series = sampled_table.get_column(col)
         dtype = series.dtype
         if getattr(dtype, "is_float", lambda: False)():
-            missing = series.is_null() | series.is_nan()
+            # Explicitly compute percent from total sampled rows (`n_row`).
+            is_null = series.is_null()
+            is_nan = series.is_nan().fill_null(False)
+            missing = is_null | is_nan
             nan_count = int(missing.sum())
-            nan_pct = float(missing.mean() * 100.0)
+            nan_pct = float(nan_count / n_row * 100.0) if n_row > 0 else float("nan")
         else:
             nan_count = int(series.null_count())
-            nan_pct = float(series.is_null().mean() * 100.0)
+            nan_pct = float(nan_count / n_row * 100.0) if n_row > 0 else float("nan")
 
         if dtype == pl.Boolean:
             col_summary = float(series.sum() / n_row * 100.0)

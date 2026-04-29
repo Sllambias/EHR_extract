@@ -105,16 +105,6 @@ extract_criteria:
         match_on: BABY_CPR
         column: "Vægt før graviditet"
     dtype: float
-  # - name: smoking_status
-  #   key_column: b_cpr
-  #   sources:
-  #     - table: ${paths.input_dir_SDS}/mfr.csv
-  #       match_on: CPR_BARN
-  #       column: RYGERSTATUS_MODER
-  #     - table: ${paths.input_dir_SDS}/nyfoedte.csv
-  #       match_on: CPRnummer_Barn
-  #       column: Tobaksforbrug
-  #   dtype: string
 
 custom_extract_criteria:
   ### Maternal characteristics
@@ -358,7 +348,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [BABY_Fødsel_ID]
           right_on: [BABY_Fødsel_ID]
-        match_on: BABY_CPR
+        match_on: MOR_CPR
         column: "Udslettet dato/tid"
         operator: "not_null"
         value: 
@@ -489,7 +479,7 @@ conditional_bool_criteria:
   # fibroids 
   - name: current_fibroids
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition: 
@@ -506,7 +496,7 @@ conditional_bool_criteria:
   # polyhydramnios
   - name: current_polyhydramnios
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -525,7 +515,7 @@ conditional_bool_criteria:
   # preclampsia
   - name: current_preclampsia
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -542,7 +532,7 @@ conditional_bool_criteria:
   # vaginal bleeding
   - name: current_vaginal_bleeding
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -576,7 +566,7 @@ conditional_bool_criteria:
   # pprom
   - name: current_pprom        
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -615,7 +605,7 @@ conditional_bool_criteria:
   # C-section
   - name: current_c_section
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -654,6 +644,6 @@ conditional_bool_criteria:
           right_on: [BABY_Fødsel_ID]
         match_on: BABY_CPR
         column: Måde
-        operator: "in"
+        operator: "startswith"
         value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
         date_col: Fødselstidspunkt
