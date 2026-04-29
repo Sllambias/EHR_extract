@@ -211,11 +211,11 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
-def filter_values(
+def extract_filtered_values(
     main_table,
     left_on,
     table,
-    match_on,
+    right_on,
     target_col,
     date_col,
     min_date,
@@ -223,10 +223,9 @@ def filter_values(
     filters,
     new_col_name,
     dtype,
-    allow_duplicates=True,
+    allow_duplicates=False,
 ):
     table = load_table(table, strict=False)
-    right_on = match_on
 
     # Filter
     for filter in filters:
@@ -269,20 +268,81 @@ def filter_values(
 
     return main_table
 
+def extract_filtered_conditional_values(
+    main_table,
+    left_on,
+    right_on,
+    key_column,
+    table,
+    target_col,
+    date_col,
+    min_date,
+    max_date,
+    filters,
+    new_col_name,
+    dtype,
+    conditions,
+    allow_duplicates=False,
+):
+    filtered_table = extract_filtered_values(
+        main_table,
+        left_on,
+        table,
+        right_on,
+        target_col,
+        date_col,
+        min_date,
+        max_date,
+        filters,
+        new_col_name,
+        dtype,
+        allow_duplicates=True,
+    )
+    print("filtered_table", filtered_table[new_col_name].value_counts())
+
+    # Convert that extracted value into a boolean using `condition`.
+    condition_matches = set()
+    for condition in conditions:
+        py_operator = get_python_operator(condition.operator)
+        bool_expr = py_operator(pl.col(new_col_name), condition.value)
+        print("bool_expr", bool_expr)
+        if condition.condition is None:
+            last_condition = set(filtered_table[left_on])
+        elif condition.condition == "and":
+            last_condition = last_condition.intersection(set(filtered_table[left_on]))
+        elif condition.condition == "or":
+            condition_matches = condition_matches.union(last_condition)
+            last_condition = set(filtered_table[left_on])
+        else:
+            print("wow, weird condition")
+    condition_matches = condition_matches.union(last_condition)
+    main_table = main_table.with_columns(
+            pl.col(key_column).is_in(list(condition_matches)).alias(new_col_name)
+        )
+    print("main_table", main_table[new_col_name].value_counts())
+    # Check for duplicates
+    duplicates = main_table[key_column].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0 and not allow_duplicates:
+        raise ValueError(f"Duplicate entries for key column {key_column}. Examples: {duplicates.head(5)}")
+    else:
+        main_table = main_table.group_by(key_column).agg(pl.col("*").first())
+        assert(len(main_table[key_column].unique()) == len(main_table[key_column]))
+    return main_table
+
 def extract_latest_value(
     main_table,
     left_on,
     table,
-    match_on,
+    right_on,
     target_col,
     new_col_name,
     date_col,
     min_date,
     max_date,
     dtype,
+    allow_duplicates=False,
 ):
     table = load_table(table, strict=False)
-    right_on = match_on
 
     # Merge
     tmp_table = main_table.join(
@@ -292,11 +352,6 @@ def extract_latest_value(
         how="left",
     )
 
-    print("at merge", tmp_table.head())
-    print("at merge columns", tmp_table.columns)
-    print("at merge target_col")
-    print(tmp_table[target_col].value_counts())
-
     # Filter on time
     event_d = convert_to_date(date_col)
     lo = date_bound_expr(**min_date)
@@ -305,26 +360,14 @@ def extract_latest_value(
     hi = date_bound_expr(**max_date)
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
-    print("at filter on time", tmp_table.head())
-    print("at filter on time columns", tmp_table.columns)
-    print("at filter on time target_col")
-    print(tmp_table[target_col].value_counts())
 
     # Filter on type
     dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
-    print("at filter on type", tmp_table.head())
-    print("at filter on type target_col")
-    print(tmp_table[target_col].value_counts())
-    print("at filter on type columns", tmp_table.columns)
 
     # Take latest by sorting on the parsed event date.
     tmp_table = tmp_table.sort([left_on, date_col])
     tmp_table = tmp_table.group_by(left_on).agg(pl.col("*").last())
     tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
-    print("at select", tmp_table.head())
-    print("at select target_col")
-    print(tmp_table[new_col_name].value_counts())
-    print("at select columns", tmp_table.columns)
 
     return main_table.join(tmp_table, on=left_on, how="left")

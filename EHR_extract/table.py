@@ -9,8 +9,9 @@ from EHR_extract.custom_find_functions import (
     find_GA_weeks,
     find_date_at_GA,
     find_maternal_age,
-    filter_values,
+    extract_filtered_values,
     extract_latest_value,
+    extract_filtered_conditional_values
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
@@ -33,8 +34,9 @@ custom_functions = {
     "find_GA_weeks": find_GA_weeks,
     "find_date_at_GA": find_date_at_GA,
     "find_maternal_age": find_maternal_age,
-    "filter_values": filter_values,
+    "extract_filtered_values": extract_filtered_values,
     "extract_latest_value": extract_latest_value,
+    "extract_filtered_conditional_values": extract_filtered_conditional_values,
 }
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = True
@@ -149,16 +151,15 @@ def get_extract_criteria(cfg, main_table):
 
 def get_custom_extract_criteria(cfg, main_table):
     for custom_extract_criterion in cfg.custom_extract_criteria:
-        left_on = custom_extract_criterion.key_column
         fn = custom_functions[custom_extract_criterion.function]
         time_window = custom_extract_criterion.time_window
         min_date = cfg.time_conditionals[time_window].min_date
         max_date = cfg.time_conditionals[time_window].max_date
         main_table = fn(**custom_extract_criterion.args, 
-                        left_on=left_on, 
                         main_table=main_table, 
                         min_date=min_date,
                         max_date=max_date,
+                        allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID,
                         )
     return main_table
 

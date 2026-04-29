@@ -116,8 +116,6 @@ extract_criteria:
 custom_extract_criteria:
   ### Maternal characteristics
   - name: alcohol_consumption
-    key_column: b_cpr
-    match_on: m_cpr
     time_window: before_and_during_pregnancy
     function: extract_latest_value
     args:
@@ -126,14 +124,13 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
+      kay_column: b_cpr
       match_on: BABY_CPR
       target_col: "Alkohol - Antal ugentlige genstande"
       new_col_name: alcohol_consumption
       date_col: "Dato for seneste opdatering"
       dtype: string
   - name: smoking_status
-    key_column: b_cpr
-    match_on: m_cpr
     time_window: before_and_during_pregnancy
     function: extract_latest_value
     args:
@@ -142,53 +139,107 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
+      kay_column: b_cpr
       match_on: BABY_CPR
       target_col: Rygestatus
       new_col_name: smoking_status
       date_col: "Dato for seneste opdatering"
       dtype: string
-  # ### Obstetric history
-  # - name: parity
-  #   key_column: b_cpr
-  #   time_window: during_pregnancy
-  #   function: filter_values
-  #   args: 
-  #     table: 
-  #       table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-  #       table2: ${paths.input_dir_SP}/Population.csv
-  #       left_on: [MOR_CPR]
-  #       right_on: [MOR_CPR]
-  #     match_on: BABY_CPR
-  #     target_col: Para
-  #     new_col_name: current_parity
-  #     date_col: "Kontakt dato"
-  #     filters: 
-  #       - column: Para 
-  #         operator: "not_null"
-  #         value: null
-  #     dtype: integer
-  # ### Cervical conditions
-  # # cervical length
-  # - name: current_cervical_length
-  #   key_column: b_cpr
-  #   time_window: during_pregnancy
-  #   function: filter_values
-  #   args:
-  #       table: 
-  #         table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: BABY_CPR
-  #       target_col: Værdi 
-  #       new_col_name: current_cervical_length
-  #       date_col: Registreringstidspunkt
-  #       filters: 
-  #         - column: Registrering
-  #           operator: "=="
-  #           value: "Cervix i mm"
-  #       dtype: float
- 
+  ### Obstetric history
+  - name: parity
+    time_window: during_pregnancy
+    function: extract_filtered_values
+    args: 
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [MOR_CPR]
+      kay_column: b_cpr
+      match_on: BABY_CPR
+      target_col: Para
+      new_col_name: current_parity
+      date_col: "Kontakt dato"
+      filters: 
+        - column: Para 
+          operator: "not_null"
+          value: null
+      dtype: integer
+  ### Cervical conditions
+  # cervical length
+  - name: current_cervical_length
+    time_window: during_pregnancy
+    function: extract_filtered_values
+    args:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        key_column: b_cpr
+        match_on: BABY_CPR
+        target_col: Værdi 
+        new_col_name: current_cervical_length
+        date_col: Registreringstidspunkt
+        filters: 
+          - column: Registrering
+            operator: "=="
+            value: "Cervix i mm"
+        dtype: float
+  # short cervical length
+  - name: current_short_cervical_length
+    time_window: during_pregnancy
+    function: extract_filtered_conditional_values
+    args:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        key_column: b_cpr
+        left_on: b_cpr
+        right_on: BABY_CPR
+        target_col: Værdi 
+        new_col_name: current_short_cervical_length
+        date_col: Registreringstidspunkt
+        filters: 
+          - column: Registrering
+            operator: "=="
+            value: "Cervix i mm"
+        conditions:
+          - condition:
+            column: Værdi
+            operator: "<"
+            value: 25
+        dtype: float
+
+  - name: previous_short_cervical_length
+    time_window: before_pregnancy
+    function: extract_filtered_conditional_values
+    args:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        key_column: b_cpr
+        left_on: m_cpr
+        right_on: MOR_CPR
+        target_col: Værdi 
+        new_col_name: previous_short_cervical_length
+        date_col: Registreringstidspunkt
+        filters: 
+          - column: Registrering
+            operator: "=="
+            value: "Cervix i mm"
+        conditions:
+          - condition:
+            column: Værdi
+            operator: "<"
+            value: 25
+        dtype: float
+
+
 conditional_bool_criteria: []
 #   ### Maternal characteristics
 #   - name: fertility_treatment
