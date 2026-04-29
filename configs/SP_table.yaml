@@ -139,7 +139,8 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      match_on: BABY_CPR
+      left_on: b_cpr
+      right_on: BABY_CPR
       target_col: Rygestatus
       new_col_name: smoking_status
       date_col: "Dato for seneste opdatering"
