@@ -284,7 +284,7 @@ def extract_filtered_conditional_values(
     conditions,
     allow_duplicates=False,
 ):
-    tmp_table = extract_filtered_values(
+    filtered_table = extract_filtered_values(
         main_table=main_table,
         table=table,
         left_on=left_on,
@@ -303,7 +303,8 @@ def extract_filtered_conditional_values(
     condition_matches = set()
     for condition in conditions:
         py_operator = get_python_operator(condition.operator)
-        tmp_table = tmp_table.filter(py_operator(pl.col(condition.column), condition.value))
+        tmp_table = filtered_table.filter(py_operator(pl.col(condition.column), condition.value))
+        print("After filter", len(tmp_table))
         if condition.condition is None:
             last_condition = set(tmp_table[key_column])
         elif condition.condition == "and":
@@ -321,7 +322,6 @@ def extract_filtered_conditional_values(
         tmp_table.select([key_column, new_col_name]),
         on=key_column,
         how="left",
-        suffix="_new",
     ) #.with_columns(
     #     pl.coalesce([pl.col(f"{new_col_name}_new"), pl.col(new_col_name)])
     #     .alias(new_col_name)

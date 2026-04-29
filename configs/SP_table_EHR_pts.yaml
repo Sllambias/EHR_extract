@@ -649,7 +649,7 @@ custom_extract_criteria:
         left_on: b_cpr
         right_on: BABY_CPR
         target_col: Værdi 
-        new_col_name: current_short_cervix
+        new_col_name: current_short_cervix_test
         date_col: Registreringstidspunkt
         filters: 
           - column: Registrering
@@ -678,7 +678,7 @@ custom_extract_criteria:
         left_on: m_cpr
         right_on: MOR_CPR
         target_col: Værdi 
-        new_col_name: previous_short_cervix
+        new_col_name: previous_short_cervix_test
         date_col: Registreringstidspunkt
         filters: 
           - column: Registrering
