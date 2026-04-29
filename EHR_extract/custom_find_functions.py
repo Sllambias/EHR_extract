@@ -294,7 +294,7 @@ def extract_filtered_conditional_values(
         min_date=min_date,
         max_date=max_date,
         filters=filters,
-        new_col_name="tmp_col",
+        new_col_name="target_col",
         dtype=dtype,
         allow_duplicates=True,
     )
@@ -303,7 +303,7 @@ def extract_filtered_conditional_values(
     condition_matches = set()
     for condition in conditions:
         py_operator = get_python_operator(condition.operator)
-        tmp_table = tmp_table.filter(py_operator(pl.col("tmp_col"), condition.value))
+        tmp_table = tmp_table.filter(py_operator(pl.col(condition.column), condition.value))
         if condition.condition is None:
             last_condition = set(tmp_table[key_column])
         elif condition.condition == "and":

@@ -216,8 +216,7 @@ def get_conditional_bool_criteria(cfg, main_table):
         main_table = main_table.with_columns(
             pl.col(key_col).is_in(list(condition_matches)).alias(condition_name)
         )
-    return main_table
-    
+    return main_table 
 
 def table_from_cfg(cfg):
     main_table, discards = make_main_table(
@@ -225,8 +224,8 @@ def table_from_cfg(cfg):
         strict=cfg.strict,
     )
     main_table = get_extract_criteria(cfg, main_table)
-    main_table = get_custom_extract_criteria(cfg, main_table)
     main_table = get_conditional_bool_criteria(cfg, main_table)
+    main_table = get_custom_extract_criteria(cfg, main_table)
 
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
