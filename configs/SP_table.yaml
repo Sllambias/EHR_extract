@@ -666,7 +666,7 @@ custom_extract_criteria:
         left_on: b_cpr
         right_on: BABY_CPR
         target_col: Værdi 
-        new_col_name: current_short_cervix
+        new_col_name: current_short_cervix_test
         date_col: Registreringstidspunkt
         filters: 
           - column: Registrering
@@ -681,7 +681,7 @@ custom_extract_criteria:
             column: current_short_cervix
             operator: "=="
             value: True
-        dtype: float
+        dtype: boolean
   - name: previous_short_cervix
     time_window: before_pregnancy
     function: extract_filtered_conditional_values
@@ -695,7 +695,7 @@ custom_extract_criteria:
         left_on: m_cpr
         right_on: MOR_CPR
         target_col: Værdi 
-        new_col_name: previous_short_cervix
+        new_col_name: previous_short_cervix_test
         date_col: Registreringstidspunkt
         filters: 
           - column: Registrering
@@ -710,4 +710,4 @@ custom_extract_criteria:
             column: previous_short_cervix
             operator: "=="
             value: True
-        dtype: float
+        dtype: boolean

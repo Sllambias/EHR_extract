@@ -635,7 +635,7 @@ custom_extract_criteria:
             operator: "=="
             value: "Cervix i mm"
         dtype: float
-  short cervical length
+  # short cervical length
   - name: current_short_cervix
     time_window: during_pregnancy
     function: extract_filtered_conditional_values
@@ -664,7 +664,7 @@ custom_extract_criteria:
             column: current_short_cervix
             operator: "=="
             value: True
-        dtype: float
+        dtype: integer
   - name: previous_short_cervix
     time_window: before_pregnancy
     function: extract_filtered_conditional_values
@@ -693,4 +693,4 @@ custom_extract_criteria:
             column: previous_short_cervix
             operator: "=="
             value: True
-        dtype: float
+        dtype: integer
