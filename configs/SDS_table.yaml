@@ -31,11 +31,13 @@ base_table:
         birth_date_col: pregnancy_end
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
+      dtype: date
     - column: GA_weeks
       function: find_GA_weeks
       args:
         GA_days_col: GA_days
         GA_weeks_col: GA_weeks
+      dtype: integer
 
 time_conditionals:
   before_pregnancy:
@@ -109,6 +111,8 @@ extract_criteria:
         match_on: CPRnummer_Barn
         column: Paritet
     dtype: string
+
+custom_extract_criteria: []
 
 conditional_bool_criteria:
   - name: fertility_treatment
