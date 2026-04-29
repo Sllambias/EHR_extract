@@ -322,10 +322,10 @@ def extract_filtered_conditional_values(
         on=key_column,
         how="left",
         suffix="_new",
-    ).with_columns(
-        pl.coalesce([pl.col(f"{new_col_name}_new"), pl.col(new_col_name)])
-        .alias(new_col_name)
-    ).drop(f"{new_col_name}_new")
+    ) #.with_columns(
+    #     pl.coalesce([pl.col(f"{new_col_name}_new"), pl.col(new_col_name)])
+    #     .alias(new_col_name)
+    # ) #.drop(f"{new_col_name}_new")
     
     # Check for duplicates
     duplicates = main_table[key_column].value_counts().filter(pl.col("count") > 1)
