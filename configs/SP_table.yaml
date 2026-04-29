@@ -75,7 +75,7 @@ time_conditionals:
       date_col: pregnancy_start
       offset_days: 0
     max_date:
-      date_col: GA_140_date
+      date_col: pregnancy_end
       offset_days: 0
   year_before_pregnancy_and_during_pregnancy:
     min_date:
