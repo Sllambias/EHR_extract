@@ -701,11 +701,11 @@ custom_extract_criteria:
           - column: Registrering
             operator: "=="
             value: "Cervix i mm"
-        # conditions: # in relation to target_col
-        #   - condition:
-        #     column: target_col
-        #     operator: "<"
-        #     value: 25
+        conditions: # in relation to target_col
+          - condition:
+            column: target_col
+            operator: "<"
+            value: 25
         #   - condition: or
         #     column: previous_short_cervix
         #     operator: "=="
