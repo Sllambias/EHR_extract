@@ -306,7 +306,7 @@ conditional_bool_criteria:
   # cervical conization # TODO: missing mfr2
   - name: current_cervical_conization
     key_column: b_cpr
-    match_on: m_cpr
+    match_on: b_cpr
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -315,7 +315,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DZ928C", "DO344B"]
@@ -326,7 +326,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: ProcedureKode
         operator: "startswith"
         value: ["KLDC00", "KLDC03"]
