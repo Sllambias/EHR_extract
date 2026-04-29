@@ -213,8 +213,8 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
 
 def extract_filtered_values(
     main_table,
-    left_on,
     table,
+    left_on,
     right_on,
     target_col,
     date_col,
@@ -284,42 +284,45 @@ def extract_filtered_conditional_values(
     conditions,
     allow_duplicates=False,
 ):
-    filtered_table = extract_filtered_values(
-        main_table,
-        left_on,
-        table,
-        right_on,
-        target_col,
-        date_col,
-        min_date,
-        max_date,
-        filters,
-        new_col_name,
-        dtype,
+    tmp_table = extract_filtered_values(
+        main_table=main_table,
+        table=table,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        min_date=min_date,
+        max_date=max_date,
+        filters=filters,
+        new_col_name="tmp_col",
+        dtype=dtype,
         allow_duplicates=True,
     )
-    print("filtered_table", filtered_table[new_col_name].value_counts())
 
     # Convert that extracted value into a boolean using `condition`.
     condition_matches = set()
     for condition in conditions:
         py_operator = get_python_operator(condition.operator)
-        bool_expr = py_operator(pl.col(new_col_name), condition.value)
-        print("bool_expr", bool_expr)
+        tmp_table = tmp_table.filter(py_operator(pl.col("tmp_col"), condition.value))
         if condition.condition is None:
-            last_condition = set(filtered_table[left_on])
+            last_condition = set(tmp_table[key_column])
         elif condition.condition == "and":
-            last_condition = last_condition.intersection(set(filtered_table[left_on]))
+            last_condition = last_condition.intersection(set(tmp_table[key_column]))
         elif condition.condition == "or":
             condition_matches = condition_matches.union(last_condition)
-            last_condition = set(filtered_table[left_on])
+            last_condition = set(tmp_table[key_column])
         else:
             print("wow, weird condition")
     condition_matches = condition_matches.union(last_condition)
-    main_table = main_table.with_columns(
+    tmp_table = tmp_table.with_columns(
             pl.col(key_column).is_in(list(condition_matches)).alias(new_col_name)
         )
-    print("main_table", main_table[new_col_name].value_counts())
+    main_table = main_table.join(
+        tmp_table.select([key_column, new_col_name]),
+        on=key_column,
+        how="left",
+    )
+    
     # Check for duplicates
     duplicates = main_table[key_column].value_counts().filter(pl.col("count") > 1)
     if duplicates.height > 0 and not allow_duplicates:

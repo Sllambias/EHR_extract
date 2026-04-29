@@ -206,9 +206,8 @@ custom_extract_criteria:
           - column: Registrering
             operator: "=="
             value: "Cervix i mm"
-        conditions:
+        conditions: # in relation to target_col
           - condition:
-            column: Værdi
             operator: "<"
             value: 25
         dtype: float
@@ -232,9 +231,8 @@ custom_extract_criteria:
           - column: Registrering
             operator: "=="
             value: "Cervix i mm"
-        conditions:
+        conditions: # in relation to target_col
           - condition:
-            column: Værdi
             operator: "<"
             value: 25
         dtype: float
