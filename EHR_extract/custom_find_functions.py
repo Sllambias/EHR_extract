@@ -1,6 +1,6 @@
 import logging
 import polars as pl
-from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date
+from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date, get_python_operator, date_bound_expr, dtype_from_cfg
 
 
 def match_images_with_child(
@@ -193,12 +193,8 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
-    print("m_table", m_table.head())
-    print("m_table columns", m_table.columns)
 
     merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
-    print("merged", merged.head())
-    print("merged columns", merged.columns)
 
     # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
     baby_d = convert_to_date(baby_birth_date_col)
@@ -211,10 +207,107 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
-    print("merged after with columns", merged.head())
-    print("merged after with columns columns", merged.columns)
-    print("merged after select", merged.select(base_cols + [maternal_age_col]).head())
-    print("merged after select columns", merged.select(base_cols + [maternal_age_col]).columns)
 
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
+
+def filter_values(
+    main_table,
+    left_on,
+    table,
+    match_on,
+    target_col,
+    date_col,
+    min_date,
+    max_date,
+    filters,
+    new_col_name,
+    dtype,
+    allow_duplicates=True,
+):
+    table = load_table(table, strict=False)
+    right_on = match_on
+
+    # Filter
+    for filter in filters:
+        py_operator = get_python_operator(filter.operator)
+        table = table.filter(py_operator(pl.col(filter.column), filter.value))
+
+    # Merge
+    tmp_table = main_table.join(
+        table,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+    )
+
+    # Filter on time
+    event_d = convert_to_date(date_col)
+    lo = date_bound_expr(**min_date)
+    if lo is not None:
+        tmp_table = tmp_table.filter(event_d >= lo)
+    hi = date_bound_expr(**max_date)
+    if hi is not None:
+        tmp_table = tmp_table.filter(event_d <= hi)
+
+    # Filter on type
+    dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
+    
+    # Merge
+    tmp_table = tmp_table.select([left_on, target_col])
+    tmp_table = tmp_table.rename({target_col: new_col_name})
+    main_table = main_table.join(tmp_table, left_on=left_on, right_on=left_on, how="left")
+
+    # Check for duplicates
+    duplicates = main_table[left_on].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0 and not allow_duplicates:
+        raise ValueError(f"Duplicate entries for key column {left_on}. Examples: {duplicates.head(5)}")
+    else:
+        main_table = main_table.group_by(left_on).agg(pl.col("*").first())
+        assert(len(main_table[left_on].unique()) == len(main_table[left_on]))
+
+    return main_table
+
+def extract_latest_value(
+    main_table,
+    left_on,
+    table,
+    match_on,
+    target_col,
+    new_col_name,
+    date_col,
+    min_date,
+    max_date,
+    dtype,
+):
+    table = load_table(table, strict=False)
+    right_on = match_on
+
+    # Merge
+    tmp_table = main_table.join(
+        table,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+    )
+
+    # Filter on time
+    event_d = convert_to_date(date_col)
+    lo = date_bound_expr(**min_date)
+    if lo is not None:
+        tmp_table = tmp_table.filter(event_d >= lo)
+    hi = date_bound_expr(**max_date)
+    if hi is not None:
+        tmp_table = tmp_table.filter(event_d <= hi)
+
+    # Filter on type
+    dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
+    
+    # Take latest by sorting on the parsed event date.
+    tmp_table = tmp_table.sort([left_on, date_col])
+    tmp_table = tmp_table.group_by(left_on).agg(pl.col("*").last())
+    tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+
+    return main_table.join(tmp_table, on=left_on, how="left")

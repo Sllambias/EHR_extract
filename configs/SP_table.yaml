@@ -27,6 +27,12 @@ base_table:
   key_columns: [b_cpr, m_cpr, GA_weeks, pregnancy_end]
   dtypes: {b_cpr: string, m_cpr: string, GA_weeks: string, pregnancy_end: date}
   add_columns:
+    - column: GA_days
+      function: find_GA_days
+      args:
+        GA_weeks_col: GA_weeks
+        GA_days_col: GA_days
+      dtype: integer
     - column: pregnancy_start
       function: find_pregnancy_start
       args:
@@ -34,12 +40,6 @@ base_table:
         GA_days_col: GA_days
         pregnancy_start_col: pregnancy_start
       dtype: date
-    - column: GA_days
-      function: find_GA_days
-      args:
-        GA_weeks_col: GA_weeks
-        GA_days_col: GA_days
-      dtype: integer
     - column: GA_140_date
       function: find_date_at_GA
       args:
@@ -116,43 +116,66 @@ extract_criteria:
   #       column: Tobaksforbrug
   #   dtype: string
 
-conditional_extract_criteria:
-   ### Obstetric history
+custom_extract_criteria:
+  ### Maternal characteristics
+  - name: smoking_status
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_pregnancy
+    function: extract_latest_value
+    args:
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [MOR_CPR]
+      match_on: BABY_CPR
+      target_col: "Alkohol - Antal ugentlige genstande"
+      new_col_name: smoking_status
+      date_col: "Dato for seneste opdatering"
+      dtype: string
+  ### Obstetric history
   - name: parity
     key_column: b_cpr
-    match_on: m_cpr
     time_window: during_pregnancy
-    conditions:
-      - condition:
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: MOR_CPR
-        column: Para
-        date_col: "Kontakt dato"
-        filter: null
+    function: filter_values
+    args: 
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [CPR_MOR]
+      match_on: CPR_BARN
+      target_col: Para
+      new_col_name: current_parity
+      date_col: "Kontakt dato"
+      filters: 
+        - column: Para 
+          operator: "not_null"
+          value: null
+      dtype: integer
   ### Cervical conditions
+  # cervical length
   - name: current_cervical_length
     key_column: b_cpr
-    match_on: m_cpr
     time_window: during_pregnancy
-    conditions:
-      - condition:
+    function: filter_values
+    args:
         table: 
           table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: MOR_CPR
-        column: Værdi 
+          right_on: [CPR_MOR]
+        match_on: CPR_BARN
+        target_col: Værdi 
+        new_col_name: current_cervical_length
         date_col: Registreringstidspunkt
-        filter: 
-          column: Registrering
-          operator: "=="
-          value: "Cervix i mm"
-
+        filters: 
+          - column: Registrering
+            operator: "=="
+            value: "Cervix i mm"
+        dtype: float
+ 
 conditional_bool_criteria:
   ### Maternal characteristics
   - name: fertility_treatment

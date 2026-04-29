@@ -9,6 +9,8 @@ from EHR_extract.custom_find_functions import (
     find_GA_weeks,
     find_date_at_GA,
     find_maternal_age,
+    filter_values,
+    extract_latest_value,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
@@ -31,6 +33,8 @@ custom_functions = {
     "find_GA_weeks": find_GA_weeks,
     "find_date_at_GA": find_date_at_GA,
     "find_maternal_age": find_maternal_age,
+    "filter_values": filter_values,
+    "extract_latest_value": extract_latest_value,
 }
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = True
@@ -143,46 +147,19 @@ def get_extract_criteria(cfg, main_table):
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
-def get_conditional_extract_criteria(cfg, main_table):
-    for conditional_extract_criterion in cfg.conditional_extract_criteria:
-        extract_table = pl.DataFrame()
-        left_on = conditional_extract_criterion.match_on
-        time_window = conditional_extract_criterion.time_window
+def get_custom_extract_criteria(cfg, main_table):
+    for custom_extract_criterion in cfg.custom_extract_criteria:
+        left_on = custom_extract_criterion.key_column
+        fn = custom_functions[custom_extract_criterion.function]
+        time_window = custom_extract_criterion.time_window
         min_date = cfg.time_conditionals[time_window].min_date
         max_date = cfg.time_conditionals[time_window].max_date
-        for condition in conditional_extract_criterion.conditions:
-            print("Extracting:", conditional_extract_criterion.name)
-            print("\tTable:", condition.table)
-            table = load_table(condition.table, strict=cfg.strict)
-            right_on = condition.match_on
-
-            # Filter on operator
-            if condition.filter is not None:
-                py_operator = get_python_operator(condition.filter.operator)
-                table = table.filter(
-                    py_operator(pl.col(condition.filter.column), condition.filter.value)
-                )
-
-            # Merge
-            tmp_table = main_table.join(
-                table,
-                left_on=left_on,
-                right_on=right_on,
-                how="left",
-            )
-
-            # Filter on time 
-            event_d = convert_to_date(condition.date_col, date_format="%Y-%m-%d")
-            lo = date_bound_expr(**min_date)
-            if lo is not None:
-                tmp_table = tmp_table.filter(event_d >= lo)
-            hi = date_bound_expr(**max_date)
-            if hi is not None:
-                tmp_table = tmp_table.filter(event_d <= hi)
-
-            tmp_table = tmp_table.select([left_on, condition.column]).rename({condition.column: conditional_extract_criterion.name})
-            extract_table = extract_table.vstack(tmp_table)
-            main_table = main_table.join(extract_table, on=left_on, how="left")
+        main_table = fn(**custom_extract_criterion.args, 
+                        left_on=left_on, 
+                        main_table=main_table, 
+                        min_date=min_date,
+                        max_date=max_date,
+                        )
     return main_table
 
 def get_conditional_bool_criteria(cfg, main_table):
@@ -246,14 +223,8 @@ def table_from_cfg(cfg):
         cfg.base_table,
         strict=cfg.strict,
     )
-    print("After main table:", main_table.columns)
-    print(main_table.head())
     main_table = get_extract_criteria(cfg, main_table)
-    print("After extract criteria:", main_table.columns)
-    print(main_table.head())
-    main_table = get_conditional_extract_criteria(cfg, main_table)
-    print("After conditional extract criteria:", main_table.columns)
-    print(main_table.head())
+    main_table = get_custom_extract_criteria(cfg, main_table)
     main_table = get_conditional_bool_criteria(cfg, main_table)
 
     summary_cfg = cfg.get("summary_table")

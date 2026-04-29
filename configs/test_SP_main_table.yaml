@@ -89,40 +89,62 @@ extract_criteria:
 
 conditional_bool_criteria: []
 
-conditional_extract_criteria:
-   ### Obstetric history
+custom_extract_criteria:
+   ## Obstetric history
   - name: parity
     key_column: b_cpr
-    match_on: m_cpr
     time_window: during_pregnancy
-    conditions:
-      - condition:
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [CPR_MOR]
-        match_on: MOR_CPR
-        column: Para
-        date_col: "Kontakt dato"
-        filter: null
+    function: filter_values
+    args: 
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [CPR_MOR]
+      match_on: CPR_BARN
+      target_col: Para
+      new_col_name: current_parity
+      date_col: "Kontakt dato"
+      filters: 
+        - column: Para 
+          operator: "not_null"
+          value: null
+      dtype: integer
 
   ### Cervical conditions
   - name: cervical_length
     key_column: b_cpr
-    match_on: m_cpr
     time_window: during_pregnancy
-    conditions:
-      - condition:
+    function: filter_values
+    args:
         table: 
           table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [MOR_CPR]
           right_on: [CPR_MOR]
-        match_on: MOR_CPR
-        column: Værdi 
+        match_on: CPR_BARN
+        target_col: Værdi 
+        new_col_name: current_cervical_length
         date_col: Registreringstidspunkt
-        filter: 
-          column: Registrering
-          operator: "=="
-          value: "Cervix i mm"
+        filters: 
+          - column: Registrering
+            operator: "=="
+            value: "Cervix i mm"
+        dtype: float
+ 
+  ### Smoking status
+  - name: smoking_status
+    key_column: b_cpr
+    time_window: before_pregnancy
+    function: extract_latest_value
+    args:
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [CPR_MOR]
+      match_on: CPR_BARN
+      target_col: "Alkohol - Antal ugentlige genstande"
+      new_col_name: smoking_status
+      date_col: "Dato for seneste opdatering"
+      dtype: string
