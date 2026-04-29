@@ -679,8 +679,8 @@ custom_extract_criteria:
             value: 25
           - condition: or
             column: current_short_cervix
-            operator: "=="
-            value: True
+            operator: "is_true"
+            value: 
         dtype: float
   - name: previous_short_cervix
     time_window: before_pregnancy
@@ -708,6 +708,6 @@ custom_extract_criteria:
             value: 25
           - condition: or
             column: previous_short_cervix
-            operator: "=="
-            value: True
+            operator: "is_true"
+            value: 
         dtype: float

@@ -59,6 +59,10 @@ def get_python_operator(operator_str):
         return lambda col, val: col.is_not_null()
     elif operator_str == "startswith":
         return expr_startswith
+    elif operator_str == "is_true":
+        return lambda col, val: col.cast(pl.Boolean, strict=False) == True
+    elif operator_str == "is_false":
+        return lambda col, val: col.cast(pl.Boolean, strict=False) == False
     else:
         raise NotImplementedError(f"Unknown operator: {operator_str}")
 
