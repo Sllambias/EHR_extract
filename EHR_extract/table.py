@@ -213,6 +213,7 @@ def get_conditional_bool_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
+            
             # Filter on time 
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)

@@ -143,26 +143,25 @@ conditional_extract_criteria:
         column: Para
         date_col: "Kontakt dato"
         filter: null
-
-  # ### Cervical conditions
-  # - name: cervical_length
-  #   key_column: b_cpr
-  #   match_on: m_cpr
-  #   time_window: during_pregnancy
-  #   conditions:
-  #     - condition:
-  #       table: 
-  #         table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: MOR_CPR
-  #       column: Værdi 
-  #       date_col: Registreringstidspunkt
-  #       filter: 
-  #         column: Registrering
-  #         operator: "=="
-  #         value: "Cervix i mm"
+  ### Cervical conditions
+  - name: current_cervical_length
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Værdi 
+        date_col: Registreringstidspunkt
+        filter: 
+          column: Registrering
+          operator: "=="
+          value: "Cervix i mm"
 
 conditional_bool_criteria:
   ### Maternal characteristics
@@ -304,7 +303,6 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
         date_col: Noteret_dato
-  # TODO get the info from history
   - name: previous_c_section
     key_column: b_cpr
     match_on: m_cpr
@@ -321,6 +319,17 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["KMCA10A", "KMCA10D", "KMCA10E"]
         date_col: ServiceDate
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: "Udslettet dato/tid"
+        operator: "not_null"
+        value: 
+        date_col: Noteret_dato
   - name: previous_preclampsia
     key_column: b_cpr
     match_on: m_cpr
@@ -338,197 +347,52 @@ conditional_bool_criteria:
         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
         date_col: Noteret_dato
 
-#   ### Obstetric history
-#   # parity
-#   - name: current_ptb
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: during_pregnancy
-#     conditions:
-#       - condition:
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: GESTATIONSALDER_DAGE
-#         operator: "<"
-#         value: 259
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table: ${paths.input_dir_SDS}/nyfoedte.csv
-#         match_on: CPRnummer_Mor
-#         column: Gestationsalder
-#         operator: "<"
-#         value: 259
-#         date_col: FoedselsDato_Barn
-#   # previous ptb
-#   - name: previous_ptb
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: before_pregnancy
-#     conditions:
-#       - condition:
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: GESTATIONSALDER_DAGE
-#         operator: "<"
-#         value: 259
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table: ${paths.input_dir_SDS}/nyfoedte.csv
-#         match_on: CPRnummer_Mor
-#         column: Gestationsalder
-#         operator: "<"
-#         value: 259
-#         date_col: FoedselsDato_Barn
-#   # previous late_miscarriage
-#   - name: previous_late_miscarriage
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: before_pregnancy
-#     conditions:
-#       - condition:
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: GESTATIONSALDER_DAGE
-#         operator: "<"
-#         value: 154
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table: ${paths.input_dir_SDS}/nyfoedte.csv
-#         match_on: CPRnummer_Mor
-#         column: Gestationsalder
-#         operator: "<"
-#         value: 154
-#         date_col: FoedselsDato_Barn
-#       - condition: and
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: GESTATIONSALDER_DAGE
-#         operator: ">"
-#         value: 84
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table: ${paths.input_dir_SDS}/nyfoedte.csv
-#         match_on: CPRnummer_Mor
-#         column: Gestationsalder
-#         operator: ">"
-#         value: 84
-#         date_col: FoedselsDato_Barn
-#   # previous pprom
-#   - name: previous_pprom
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: before_pregnancy
-#     conditions:
-#       - condition:
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: PPROM
-#         operator: "startswith"
-#         value: ["DO4"]
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table:
-#           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
-#           table2: ${paths.input_dir_SDS}/nyfoedte.csv
-#           left_on: DW_EK_Foedsel
-#           right_on: DW_EK_Foedsel
-#         match_on: CPRnummer_Mor
-#         column: DiagnoseKode
-#         operator: "startswith"
-#         value: ["DO422", "DO420", "DO424"]
-#         date_col: FoedselsDato_Barn
-#   # previous short_cervix
-#   # previous c_section
-#   - name: previous_c_section
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: before_pregnancy
-#     conditions:
-#       - condition:
-#         table: ${paths.input_dir_SDS}/mfr.csv
-#         match_on: CPR_MODER
-#         column: MARKOER_KEJSERSNIT
-#         operator: "=="
-#         value: "1"
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table: ${paths.input_dir_SDS}/nyfoedte.csv
-#         match_on: CPRnummer_Mor
-#         column: Kejsersnit
-#         operator: "!="
-#         value: "-1"
-#         date_col: FoedselsDato_Barn
-#       - condition: or
-#         table: 
-#           table1: ${paths.input_dir_SDS}/kejsersnit.csv
-#           table2: ${paths.input_dir_SDS}/mfr.csv
-#           left_on: FK_MFR
-#           right_on: PK_MFR
-#         match_on: CPR_MODER
-#         column: SKSKODE
-#         operator: "startswith"
-#         value: ["KMCA"]
-#         date_col: FOEDSELSDATO
-#   # previous preclampsia
-#   - name: previous_preclampsia
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: before_pregnancy
-#     conditions:
-#       - condition:
-#         table: 
-#           table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
-#           table2: ${paths.input_dir_SDS}/mfr.csv
-#           left_on: FK_MFR
-#           right_on: PK_MFR
-#         match_on: CPR_MODER
-#         column: SKSKODE
-#         operator: "startswith"
-#         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
-#         date_col: FOEDSELSDATO
-#       - condition: or
-#         table:
-#           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
-#           table2: ${paths.input_dir_SDS}/nyfoedte.csv
-#           left_on: DW_EK_Foedsel
-#           right_on: DW_EK_Foedsel
-#         match_on: CPRnummer_Mor
-#         column: DiagnoseKode
-#         operator: "startswith"
-#         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
-#         date_col: FoedselsDato_Barn
 
-#   ### Current pregnancy (cervical)
-#   # cervical conization # TODO: missing mfr2
-#   - name: current_cervical_conization
-#     key_column: b_cpr
-#     match_on: m_cpr
-#     time_window: during_pregnancy
-#     conditions:
-#       - condition:
-#         table:
-#           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
-#           table2: ${paths.input_dir_SDS}/nyfoedte.csv
-#           left_on: DW_EK_Foedsel
-#           right_on: DW_EK_Foedsel
-#         match_on: CPRnummer_Mor
-#         column: DiagnoseKode
-#         operator: "startswith"
-#         value: ["DZ928C", "DO344B"]
-#         date_col: FoedselsDato_Barn
-#       - condition: or
-#         table:
-#           table1: ${paths.input_dir_SDS}/mor_procedurer.csv
-#           table2: ${paths.input_dir_SDS}/nyfoedte.csv
-#           left_on: DW_EK_Foedsel
-#           right_on: DW_EK_Foedsel
-#         match_on: CPRnummer_Mor
-#         column: ProcedureKode
-#         operator: "startswith"
-#         value: ["KLDC00", "KLDC03"]
-#         date_col: FoedselsDato_Barn
-#   # cervical length #TODO missing
-#   # short cervix #TODO missing
+  ### Current pregnancy (cervical)
+  - name: current_cervical_conization
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table:
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DZ928C", "DO344B"]
+        date_col: Noteret_dato
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: ProcedureCode
+        operator: "startswith"
+        value: ["KLDC00", "KLDC03"]
+        date_col: ServiceDate
+  - name: current_short_cervix  
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: during_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
+        date_col: Noteret_dato
+  # cervical length #TODO missing
 
 #   ### Current pregnancy (mechanical)
 #   # multiple pregnancies
