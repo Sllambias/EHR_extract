@@ -124,8 +124,8 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      kay_column: b_cpr
-      match_on: BABY_CPR
+      left_on: b_cpr
+      right_on: BABY_CPR
       target_col: "Alkohol - Antal ugentlige genstande"
       new_col_name: alcohol_consumption
       date_col: "Dato for seneste opdatering"
@@ -139,7 +139,6 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      kay_column: b_cpr
       match_on: BABY_CPR
       target_col: Rygestatus
       new_col_name: smoking_status
@@ -155,8 +154,8 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      kay_column: b_cpr
-      match_on: BABY_CPR
+      left_on: b_cpr
+      right_on: BABY_CPR
       target_col: Para
       new_col_name: current_parity
       date_col: "Kontakt dato"
@@ -176,8 +175,8 @@ custom_extract_criteria:
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [MOR_CPR]
           right_on: [MOR_CPR]
-        key_column: b_cpr
-        match_on: BABY_CPR
+        left_on: b_cpr
+        right_on: BABY_CPR
         target_col: Værdi 
         new_col_name: current_cervical_length
         date_col: Registreringstidspunkt
