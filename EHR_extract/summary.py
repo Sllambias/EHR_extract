@@ -72,6 +72,7 @@ def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
     print(f"Sampling {n_draw} rows from {sampled_table.height} rows")
     sampled_table = sampled_table.sample(n=n_draw, shuffle=True)
     n_row = sampled_table.height
+    print(f"Number of rows: {n_row}")
     rows = []
     for col in sampled_table.columns:
         series = sampled_table.get_column(col)
