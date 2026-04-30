@@ -589,17 +589,17 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["KMAC", "BKHD2"]
         date_col: ServiceDate
-      - condition: or 
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: Diagnosekode
-        operator: "startswith"
-        value: ["DO837", "DO847"]
-        date_col: Noteret_dato
+      # - condition: or 
+      #   table: 
+      #     table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+      #     table2: ${paths.input_dir_SP}/Population.csv
+      #     left_on: [MOR_CPR]
+      #     right_on: [MOR_CPR]
+      #   match_on: BABY_CPR
+      #   column: Diagnosekode
+      #   operator: "startswith"
+      #   value: ["DO837", "DO847"]
+      #   date_col: Noteret_dato
 
 custom_extract_criteria:
   ### Maternal characteristics
