@@ -271,7 +271,7 @@ conditional_bool_criteria:
         match_on: MOR_CPR
         column: ProcedureCode
         operator: "startswith"
-        value: ["KMCA10A", "KMCA10D", "KMCA10E"]
+        value: ["KMCA"]
         date_col: ServiceDate
       # - condition: or
       #   table: 
