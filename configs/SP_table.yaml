@@ -586,8 +586,8 @@ conditional_bool_criteria:
           right_on: [MOR_CPR]
         match_on: BABY_CPR
         column: ProcedureCode
-        operator: "startswith"
-        value: ["KMAC00", "KMAC96A", "BKHD2"]
+        operator: "in"
+        value: ["KMAC00", "KMAC96A", "BKHD2", "BKHD20"]
         date_col: ServiceDate
       - condition: or 
         table: 
