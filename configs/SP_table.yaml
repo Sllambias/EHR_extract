@@ -567,18 +567,18 @@ conditional_bool_criteria:
     match_on: b_cpr
     time_window: during_pregnancy
     conditions:
-      - condition:
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [BABY_Fødsel_ID]
-          right_on: [BABY_Fødsel_ID]
-        match_on: BABY_CPR
-        column: "Måde"
-        operator: "startswith"
-        value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
-        date_col: Fødselstidspunkt
-      - condition: or
+      # - condition:
+      #   table: 
+      #     table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+      #     table2: ${paths.input_dir_SP}/Population.csv
+      #     left_on: [BABY_Fødsel_ID]
+      #     right_on: [BABY_Fødsel_ID]
+      #   match_on: BABY_CPR
+      #   column: "Måde"
+      #   operator: "startswith"
+      #   value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
+      #   date_col: Fødselstidspunkt
+      - condition: 
         table:
           table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
           table2: ${paths.input_dir_SP}/Population.csv
