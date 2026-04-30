@@ -557,17 +557,17 @@ conditional_bool_criteria:
     match_on: b_cpr
     time_window: during_pregnancy
     conditions:
-      # - condition:
-      #   table: 
-      #     table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-      #     table2: ${paths.input_dir_SP}/Population.csv
-      #     left_on: [BABY_Fødsel_ID]
-      #     right_on: [BABY_Fødsel_ID]
-      #   match_on: BABY_CPR
-      #   column: "Måde"
-      #   operator: "startswith"
-      #   value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
-      #   date_col: Fødselstidspunkt
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [BABY_Fødsel_ID]
+          right_on: [BABY_Fødsel_ID]
+        match_on: BABY_CPR
+        column: "Måde"
+        operator: "startswith"
+        value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
+        date_col: Fødselstidspunkt
       - condition: 
         table:
           table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
@@ -576,20 +576,21 @@ conditional_bool_criteria:
           right_on: [MOR_CPR]
         match_on: BABY_CPR
         column: ProcedureCode
-        operator: "startswith"
-        value: ["KMAC", "BKHD2"]
+        operator: "in"
+        value: ["KMAC00", "KMAC96A", "BKHD2", "BKHD20"]
         date_col: ServiceDate
-      # - condition: or 
-      #   table: 
-      #     table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-      #     table2: ${paths.input_dir_SP}/Population.csv
-      #     left_on: [MOR_CPR]
-      #     right_on: [MOR_CPR]
-      #   match_on: BABY_CPR
-      #   column: Diagnosekode
-      #   operator: "startswith"
-      #   value: ["DO837", "DO847"]
-      #   date_col: Noteret_dato
+      - condition: or 
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: BABY_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO837", "DO847"]
+        date_col: Noteret_dato
+
 
 custom_extract_criteria:
   ### Maternal characteristics
