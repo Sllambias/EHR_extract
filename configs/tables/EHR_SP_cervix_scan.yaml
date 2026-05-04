@@ -65,21 +65,28 @@ time_conditionals:
       date_col: pregnancy_start
       offset_days: 0
     max_date:
-      date_col: scan_date
-      offset_days: 0
-  year_before_pregnancy_and_during_pregnancy:
-    min_date:
-      date_col: pregnancy_start
-      offset_days: -365
-    max_date:
-      date_col: scan_date
+      date_col: GA_140_date
       offset_days: 0
   before_and_during_pregnancy:
     min_date:
       date_col: null
       offset_days: 0
     max_date:
-      date_col: scan_date
+      date_col: GA_140_date
+      offset_days: 0
+  year_before_pregnancy_and_during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: -365
+    max_date:
+      date_col: GA_140_date
+      offset_days: 0
+  two_years_before_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: -730
+    max_date:
+      date_col: pregnancy_start
       offset_days: 0
 
 
@@ -91,6 +98,7 @@ extract_criteria:
       - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
         match_on: MOR_CPR
         column: Etnicitet
+        date_col: "Dato for seneste opdatering"
     dtype: string
   - name: maternal_BMI
     key_column: b_cpr
@@ -102,6 +110,7 @@ extract_criteria:
           right_on: [BABY_Fødsel_ID]
         match_on: BABY_CPR
         column: "Vægt før graviditet"
+        date_col: Fødselstidspunkt
     dtype: float
     ## vægt fra vitale_parametre. 
 
@@ -692,6 +701,26 @@ custom_extract_criteria:
           operator: "in"
           value: ["PAPP A (DOUBLETEST);P"]
       dtype: float
+  - name: lab_bmi
+    time_window: two_years_before_pregnancy_and_during_pregnancy
+    function: extract_filtered_values
+    args:
+      table: 
+        table1: ${paths.input_dir_SP}/Mor - CPMI - Vital parametre.csv
+        table2: ${paths.input_dir_SP}/Population.csv
+        left_on: [MOR_CPR]
+        right_on: [MOR_CPR]
+      left_on: b_cpr
+      right_on: BABY_CPR
+      target_col: Værdi
+      new_col_name: lab_bmi
+      date_col: Registreringstidspunkt
+      filters:
+        - column: Vital_parametre
+          operator: "startswith"
+          value: ["BMI"]
+      dtype: float
+
   # # short cervical length
   # - name: current_short_cervix
   #   time_window: during_pregnancy

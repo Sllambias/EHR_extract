@@ -208,14 +208,6 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
-    dup_babies = merged.group_by(key_column).len().filter(pl.col("len") > 1)
-    if dup_babies.height > 0:
-        sample = dup_babies[key_column].head(5).to_list()
-        logging.warning(
-            "find_maternal_age: still %s duplicate %s after deduping mother table — duplicate rows already in `table`?",
-            dup_babies.height,
-            key_column,
-        )
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
