@@ -41,14 +41,19 @@ custom_functions = {
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = False
 
-def check_duplicates(table, key_column, allow_duplicates=False):
-    duplicates = table[key_column].value_counts().filter(pl.col("count") > 1)
+def check_duplicates(table, population_column, allow_duplicates=False):
+    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
     if duplicates.height > 0:
         if not allow_duplicates:
-            raise ValueError(f"Duplicate entries for key column {key_column}. Examples: {duplicates.head(5)}")
+            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
         else:
-            table = table.group_by(key_column).agg(pl.col("*").first())
-            assert(len(table[key_column].unique()) == len(table[key_column]))
+            table = table.group_by(population_column).agg(pl.col("*").first())
+            assert(len(table[population_column].unique()) == len(table[population_column]))
+    return table
+
+def take_latest_row(table, key_column, date_col):
+    table = table.sort([key_column, date_col])
+    table = table.group_by(key_column).agg(pl.col("*").last())
     return table
 
 def cast_types(table, dtype, column):
@@ -145,7 +150,7 @@ def get_extract_criteria(cfg, main_table):
             ).drop_nulls(extract_criterion.name).select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
 
-        extract_table = check_duplicates(extract_table, extract_criterion.key_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
+        extract_table = take_latest_row(extract_table, left_on, extract_criterion.date_col)
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 
