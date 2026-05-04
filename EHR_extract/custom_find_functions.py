@@ -1,21 +1,6 @@
 import logging
 import polars as pl
-from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date, get_python_operator, date_bound_expr, dtype_from_cfg
-
-def check_duplicates(table, population_column, allow_duplicates=False):
-    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
-    if duplicates.height > 0:
-        if not allow_duplicates:
-            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
-        else:
-            table = table.group_by(population_column).agg(pl.col("*").first())
-            assert(len(table[population_column].unique()) == len(table[population_column]))
-    return table
-
-def take_latest_row(table, key_column, date_col):
-    table = table.sort([key_column, date_col])
-    table = table.group_by(key_column).agg(pl.col("*").last())
-    return table
+from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date, get_python_operator, date_bound_expr, dtype_from_cfg, check_duplicates, take_latest_row
 
 def match_images_with_child(
     population, table_cfg, study_date_key="STUDY_DATE", mom_key="CPR_MOR", birthday_key="BIRTHDAY", ga_key="GA"

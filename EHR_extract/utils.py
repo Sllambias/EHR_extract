@@ -1,6 +1,22 @@
 import polars as pl
 import json
 
+
+def check_duplicates(table, population_column, allow_duplicates=False):
+    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0:
+        if not allow_duplicates:
+            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
+        else:
+            table = table.group_by(population_column).agg(pl.col("*").first())
+            assert(len(table[population_column].unique()) == len(table[population_column]))
+    return table
+
+def take_latest_row(table, key_column, date_col):
+    table = table.sort([key_column, date_col])
+    table = table.group_by(key_column).agg(pl.col("*").last())
+    return table
+    
 def load_table_path(path, strict=True, n_rows=None, has_header=True):
     if strict:
         ignore_errors = False
