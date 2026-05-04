@@ -190,7 +190,7 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     )
     return table
 
-def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, maternal_age_col: str):
+def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, key_column: str, match_on: str, maternal_age_col: str):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
 
@@ -207,7 +207,7 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
-
+    table = table.join(merged, left_on=key_column, right_on=match_on, how="left")
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
