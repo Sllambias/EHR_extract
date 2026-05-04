@@ -141,9 +141,7 @@ def get_extract_criteria(cfg, main_table):
             tmp_table = tmp_table.select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
 
-        extract_table = check_duplicates(extract_table, left_on, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
         main_table = main_table.join(extract_table, on=left_on, how="left")
-        main_table = check_duplicates(main_table, left_on, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
     return main_table
 
 def get_custom_extract_criteria(cfg, main_table):
