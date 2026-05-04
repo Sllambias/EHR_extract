@@ -2,6 +2,7 @@ import logging
 import polars as pl
 from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date, get_python_operator, date_bound_expr, dtype_from_cfg, check_duplicates, take_latest_row
 
+
 def match_images_with_child(
     population, table_cfg, study_date_key="STUDY_DATE", mom_key="CPR_MOR", birthday_key="BIRTHDAY", ga_key="GA"
 ):
@@ -231,7 +232,6 @@ def extract_filtered_values(
         py_operator = get_python_operator(filter.operator)
         table = table.filter(py_operator(pl.col(filter.column), filter.value))
 
-    # Merge
     tmp_table = main_table.join(
         table,
         left_on=left_on,
@@ -251,16 +251,13 @@ def extract_filtered_values(
     # Filter on type
     dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
-    
-    # Merge
+
     tmp_table = take_latest_row(tmp_table, left_on, date_col)
-    tmp_table = tmp_table.select([left_on, target_col])
-    tmp_table = tmp_table.rename({target_col: new_col_name})
+    tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+    tmp_table = check_duplicates(tmp_table, left_on, allow_duplicates=allow_duplicates)
+
     main_table = main_table.join(tmp_table, left_on=left_on, right_on=left_on, how="left")
-
-    # Check for duplicates
     main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
-
     return main_table
 
 def extract_filtered_conditional_values(
@@ -346,7 +343,6 @@ def extract_latest_value(
 ):
     table = load_table(table, strict=False)
 
-    # Merge
     tmp_table = main_table.join(
         table,
         left_on=left_on,
@@ -367,9 +363,7 @@ def extract_latest_value(
     dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
 
-    # Take latest by sorting on the parsed event date.
-    tmp_table = tmp_table.sort([left_on, date_col])
-    tmp_table = tmp_table.group_by(left_on).agg(pl.col("*").last())
+    tmp_table = take_latest_row(tmp_table, left_on, date_col)
     tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
 
     return main_table.join(tmp_table, on=left_on, how="left")
