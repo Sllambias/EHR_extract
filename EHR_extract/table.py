@@ -148,7 +148,7 @@ def get_extract_criteria(cfg, main_table):
             ).select([left_on, source.column, source.date_col]).rename({source.column: extract_criterion.name})
             tmp_table = tmp_table.with_columns(
                 pl.col(extract_criterion.name).cast(dtype, strict=False)
-            ).drop_nulls(extract_criterion.name).select([left_on, extract_criterion.name])
+            ).drop_nulls(extract_criterion.name)
             tmp_table = take_latest_row(tmp_table, left_on, source.date_col)
             tmp_table = tmp_table.select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
