@@ -190,42 +190,12 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     )
     return table
 
-def find_maternal_age(
-    table,
-    m_table_path,
-    maternal_birth_date_col: str,
-    maternal_id_col: str,
-    baby_birth_date_col: str,
-    maternal_age_col: str,
-    key_column: str = "b_cpr",
-    baby_mother_id_col: str = "m_cpr",
-):
+def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, key_column: str, maternal_age_col: str):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
+    m_table = m_table.unique(subset=[maternal_id_col], keep="first")
 
-    dup_mother_ids = (
-        m_table.group_by(maternal_id_col)
-        .len()
-        .filter(pl.col("len") > 1)
-        .sort("len", descending=True)
-    )
-    if dup_mother_ids.height > 0:
-        sample_ids = dup_mother_ids[maternal_id_col].head(8).to_list()
-        examples = m_table.filter(pl.col(maternal_id_col).is_in(sample_ids)).sort(maternal_id_col)
-        logging.info(
-            "find_maternal_age: mother lookup has %s %s values with >1 row (allowed). "
-            "Output will be one row per %s (first match after sort order).",
-            dup_mother_ids.height,
-            maternal_id_col,
-            key_column,
-        )
-        print(
-            "find_maternal_age: sample mother-ID rows in lookup (multiple per ID is OK):\n",
-            examples,
-            sep="",
-        )
-
-    merged = table.join(m_table, left_on=baby_mother_id_col, right_on=maternal_id_col, how="left")
+    merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
 
     # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
     baby_d = convert_to_date(baby_birth_date_col)
@@ -238,30 +208,14 @@ def find_maternal_age(
     merged = merged.with_columns(
         (years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col)
     )
-
-    dup_child = merged.group_by(key_column).len().filter(pl.col("len") > 1)
-    if dup_child.height > 0:
-        sample = dup_child[key_column].head(5).to_list()
+    dup_babies = merged.group_by(key_column).len().filter(pl.col("len") > 1)
+    if dup_babies.height > 0:
+        sample = dup_babies[key_column].head(5).to_list()
         logging.warning(
-            "find_maternal_age: collapsing %s %s values with multiple rows to one row each (keep=\"first\").",
-            dup_child.height,
+            "find_maternal_age: still %s duplicate %s after deduping mother table — duplicate rows already in `table`?",
+            dup_babies.height,
             key_column,
         )
-        print(
-            "find_maternal_age: duplicate child keys before collapse (sample):\n",
-            merged.filter(pl.col(key_column).is_in(sample))
-            .sort(key_column)
-            .select(base_cols + [maternal_age_col]),
-            sep="",
-        )
-
-    # One row per child: among duplicate matches (many mother rows × join), keep a deterministic row.
-    merged = merged.sort(
-        [key_column, maternal_birth_date_col],
-        descending=[False, True],
-        nulls_last=True,
-    ).unique(subset=[key_column], keep="first")
-
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
