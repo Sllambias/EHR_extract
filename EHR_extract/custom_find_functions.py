@@ -253,13 +253,12 @@ def extract_filtered_values(
     tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
     
     # Merge
+    tmp_table = take_latest_row(tmp_table, left_on, date_col)
     tmp_table = tmp_table.select([left_on, target_col])
     tmp_table = tmp_table.rename({target_col: new_col_name})
     main_table = main_table.join(tmp_table, left_on=left_on, right_on=left_on, how="left")
 
     # Check for duplicates
-    main_table = take_latest_row(main_table, left_on, date_col)
-    main_table = main_table.select([left_on, target_col]).rename({target_col: new_col_name})
     main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
 
     return main_table
