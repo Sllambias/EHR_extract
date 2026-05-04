@@ -1,3 +1,4 @@
+from pydoc import source_synopsis
 import hydra
 import json
 import polars as pl
@@ -144,14 +145,15 @@ def get_extract_criteria(cfg, main_table):
                 left_on=left_on,
                 right_on=right_on,
                 how="left",
-            ).select([left_on, source.column, extract_criterion.date_col]).rename({source.column: extract_criterion.name})
+            ).select([left_on, source.column, source.date_col]).rename({source.column: extract_criterion.name})
             tmp_table = tmp_table.with_columns(
                 pl.col(extract_criterion.name).cast(dtype, strict=False)
             ).drop_nulls(extract_criterion.name).select([left_on, extract_criterion.name])
+            tmp_table = take_latest_row(tmp_table, left_on, source.date_col)
+            tmp_table = tmp_table.select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
 
-        extract_table = take_latest_row(extract_table, left_on, extract_criterion.date_col)
-        extract_table = extract_table.select([left_on, extract_criterion.name])
+        extract_table = check_duplicates(extract_table, left_on, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
 

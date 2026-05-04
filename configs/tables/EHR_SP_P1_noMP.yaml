@@ -94,11 +94,11 @@ extract_criteria:
   ### Maternal characteristics
   - name: ethnicity
     key_column: m_cpr
-    date_col: "Dato for seneste opdatering"
     sources:
       - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
         match_on: MOR_CPR
         column: Etnicitet
+        date_col: "Dato for seneste opdatering"
     dtype: string
   - name: maternal_BMI
     key_column: b_cpr
