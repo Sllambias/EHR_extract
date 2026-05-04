@@ -50,7 +50,6 @@ base_table:
         maternal_id_col: MOR_CPR
         baby_birth_date_col: pregnancy_start
         key_column: b_cpr
-        match_on: BABY_CPR
         maternal_age_col: maternal_age
       dtype: integer
 
