@@ -102,7 +102,6 @@ extract_criteria:
     dtype: string
   - name: maternal_BMI
     key_column: b_cpr
-    date_col: Fødselstidspunkt
     sources:
       - table: 
           table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
@@ -111,6 +110,7 @@ extract_criteria:
           right_on: [BABY_Fødsel_ID]
         match_on: BABY_CPR
         column: "Vægt før graviditet"
+        date_col: Fødselstidspunkt
     dtype: float
     ## vægt fra vitale_parametre. 
 
