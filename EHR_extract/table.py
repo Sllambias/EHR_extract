@@ -98,6 +98,7 @@ def make_main_table(cfg, strict):
     
     # Add the customs columns
     for column in cfg.add_columns:
+        print
         fn = custom_functions[column.function]
         args = column.args
         dtype = dtype_from_cfg(column.dtype)
@@ -147,6 +148,7 @@ def get_extract_criteria(cfg, main_table):
 
 def get_custom_extract_criteria(cfg, main_table):
     for custom_extract_criterion in cfg.custom_extract_criteria:
+        print("Custom extract criterion:", custom_extract_criterion.name)
         fn = custom_functions[custom_extract_criterion.function]
         time_window = custom_extract_criterion.time_window
         min_date = cfg.time_conditionals[time_window].min_date

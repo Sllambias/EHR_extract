@@ -715,7 +715,7 @@ custom_extract_criteria:
       right_on: BABY_CPR
       target_col: Værdi
       new_col_name: lab_bmi
-      date_col: Resultatdato
+      date_col: Registreringstidspunkt
       filters:
         - column: Vital_parametre
           operator: "startswith"
