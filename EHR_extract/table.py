@@ -39,7 +39,7 @@ custom_functions = {
     "extract_filtered_conditional_values": extract_filtered_conditional_values,
 }
 
-BOOL_ALLOW_DUPLICATE_BABY_ID = True
+BOOL_ALLOW_DUPLICATE_BABY_ID = False
 
 def check_duplicates(table, key_column, allow_duplicates=False):
     duplicates = table[key_column].value_counts().filter(pl.col("count") > 1)

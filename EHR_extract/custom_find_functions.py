@@ -263,7 +263,9 @@ def extract_filtered_values(
     if duplicates.height > 0 and not allow_duplicates:
         raise ValueError(f"Duplicate entries for key column {left_on}. Examples: {duplicates.head(5)}")
     else:
-        main_table = main_table.group_by(left_on).agg(pl.col("*").first())
+        main_table = main_table.sort([left_on, date_col])
+        main_table = main_table.group_by(left_on).agg(pl.col("*").last())
+        main_table = main_table.select([left_on, target_col]).rename({target_col: new_col_name})
         assert(len(main_table[left_on].unique()) == len(main_table[left_on]))
 
     return main_table
