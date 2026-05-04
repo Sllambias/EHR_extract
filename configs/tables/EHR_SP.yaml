@@ -703,7 +703,7 @@ custom_extract_criteria:
           value: ["PAPP A (DOUBLETEST);P"]
       dtype: float
   - name: lab_bmi
-    time_window: two_years_before_pregnancy_and_during_pregnancy
+    time_window: two_years_before_pregnancy
     function: extract_filtered_values
     args:
       table: 

@@ -82,12 +82,12 @@ time_conditionals:
     max_date:
       date_col: GA_140_date
       offset_days: 0
-  two_years_before_pregnancy_and_during_pregnancy:
+  two_years_before_pregnancy:
     min_date:
       date_col: pregnancy_start
       offset_days: -730
     max_date:
-      date_col: GA_140_date
+      date_col: pregnancy_start
       offset_days: 0
 
 
@@ -703,7 +703,7 @@ custom_extract_criteria:
           value: ["PAPP A (DOUBLETEST);P"]
       dtype: float
   - name: lab_bmi
-    time_window: two_years_before_pregnancy_and_during_pregnancy
+    time_window: two_years_before_pregnancy
     function: extract_filtered_values
     args:
       table: 
