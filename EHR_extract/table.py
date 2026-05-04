@@ -113,7 +113,7 @@ def make_main_table(cfg, strict):
             len(subset_population),
         ])
         main_table = subset_table
-
+        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
     return main_table, all_discards
 
 def get_extract_criteria(cfg, main_table):
@@ -142,6 +142,7 @@ def get_extract_criteria(cfg, main_table):
 
         extract_table = check_duplicates(extract_table, left_on, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
         main_table = main_table.join(extract_table, on=left_on, how="left")
+        main_table = check_duplicates(main_table, left_on, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
     return main_table
 
 def get_custom_extract_criteria(cfg, main_table):
