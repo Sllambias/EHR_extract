@@ -1,9 +1,9 @@
 paths:
   input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
   input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
-  population: outputs/populations/preterm_SP_population.json
+  population: outputs/populations/full_population.json
   output_dir: outputs/tables
-  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}_cervix_scan_date.csv
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}_SP_P1_noMP.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
@@ -18,10 +18,10 @@ base_table:
   population: ${paths.population}
   population_column: b_cpr
   tables:
-    - table: ../../data/img_data_link/ptb_population/cervix_imgs/preterm_NGC_population_train_and_test.csv
-      columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days, STUDY_DATE: scan_date}
-  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, scan_date]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date, scan_date: date}
+    - table: ../../data/img_data_link/ptb_population/preterm_SP_P1_noMP/preterm_SP_P1_noMP_population_train_and_test.csv
+      columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
+  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
@@ -65,21 +65,21 @@ time_conditionals:
       date_col: pregnancy_start
       offset_days: 0
     max_date:
-      date_col: scan_date
+      date_col: GA_140_date
       offset_days: 0
   year_before_pregnancy_and_during_pregnancy:
     min_date:
       date_col: pregnancy_start
       offset_days: -365
     max_date:
-      date_col: scan_date
+      date_col: GA_140_date
       offset_days: 0
   before_and_during_pregnancy:
     min_date:
       date_col: null
       offset_days: 0
     max_date:
-      date_col: scan_date
+      date_col: GA_140_date
       offset_days: 0
 
 

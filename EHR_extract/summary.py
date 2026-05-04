@@ -68,8 +68,15 @@ def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
     if n_samples is None:
         n_samples = main_table.height
     sampled_table = main_table.drop(ignore_columns)
-    n_draw = min(int(n_samples), sampled_table.height)
-    print(f"Sampling {n_draw} rows from {sampled_table.height} rows")
+    req_n = int(n_samples)
+    avail = sampled_table.height
+    n_draw = min(req_n, avail)
+    if req_n > avail:
+        print(
+            f"WARNING: n_samples={req_n} is larger than the table ({avail} rows after ignore_columns). "
+            f"nan_pct uses the actual {n_draw} rows sampled, not {req_n} — so percentages are not out of n_samples."
+        )
+    print(f"Sampling {n_draw} rows from {avail} rows")
     sampled_table = sampled_table.sample(n=n_draw, shuffle=True)
     n_row = sampled_table.height
     print(f"Number of rows: {n_row}")
@@ -77,12 +84,11 @@ def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
     for col in sampled_table.columns:
         series = sampled_table.get_column(col)
         dtype = series.dtype
-        if getattr(dtype, "is_float", lambda: False)():
-            # Explicitly compute percent from total sampled rows (`n_row`).
-            is_null = series.is_null()
-            is_nan = series.is_nan().fill_null(False)
-            missing = is_null | is_nan
-            nan_count = int(missing.sum())
+        if dtype.is_float():
+            # Null and NaN are distinct for floats in Polars; count both as missing.
+            nan_count = int(series.null_count())
+            nan_count += int((series.is_not_null() & series.is_nan()).sum())
+            # Denominator is actual rows in this sample (`n_row`), not cfg n_samples.
             nan_pct = float(nan_count / n_row * 100.0) if n_row > 0 else float("nan")
         else:
             nan_count = int(series.null_count())
