@@ -144,7 +144,7 @@ def get_extract_criteria(cfg, main_table):
                 left_on=left_on,
                 right_on=right_on,
                 how="left",
-            ).select([left_on, source.column, source.date_col]).rename({source.column: extract_criterion.name})
+            ).select([left_on, source.column, extract_criterion.date_col]).rename({source.column: extract_criterion.name})
             tmp_table = tmp_table.with_columns(
                 pl.col(extract_criterion.name).cast(dtype, strict=False)
             ).drop_nulls(extract_criterion.name).select([left_on, extract_criterion.name])
