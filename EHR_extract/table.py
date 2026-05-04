@@ -24,6 +24,8 @@ from EHR_extract.utils import (
     date_bound_expr,
     convert_to_datetime,
     safe_save_df,
+    check_duplicates,
+    take_latest_row,
 )
 from omegaconf import DictConfig
 
@@ -41,21 +43,6 @@ custom_functions = {
 }
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = False
-
-def check_duplicates(table, population_column, allow_duplicates=False):
-    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
-    if duplicates.height > 0:
-        if not allow_duplicates:
-            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
-        else:
-            table = table.group_by(population_column).agg(pl.col("*").first())
-            assert(len(table[population_column].unique()) == len(table[population_column]))
-    return table
-
-def take_latest_row(table, key_column, date_col):
-    table = table.sort([key_column, date_col])
-    table = table.group_by(key_column).agg(pl.col("*").last())
-    return table
 
 def cast_types(table, dtype, column):
     if dtype == pl.Date:

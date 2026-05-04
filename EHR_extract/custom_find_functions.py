@@ -2,6 +2,20 @@ import logging
 import polars as pl
 from EHR_extract.utils import filter_numeric_rows, load_table, convert_to_date, get_python_operator, date_bound_expr, dtype_from_cfg
 
+def check_duplicates(table, population_column, allow_duplicates=False):
+    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0:
+        if not allow_duplicates:
+            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
+        else:
+            table = table.group_by(population_column).agg(pl.col("*").first())
+            assert(len(table[population_column].unique()) == len(table[population_column]))
+    return table
+
+def take_latest_row(table, key_column, date_col):
+    table = table.sort([key_column, date_col])
+    table = table.group_by(key_column).agg(pl.col("*").last())
+    return table
 
 def match_images_with_child(
     population, table_cfg, study_date_key="STUDY_DATE", mom_key="CPR_MOR", birthday_key="BIRTHDAY", ga_key="GA"
@@ -259,14 +273,9 @@ def extract_filtered_values(
     main_table = main_table.join(tmp_table, left_on=left_on, right_on=left_on, how="left")
 
     # Check for duplicates
-    duplicates = main_table[left_on].value_counts().filter(pl.col("count") > 1)
-    if duplicates.height > 0 and not allow_duplicates:
-        raise ValueError(f"Duplicate entries for key column {left_on}. Examples: {duplicates.head(5)}")
-    else:
-        main_table = main_table.sort([left_on, date_col])
-        main_table = main_table.group_by(left_on).agg(pl.col("*").last())
-        main_table = main_table.select([left_on, target_col]).rename({target_col: new_col_name})
-        assert(len(main_table[left_on].unique()) == len(main_table[left_on]))
+    main_table = take_latest_row(main_table, left_on, date_col)
+    main_table = main_table.select([left_on, target_col]).rename({target_col: new_col_name})
+    main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
 
     return main_table
 
