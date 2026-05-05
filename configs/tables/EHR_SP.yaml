@@ -117,6 +117,38 @@ extract_criteria:
 
 conditional_bool_criteria:
   ### Maternal characteristics
+  - name: smoking_status
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_and_during_pregnancy
+    conditions:
+      - condition:
+        table:  
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: BABY_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["BKUA32"]
+        date_col: Noteret_dato
+  - name: drug_use:
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_and_during_pregnancy
+    conditions:
+      - condition:
+        table:  
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: BABY_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
+        date_col: Noteret_dato
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
@@ -405,7 +437,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DO340", "DQ518", "DQ519"]
+        value: ["DO340", "DQ518", "DQ519", "DQ51"]
         date_col: Noteret_dato
   # fibroids 
   - name: current_fibroids
@@ -458,7 +490,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
+        value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139", "DO14", "DO13"]
         date_col: Noteret_dato
   # vaginal bleeding
   - name: current_vaginal_bleeding
@@ -475,7 +507,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DO468A", "DO209", "DO208", "DO208A"]
+        value: ["DO468A", "DO209", "DO208", "DO208A", "DO20", "DO46"]
         date_col: Noteret_dato
   # infection 
   - name: current_infection
@@ -509,7 +541,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DO422", "DO420", "DO424"]
+        value: ["DO422", "DO420", "DO424", "DO423"]
         date_col: Noteret_dato
   # maternal comorbidity 
   - name: current_maternal_comorbidity
