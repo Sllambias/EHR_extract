@@ -133,7 +133,7 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["BKUA32"]
         date_col: Noteret_dato
-  - name: drug_use:
+  - name: drug_use
     key_column: b_cpr
     match_on: m_cpr
     time_window: before_and_during_pregnancy
