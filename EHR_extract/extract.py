@@ -180,7 +180,7 @@ def main(cfg: DictConfig) -> None:
         intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
         if len(intersection) > 0:
             logging.warn(
-                "leak detected in train and test splits. Removing leaked samples from TEST but this should be investigated"
+                f"leak detected in train and test splits. Removing leaked samples from TEST but this should be investigated. Leaked IDs: {intersection}"
             )
             test_pop = test_pop.filter(~pl.col(cfg.population.population_key).is_in(intersection))
         train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
