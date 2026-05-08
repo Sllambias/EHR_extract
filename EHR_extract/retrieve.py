@@ -153,6 +153,7 @@ def main(cfg: DictConfig) -> None:
         strict=cfg.strict,
     )
     extract_table = get_extract_criteria(cfg, main_table)
+    extract_table = extract_table.drop_duplicates()
 
     print("Total unique values in b_cpr:", len(main_table["b_cpr"].unique()))
     print("Total unique values in b_cpr in extract table:", len(extract_table["b_cpr"].unique()))
