@@ -27,18 +27,18 @@ base_table:
       dtype: date
 
 time_conditionals:
-  anytime:
-   min_date:
-      date_col: null
+  during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
       offset_days: 0
-  max_date:
-      date_col: null
+    max_date:
+      date_col: pregnancy_end
       offset_days: 0
 
 extract_info:
   - name: cerclage_insertion
     key_column: m_cpr
-    time_window: anytime
+    time_window: during_pregnancy
     sources:
       - table: 
           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
@@ -82,7 +82,7 @@ extract_info:
         date_col: D_ODTO
   - name: cerclage_removal
     key_column: m_cpr
-    time_window: anytime
+    time_window: during_pregnancy
     sources:
       - table: 
           table1: ${paths.input_dir_SDS}/mor_procedurer.csv

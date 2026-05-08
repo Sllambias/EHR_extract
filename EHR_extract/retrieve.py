@@ -98,6 +98,7 @@ def make_main_table(cfg, strict):
     return main_table, all_discards
     
 def get_extract_criteria(cfg, main_table):
+    extract_table = pl.DataFrame()
     for extract_criterion in cfg.extract_info:
         key_col = extract_criterion.key_column
         for source in extract_criterion.sources:
@@ -110,21 +111,18 @@ def get_extract_criteria(cfg, main_table):
             # Filter values
             py_operator = get_python_operator(source.operator)
             table = table.filter(py_operator(pl.col(source.column), source.value)).select([match_on, source.column, source.date_col])
-            print("Matches:", len(table[match_on].unique()))
 
             # Merge
             tmp_table = table.join(main_table, left_on=match_on, right_on=key_col, how="left")
-            print("After merge:", len(tmp_table[key_col].unique()))
 
-
-            # # Filter on time
-            # event_d = convert_to_date(source.date_col)
-            # lo = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].min_date)
-            # if lo is not None:
-            #     tmp_table = tmp_table.filter(event_d >= lo)
-            # hi = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].max_date)
-            # if hi is not None:
-            #     tmp_table = tmp_table.filter(event_d <= hi)
+            # Filter on time
+            event_d = convert_to_date(source.date_col)
+            lo = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].min_date)
+            if lo is not None:
+                tmp_table = tmp_table.filter(event_d >= lo)
+            hi = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].max_date)
+            if hi is not None:
+                tmp_table = tmp_table.filter(event_d <= hi)
 
             if isinstance(source.table, Mapping) and "table1" in source.table:
                 source_table = source.table["table1"]

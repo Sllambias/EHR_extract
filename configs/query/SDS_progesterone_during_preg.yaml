@@ -27,18 +27,18 @@ base_table:
       dtype: date
 
 time_conditionals:
-  anytime:
-   min_date:
-      date_col: null
+  during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
       offset_days: 0
-  max_date:
-      date_col: null
+    max_date:
+      date_col: pregnancy_end
       offset_days: 0
 
 extract_info:
   - name: progesterone
     key_column: m_cpr
-    time_window: anytime
+    time_window: during_pregnancy
     sources:
       - table: ${paths.input_dir_SDS}/epikur_1.csv
         match_on: cpr
