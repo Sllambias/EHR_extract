@@ -139,8 +139,7 @@ def get_extract_criteria(cfg, main_table):
             )
             tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr"])
 
-            extract_table = extract_table.vstack(tmp_table)
-            print(extract_table.head())
+        extract_table = extract_table.vstack(tmp_table)
     return extract_table
 
 
