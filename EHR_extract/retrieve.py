@@ -38,6 +38,7 @@ def make_main_table(cfg, strict):
         main_table = main_table.vstack(table_df)
 
     # Check for duplicates    
+    main_table = main_table.filter(pl.col(cfg.population_column) != "INVALID")
     main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=False)
     
     # Check population size
@@ -90,6 +91,7 @@ def get_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
+            tmp_table["source_name"] = source.table
             main_table = main_table.join(tmp_table, on=left_on, how="left")
     return main_table
 
