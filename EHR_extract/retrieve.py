@@ -91,8 +91,25 @@ def get_extract_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
-            tmp_table["source_name"] = source.table
-            main_table = main_table.join(tmp_table, on=left_on, how="left")
+
+            # Add provenance: which source table contributed the value (only when it matches).
+            source_name_col = "source_name"
+            contributed = (
+                pl.when(pl.col(source.column).is_not_null())
+                .then(pl.lit(source.table))
+                .otherwise(None)
+            )
+            if source_name_col in tmp_table.columns:
+                tmp_table = tmp_table.with_columns(
+                    pl.coalesce([pl.col(source_name_col), contributed]).alias(source_name_col)
+                )
+            else:
+                tmp_table = tmp_table.with_columns(contributed.alias(source_name_col))
+
+            if right_on != left_on and right_on in tmp_table.columns:
+                tmp_table = tmp_table.drop(right_on)
+
+            main_table = tmp_table
     return main_table
 
 
