@@ -127,7 +127,7 @@ def get_extract_criteria(cfg, main_table):
             else:
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(source_table).alias("source_name"))
-            tmp_table = tmp_table.select([key_col, source.column, source.date_col, "source_name"]).rename({source.column: extract_criterion.name, source.date_col: "date"})
+            tmp_table = tmp_table.select([match_on, source.column, source.date_col, "source_name"]).rename({source.column: extract_criterion.name, source.date_col: "date", match_on: key_col})
 
             extract_table = extract_table.vstack(tmp_table)
             print(extract_table.head())
@@ -146,17 +146,9 @@ def main(cfg: DictConfig) -> None:
     )
     main_table = get_extract_criteria(cfg, main_table)
 
-
-    d = {}
-    for i in range(len(discards)):
-        d[i] = {
-            "key_column": discards[i][0],
-            "n_discards": discards[i][2] - discards[i][3],
-            "n_population_pre_discard": discards[i][2],
-            "n_population_post_discard": discards[i][3],
-            "discards": discards[i][1],
-        }
-
+    print(main_table.schema)
+    print({k: v for k, v in main_table.schema.items() if v in (pl.Object,) or isinstance(v, (pl.List, pl.Struct))})
+    
     with open(cfg.paths.extract_save_path, "w") as fp:
         Path(cfg.paths.extract_save_path).parent.mkdir(parents=True, exist_ok=True)
         main_table.write_csv(fp)
