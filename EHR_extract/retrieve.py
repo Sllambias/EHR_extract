@@ -11,10 +11,16 @@ from EHR_extract.utils import (
     convert_to_date,
     convert_to_datetime,
     check_duplicates,
+    date_bound_expr,
 )
+from EHR_extract.custom_find_functions import find_pregnancy_start
 from omegaconf import DictConfig
 
 load_dotenv()
+
+custom_functions = {
+    "find_pregnancy_start": find_pregnancy_start,
+}
 
 def cast_types(table, dtype, column):
     if dtype == pl.Date:
@@ -69,16 +75,35 @@ def make_main_table(cfg, strict):
         ])
         main_table = subset_table
     
+    # Add the customs columns
+    for column in cfg.add_columns:
+        print
+        fn = custom_functions[column.function]
+        args = column.args
+        dtype = dtype_from_cfg(column.dtype)
+        subset_table = fn(**args, table=main_table)
+        subset_table = cast_types(subset_table, dtype, column.column)
+        subset_table = subset_table.drop_nulls(column.column)
+        population = set(main_table[cfg.population_column])
+        subset_population = set(subset_table[cfg.population_column])
+        all_discards.append([
+            column.column,
+            list(population.difference(subset_population)),
+            len(population),
+            len(subset_population),
+        ])
+        main_table = subset_table
+        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=False)
     return main_table, all_discards
-
+    
 def get_extract_criteria(cfg, main_table):
     for extract_criterion in cfg.extract_info:
-        left_on = extract_criterion.key_column
+        key_col = extract_criterion.key_column
         for source in extract_criterion.sources:
             extract_table = pl.DataFrame()
             print("Extract criterion:", extract_criterion.name)
             print("\tTable:", source.table)
-            right_on = source.match_on
+            match_on = source.match_on
             table = load_table(source.table, strict=cfg.strict, null_values=["."])
 
             # Filter values
@@ -86,18 +111,23 @@ def get_extract_criteria(cfg, main_table):
             table = table.filter(py_operator(pl.col(source.column), source.value))
 
             # Merge
-            tmp_table = main_table.join(
-                table.select([right_on, source.column, source.date_col]),
-                left_on=left_on,
-                right_on=right_on,
-                how="left",
-            ).rename({source.column: "code", source.date_col: "date"})
+            tmp_table = table.join(main_table, left_on=match_on, right_on=key_col, how="left")
+
+            # Filter on time
+            event_d = convert_to_date(source.date_col)
+            lo = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].min_date)
+            if lo is not None:
+                tmp_table = tmp_table.filter(event_d >= lo)
+            hi = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].max_date)
+            if hi is not None:
+                tmp_table = tmp_table.filter(event_d <= hi)
 
             if isinstance(source.table, dict):
                 source_table = source.table["table1"]
             else:
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(source_table).alias("source_name"))
+            tmp_table = tmp_table.select([key_col, source.column, source.date_col, "source_name"]).rename({source.column: extract_criterion.name, source.date_col: "date"})
 
             extract_table = extract_table.vstack(tmp_table)
             print(extract_table.head())

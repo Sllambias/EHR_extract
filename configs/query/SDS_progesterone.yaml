@@ -17,11 +17,28 @@ base_table:
       columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, FoedselsDato_Barn: pregnancy_end}
   key_columns: [b_cpr, m_cpr, pregnancy_end]
   dtypes: {b_cpr: string, m_cpr: string, pregnancy_end: date}
+  add_columns:
+    - column: pregnancy_start
+      function: find_pregnancy_start
+      args:
+        birth_date_col: pregnancy_end
+        GA_days_col: GA_days
+        pregnancy_start_col: pregnancy_start
+      dtype: date
 
+time_conditionals:
+  during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: 0
+    max_date:
+      date_col: pregnancy_end
+      offset_days: 0
 
 extract_info:
   - name: progesterone
     key_column: m_cpr
+    time_window: during_pregnancy
     sources:
       - table: ${paths.input_dir_SDS}/epikur_1.csv
         match_on: cpr
