@@ -28,10 +28,10 @@ base_table:
 
 time_conditionals:
   anytime:
-   min_date:
+    min_date:
       date_col: null
       offset_days: 0
-  max_date:
+    max_date:
       date_col: null
       offset_days: 0
 
