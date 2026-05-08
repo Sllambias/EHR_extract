@@ -43,19 +43,19 @@ extract_info:
       - table: ${paths.input_dir_SDS}/epikur_1.csv
         match_on: cpr
         column: atc
-        operator: "in"
+        operator: "startswith"
         value: ["G03DA04"]
         date_col: eksd
       - table: ${paths.input_dir_SDS}/epikur_2.csv
         match_on: cpr
         column: atc
-        operator: "in"
+        operator: "startswith"
         value: ["G03DA04"]
         date_col: eksd
       - table: ${paths.input_dir_SDS}/epikur_3.csv
         match_on: cpr
         column: atc
-        operator: "in"
+        operator: "startswith"
         value: ["G03DA04"]
         date_col: eksd
       - table: 

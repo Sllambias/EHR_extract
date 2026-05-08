@@ -137,6 +137,7 @@ def get_extract_criteria(cfg, main_table):
                     match_on: key_col,
                 }
             )
+            tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr"])
 
             extract_table = extract_table.vstack(tmp_table)
             print(extract_table.head())
@@ -153,13 +154,15 @@ def main(cfg: DictConfig) -> None:
         cfg.base_table,
         strict=cfg.strict,
     )
-    main_table = get_extract_criteria(cfg, main_table)
+    extract_table = get_extract_criteria(cfg, main_table)
 
     print("Total unique values in b_cpr:", len(main_table["b_cpr"].unique()))
+    print("Total unique values in b_cpr in extract table:", len(extract_table["b_cpr"].unique()))
+    print("Percentage of b_cpr in extract table:", len(extract_table["b_cpr"].unique()) / len(main_table["b_cpr"].unique()))
     
     with open(cfg.paths.extract_save_path, "w") as fp:
         Path(cfg.paths.extract_save_path).parent.mkdir(parents=True, exist_ok=True)
-        main_table.write_csv(fp)
+        extract_table.write_csv(fp)
 
 if __name__ == "__main__":
     main()
