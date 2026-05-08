@@ -109,19 +109,19 @@ def get_extract_criteria(cfg, main_table):
 
             # Filter values
             py_operator = get_python_operator(source.operator)
-            table = table.filter(py_operator(pl.col(source.column), source.value))
+            table = table.filter(py_operator(pl.col(source.column), source.value)).select([match_on, source.column, source.date_col])
 
             # Merge
             tmp_table = table.join(main_table, left_on=match_on, right_on=key_col, how="left")
 
-            # Filter on time
-            event_d = convert_to_date(source.date_col)
-            lo = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].min_date)
-            if lo is not None:
-                tmp_table = tmp_table.filter(event_d >= lo)
-            hi = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].max_date)
-            if hi is not None:
-                tmp_table = tmp_table.filter(event_d <= hi)
+            # # Filter on time
+            # event_d = convert_to_date(source.date_col)
+            # lo = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].min_date)
+            # if lo is not None:
+            #     tmp_table = tmp_table.filter(event_d >= lo)
+            # hi = date_bound_expr(**cfg.time_conditionals[extract_criterion.time_window].max_date)
+            # if hi is not None:
+            #     tmp_table = tmp_table.filter(event_d <= hi)
 
             if isinstance(source.table, Mapping) and "table1" in source.table:
                 source_table = source.table["table1"]
@@ -129,9 +129,7 @@ def get_extract_criteria(cfg, main_table):
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(str(source_table)).alias("source_name"))
 
-            tmp_table = tmp_table.select(
-                [match_on, source.column, source.date_col, "source_name", "b_cpr"]
-            ).rename(
+            tmp_table = tmp_table.select.rename(
                 {
                     source.column: extract_criterion.name,
                     source.date_col: "date",
