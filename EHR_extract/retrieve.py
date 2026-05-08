@@ -110,6 +110,7 @@ def get_extract_criteria(cfg, main_table):
             # Filter values
             py_operator = get_python_operator(source.operator)
             table = table.filter(py_operator(pl.col(source.column), source.value)).select([match_on, source.column, source.date_col])
+            print("Matches:", len(table))
 
             # Merge
             tmp_table = table.join(main_table, left_on=match_on, right_on=key_col, how="left")
@@ -129,7 +130,7 @@ def get_extract_criteria(cfg, main_table):
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(str(source_table)).alias("source_name"))
 
-            tmp_table = tmp_table.select.rename(
+            tmp_table = tmp_table.rename(
                 {
                     source.column: extract_criterion.name,
                     source.date_col: "date",
