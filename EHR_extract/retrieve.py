@@ -131,7 +131,7 @@ def get_extract_criteria(cfg, main_table):
             else:
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(str(source_table)).alias("source_name"))
-            tmp_table = tmp_table.select([match_on, source.column, source.date_col, "source_name"]).rename({source.column: extract_criterion.name, source.date_col: "date", match_on: key_col})
+            tmp_table = tmp_table.select([match_on, source.column, source.date_col, "source_name", "b_cpr"]).rename({source.column: extract_criterion.name, source.date_col: "date", match_on: key_col})
 
             extract_table = extract_table.vstack(tmp_table)
             print(extract_table.head())

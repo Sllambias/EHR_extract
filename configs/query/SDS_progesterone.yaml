@@ -44,19 +44,19 @@ extract_info:
         match_on: cpr
         column: atc
         operator: "in"
-        value: ["MG03DA04"]
+        value: ["G03DA04"]
         date_col: eksd
       - table: ${paths.input_dir_SDS}/epikur_2.csv
         match_on: cpr
         column: atc
         operator: "in"
-        value: ["MG03DA04"]
+        value: ["G03DA04"]
         date_col: eksd
       - table: ${paths.input_dir_SDS}/epikur_3.csv
         match_on: cpr
         column: atc
         operator: "in"
-        value: ["MG03DA04"]
+        value: ["G03DA04"]
         date_col: eksd
       - table: 
           table1: ${paths.input_dir_SDS}/t_sksube.csv
