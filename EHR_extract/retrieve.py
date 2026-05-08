@@ -129,14 +129,17 @@ def get_extract_criteria(cfg, main_table):
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(str(source_table)).alias("source_name"))
 
+            # Keep a stable schema across criteria by storing results in "long" form.
             tmp_table = tmp_table.rename(
                 {
-                    source.column: extract_criterion.name,
+                    source.column: "value",
                     source.date_col: "date",
                     match_on: key_col,
                 }
+            ).with_columns(pl.lit(extract_criterion.name).alias("criterion"))
+            tmp_table = tmp_table.select(
+                [key_col, "criterion", "value", "date", "source_name", "b_cpr", "pregnancy_end"]
             )
-            tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr", "pregnancy_end"])
 
             extract_table = extract_table.vstack(tmp_table)
     return extract_table
