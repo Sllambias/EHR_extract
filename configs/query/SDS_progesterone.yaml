@@ -57,7 +57,7 @@ extract_info:
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
         match_on: CPRnummer_Mor
-        column: C_TILOPR
+        column: DiagnoseKode
         operator: "in"
         value: ["BKHA1"]
         date_col: StartDato_Kontakt
