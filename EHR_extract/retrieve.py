@@ -110,10 +110,12 @@ def get_extract_criteria(cfg, main_table):
             # Filter values
             py_operator = get_python_operator(source.operator)
             table = table.filter(py_operator(pl.col(source.column), source.value)).select([match_on, source.column, source.date_col])
-            print("Matches:", len(table))
+            print("Matches:", len(table[match_on].unique()))
 
             # Merge
             tmp_table = table.join(main_table, left_on=match_on, right_on=key_col, how="left")
+            print("After merge:", len(tmp_table[key_col].unique()))
+
 
             # # Filter on time
             # event_d = convert_to_date(source.date_col)
