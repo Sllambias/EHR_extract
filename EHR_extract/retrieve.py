@@ -123,15 +123,21 @@ def get_extract_criteria(cfg, main_table):
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
 
-            # `source.table` can be a mapping (e.g. OmegaConf DictConfig), which Polars
-            # would otherwise interpret as a Struct (nested) when used in `pl.lit`.
-            # In those cases we want the plain table name from `table1`.
             if isinstance(source.table, Mapping) and "table1" in source.table:
                 source_table = source.table["table1"]
             else:
                 source_table = source.table
             tmp_table = tmp_table.with_columns(pl.lit(str(source_table)).alias("source_name"))
-            tmp_table = tmp_table.select([match_on, source.column, source.date_col, "source_name", "b_cpr"]).rename({source.column: extract_criterion.name, source.date_col: "date", match_on: key_col})
+
+            tmp_table = tmp_table.select(
+                [match_on, source.column, source.date_col, "source_name", "b_cpr"]
+            ).rename(
+                {
+                    source.column: extract_criterion.name,
+                    source.date_col: "date",
+                    match_on: key_col,
+                }
+            )
 
             extract_table = extract_table.vstack(tmp_table)
             print(extract_table.head())
@@ -150,8 +156,7 @@ def main(cfg: DictConfig) -> None:
     )
     main_table = get_extract_criteria(cfg, main_table)
 
-    print(main_table.schema)
-    print({k: v for k, v in main_table.schema.items() if v in (pl.Object,) or isinstance(v, (pl.List, pl.Struct))})
+    print("Total unique values in b_cpr:", len(main_table["b_cpr"].unique()))
     
     with open(cfg.paths.extract_save_path, "w") as fp:
         Path(cfg.paths.extract_save_path).parent.mkdir(parents=True, exist_ok=True)

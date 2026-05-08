@@ -1,0 +1,106 @@
+paths:
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  population: outputs/populations/full_population.json
+  output_dir: outputs/extract_codes
+  extract_save_path: ${paths.output_dir}/${hydra:job.config_name}.csv
+
+strict: True 
+
+base_table: 
+  population: ${paths.population}
+  population_column: b_cpr
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns: {CPR_MODER: m_cpr, FOEDSELSDATO: pregnancy_end, GESTATIONSALDER_DAGE: GA_days, CPR_BARN: b_cpr}
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, Gestationsalder: GA_days, FoedselsDato_Barn: pregnancy_end}
+  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: string, pregnancy_end: date}
+  add_columns:
+    - column: pregnancy_start
+      function: find_pregnancy_start
+      args:
+        birth_date_col: pregnancy_end
+        GA_days_col: GA_days
+        pregnancy_start_col: pregnancy_start
+      dtype: date
+
+time_conditionals:
+  during_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: 0
+    max_date:
+      date_col: pregnancy_end
+      offset_days: 0
+
+extract_info:
+  - name: cerclage_insertion
+    key_column: m_cpr
+    time_window: during_pregnancy
+    sources:
+      - table: 
+          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: DiagnoseKode
+        operator: "in"
+        value: ["DO343C"]
+        date_col: StartDato_Kontakt
+      # - table: 
+      #     table1: ${paths.input_dir_SDS}/t_diag.csv
+      #     table2: ${paths.input_dir_SDS}/t_adm.csv
+      #     left_on: V_RECNUM
+      #     right_on: K_RECNUM
+      #   match_on: V_CPR
+      #   column: C_DIAG
+      #   operator: "in"
+      #   value: ["DO343C"]
+      #   date_col: D_ODTO
+      - table: 
+          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: ProcedureKode
+        operator: "in"
+        value: ["KLDD10A", "KLDD10B", "KMAB00", "KMAB01"]
+        date_col: StartDato_Procedure
+      - table: 
+          table1: ${paths.input_dir_SDS}/t_afl.csv
+          table2: ${paths.input_dir_SDS}/t_adm.csv
+          left_on: V_RECNUM
+          right_on: K_RECNUM
+        match_on: V_CPR
+        column: C_TILOPR
+        operator: "in"
+        value: ["KLDD10A", "KLDD10B", "KMAB00", "KMAB01"]
+        date_col: D_ODTO
+  - name: cerclage_removal
+    key_column: m_cpr
+    time_window: during_pregnancy
+    sources:
+      - table: 
+          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: ProcedureKode
+        operator: "in"
+        value: ["KLDD20", "KMAB03"]
+        date_col: StartDato_Procedure
+      - table: 
+          table1: ${paths.input_dir_SDS}/t_afl.csv
+          table2: ${paths.input_dir_SDS}/t_adm.csv
+          left_on: V_RECNUM
+          right_on: K_RECNUM
+        match_on: V_CPR
+        column: C_TILOPR
+        operator: "in"
+        value: ["KLDD20", "KMAB03"]
+        date_col: D_ODTO
