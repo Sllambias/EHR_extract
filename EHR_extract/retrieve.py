@@ -93,9 +93,14 @@ def get_extract_criteria(cfg, main_table):
                 how="left",
             ).rename({source.column: "code", source.date_col: "date"})
 
-            tmp_table = tmp_table.with_columns(pl.lit(source.table).alias("source_name"))
+            if isinstance(source.table, dict):
+                source_table = source.table["table1"]
+            else:
+                source_table = source.table
+            tmp_table = tmp_table.with_columns(pl.lit(source_table).alias("source_name"))
 
             extract_table = extract_table.vstack(tmp_table)
+            print(extract_table.head())
     return extract_table
 
 
