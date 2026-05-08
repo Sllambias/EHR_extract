@@ -38,7 +38,7 @@ def make_main_table(cfg, strict):
         main_table = main_table.vstack(table_df)
 
     # Check for duplicates    
-    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
+    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=False)
     
     # Check population size
     if len(population) != len(main_table[cfg.population_column]):

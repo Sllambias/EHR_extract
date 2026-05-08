@@ -2,8 +2,8 @@ paths:
   input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
   input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
   population: outputs/populations/full_population.json
-  output_dir: outputs/tables
-  extract_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
+  output_dir: outputs/extract_codes
+  extract_save_path: ${paths.output_dir}/${hydra:job.config_name}.csv
 
 strict: True 
 
