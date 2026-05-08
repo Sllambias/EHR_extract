@@ -78,7 +78,7 @@ def get_extract_criteria(cfg, main_table):
             print("Extract criterion:", extract_criterion.name)
             print("\tTable:", source.table)
             right_on = source.match_on
-            table = load_table(source.table, strict=cfg.strict)
+            table = load_table(source.table, strict=cfg.strict, null_values=["."])
 
             # Filter values
             py_operator = get_python_operator(source.operator)

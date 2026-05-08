@@ -17,7 +17,7 @@ def take_latest_row(table, key_column, date_col):
     table = table.group_by(key_column).agg(pl.col("*").last())
     return table
     
-def load_table_path(path, strict=True, n_rows=None, has_header=True):
+def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None):
     if strict:
         ignore_errors = False
     else:
@@ -25,10 +25,10 @@ def load_table_path(path, strict=True, n_rows=None, has_header=True):
 
     if path.endswith(".csv"):
         try:
-            return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header)
+            return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values)
         except pl.exceptions.ComputeError:
             return pl.read_csv(
-                path, ignore_errors=ignore_errors, infer_schema_length=1000000, n_rows=n_rows, has_header=has_header
+                path, ignore_errors=ignore_errors, infer_schema_length=1000000, n_rows=n_rows, has_header=has_header, null_values=null_values
             )
     else:
         raise NotImplementedError(f"Unknown file type for path: {path}. Did you remember to add the file extension?")
@@ -40,12 +40,12 @@ def expr_startswith(col: pl.Expr, val) -> pl.Expr:
         [s.str.starts_with(p) for p in val]
     )
 
-def load_table(table_cfg, strict=True, n_rows=None, has_header=True):
+def load_table(table_cfg, strict=True, n_rows=None, has_header=True, null_values=None):
     if isinstance(table_cfg, str):
-        return load_table_path(table_cfg, strict=strict, n_rows=n_rows, has_header=has_header)
+        return load_table_path(table_cfg, strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
     else:
-        table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows, has_header=has_header)
-        table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows, has_header=has_header)
+        table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
+        table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
         left_on = table_cfg["left_on"]
         right_on = table_cfg["right_on"]
         if isinstance(left_on, list):
