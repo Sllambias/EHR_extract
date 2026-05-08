@@ -136,7 +136,7 @@ def get_extract_criteria(cfg, main_table):
                     match_on: key_col,
                 }
             )
-            tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr"])
+            tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr", "pregnancy_end"])
 
             extract_table = extract_table.vstack(tmp_table)
     return extract_table
