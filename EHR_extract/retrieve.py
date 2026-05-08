@@ -75,6 +75,7 @@ def get_extract_criteria(cfg, main_table):
     for extract_criterion in cfg.extract_info:
         left_on = extract_criterion.key_column
         for source in extract_criterion.sources:
+            extract_table = pl.DataFrame()
             print("Extract criterion:", extract_criterion.name)
             print("\tTable:", source.table)
             right_on = source.match_on
@@ -90,12 +91,12 @@ def get_extract_criteria(cfg, main_table):
                 left_on=left_on,
                 right_on=right_on,
                 how="left",
-            )
+            ).rename({source.column: "code"})
 
             # Add provenance: which source table contributed the value (only when it matches).
             source_name_col = "source_name"
             contributed = (
-                pl.when(pl.col(source.column).is_not_null())
+                pl.when(pl.col("code").is_not_null())
                 .then(pl.lit(source.table))
                 .otherwise(None)
             )
@@ -109,8 +110,8 @@ def get_extract_criteria(cfg, main_table):
             if right_on != left_on and right_on in tmp_table.columns:
                 tmp_table = tmp_table.drop(right_on)
 
-            main_table = tmp_table
-    return main_table
+            extract_table = extract_table.vstack(tmp_table)
+    return extract_table
 
 
 @hydra.main(
