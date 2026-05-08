@@ -102,7 +102,6 @@ def get_extract_criteria(cfg, main_table):
     for extract_criterion in cfg.extract_info:
         key_col = extract_criterion.key_column
         for source in extract_criterion.sources:
-            extract_table = pl.DataFrame()
             print("Extract criterion:", extract_criterion.name)
             print("\tTable:", source.table)
             match_on = source.match_on
@@ -139,7 +138,7 @@ def get_extract_criteria(cfg, main_table):
             )
             tmp_table = tmp_table.select([key_col, extract_criterion.name, "date", "source_name", "b_cpr"])
 
-        extract_table = extract_table.vstack(tmp_table)
+            extract_table = extract_table.vstack(tmp_table)
     return extract_table
 
 
