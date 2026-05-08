@@ -42,10 +42,10 @@ extract_info:
         value: ["MG03DA04"]
         date_col: eksd
       - table: 
-          table1: ${paths.input_dir_SDS}/t_adm.csv
-          table2: ${paths.input_dir_SDS}/t_sksube.csv
-          left_on: K_RECNUM
-          right_on: V_RECNUM
+          table1: ${paths.input_dir_SDS}/t_sksube.csv
+          table2: ${paths.input_dir_SDS}/t_adm.csv
+          left_on: V_RECNUM
+          right_on: K_RECNUM
         match_on: V_CPR
         column: C_TILOPR
         operator: "in"
