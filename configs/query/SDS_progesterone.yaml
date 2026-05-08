@@ -1,0 +1,63 @@
+paths:
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  population: outputs/populations/full_population.json
+  output_dir: outputs/tables
+  extract_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
+
+strict: True 
+
+base_table: 
+  population: ${paths.population}
+  population_column: b_cpr
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns: {CPR_MODER: m_cpr, FOEDSELSDATO: pregnancy_end, CPR_BARN: b_cpr}
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns: {CPRnummer_Mor: m_cpr, CPRnummer_Barn: b_cpr, FoedselsDato_Barn: pregnancy_end}
+  key_columns: [b_cpr, m_cpr, pregnancy_end]
+  dtypes: {b_cpr: string, m_cpr: string, pregnancy_end: date}
+
+
+extract_info:
+  - name: progesterone
+    key_column: m_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/epikur_1.csv
+        match_on: cpr
+        column: atc
+        operator: "in"
+        value: ["MG03DA04"]
+        date_col: eksd
+      - table: ${paths.input_dir_SDS}/epikur_2.csv
+        match_on: cpr
+        column: atc
+        operator: "in"
+        value: ["MG03DA04"]
+        date_col: eksd
+      - table: ${paths.input_dir_SDS}/epikur_3.csv
+        match_on: cpr
+        column: atc
+        operator: "in"
+        value: ["MG03DA04"]
+        date_col: eksd
+      - table: 
+          table1: ${paths.input_dir_SDS}/t_adm.csv
+          table2: ${paths.input_dir_SDS}/t_sksube.csv
+          left_on: K_RECNUM
+          right_on: V_RECNUM
+        match_on: V_CPR
+        column: C_TILOPR
+        operator: "in"
+        value: ["BKHA1"]
+        date_col: D_ODTO
+      - table: 
+          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: C_TILOPR
+        operator: "in"
+        value: ["BKHA1"]
+        date_col: StartDato_Kontakt
