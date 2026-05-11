@@ -365,6 +365,32 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["DA59"]
         date_col: Noteret_dato
+  - name: pyelonefritis
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_and_during_pregnancy
+    conditions:
+      - condition:
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "in"
+        value: ["DN109C", "DN129", "DN118B"]
+        date_col: Noteret_dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO23", "DO98"]
 
   ### Obstetric history
   - name: previous_ptb
@@ -561,7 +587,7 @@ conditional_bool_criteria:
         value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
         date_col: Noteret_dato
 #   ### Current pregnancy (mechanical)
-    # sex
+  # multiple pregnancies
   - name: female_fetus
     key_column: b_cpr
     match_on: b_cpr
@@ -579,7 +605,6 @@ conditional_bool_criteria:
         value: ["Kvinde"]
         date_col: Fødselstidspunkt
 
-  # multiple pregnancies
   - name: current_multiple_pregnancies
     key_column: b_cpr
     match_on: b_cpr
