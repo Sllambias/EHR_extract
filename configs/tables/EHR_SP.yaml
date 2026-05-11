@@ -391,6 +391,7 @@ conditional_bool_criteria:
         column: Diagnosekode
         operator: "startswith"
         value: ["DO23", "DO98"]
+        date_col: Noteret_dato
 
   ### Obstetric history
   - name: previous_ptb
