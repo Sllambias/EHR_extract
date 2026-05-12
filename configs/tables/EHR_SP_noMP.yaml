@@ -89,7 +89,13 @@ time_conditionals:
     max_date:
       date_col: pregnancy_start
       offset_days: 0
-
+  six_months_before_pregnancy:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: -180
+    max_date:
+      date_col: pregnancy_start
+      offset_days: 0
 extract_criteria:
   ### Maternal characteristics
   - name: ethnicity
