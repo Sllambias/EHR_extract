@@ -188,6 +188,19 @@ custom_criteria:
       mapping_table_birth_id_column: BABY_Fødsel_ID
       mapping_table_child_cpr_column: BABY_CPR
     action: exclude
+  # Remove multiple (twin etc.) births (no SP)
+  - function: find_multiple_births
+    args: 
+      table: ${paths.input_dir_SDS}/nyfoedte.csv
+      match_on: CPRnummer_Barn
+      birth_id_column: DW_EK_Foedsel
+    action: exclude
+  - function: find_multiple_births
+    args: 
+      table: ${paths.input_dir_SDS}/mfr.csv
+      match_on: CPR_BARN
+      birth_id_column: FOEDSELSLOEBENUMMER
+    action: exclude
   # Removes close pregnancies (no SP)
   - function: find_close_births
     args:
