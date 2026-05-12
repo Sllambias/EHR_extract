@@ -113,27 +113,12 @@ def format_sp_ga(ga_str):
 
 def format_criterion(criterion):
     crit_str = f"{criterion.action} IF: "
-    s = [f"{cond.condition} {cond.column} {cond.operator} {cond.value}" for cond in criterion.conditions]
-    print(crit_str, s)
-    for condition in criterion.conditions:
-        if condition.operator in ["in", "not_in"]:
-            value_str = (
-                f"{condition.value[:5]}... (total {len(condition.value)})"
-                if isinstance(condition.value, list)
-                else str(condition.value)
-            )
-        else:
-            value_str = str(condition.value)
-        return f"{condition.table}.{condition.column} {condition.operator} {value_str}"
-    if criterion.operator in ["in", "not_in"]:
-        value_str = (
-            f"{criterion.value[:5]}... (total {len(criterion.value)})"
-            if isinstance(criterion.value, list)
-            else str(criterion.value)
-        )
-    else:
-        value_str = str(criterion.value)
-    return f"{criterion.table}.{criterion.column} {criterion.operator} {value_str}"
+    s = [
+        f"{cond.get('condition', None)} {cond.get('column', None)} {cond.get('operator', None)} {cond.get('value', None)}"
+        for cond in criterion.conditions
+    ]
+    output = crit_str + " ".join(s)
+    return output
 
 
 class RecursiveSearchpathPlugin(SearchPathPlugin):
