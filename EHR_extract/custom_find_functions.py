@@ -17,9 +17,7 @@ def match_images_with_child(
     table = table.with_columns(pl.col(birthday_key).str.to_date())
     table = table.with_columns(pl.col(study_date_key).cast(pl.String).str.to_date("%Y%m%d"))
     table = table.with_columns(pl.col(ga_key).str.to_integer(strict=False))
-    print("pre unique len", len(table))
     table = table.unique()
-    print("post unique len", len(table))
     table = table.with_columns(
         image_during_pregnancy=pl.col(study_date_key).is_between(
             pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
@@ -113,8 +111,11 @@ def find_images_with_predicted_classes(
     return population, discard_stats
 
 
-def find_close_births(table, match_on, mom_column, birth_id_column, delivery_date_column, threshold_days, population):
+def find_close_births(
+    table, match_on, mom_column, birth_id_column, delivery_date_column, threshold_days, population, population_key_column
+):
     # Sort by mother and birth date
+    population = set(population.get_column(population_key_column))
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
@@ -143,7 +144,8 @@ def find_close_births(table, match_on, mom_column, birth_id_column, delivery_dat
     return siblings_to_exclude
 
 
-def find_multiple_births(table, match_on, birth_id_column, population):
+def find_multiple_births(table, match_on, birth_id_column, population, population_key_column):
+    population = set(population.get_column(population_key_column))
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")

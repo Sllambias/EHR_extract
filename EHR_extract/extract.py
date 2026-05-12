@@ -15,22 +15,107 @@ from EHR_extract.custom_find_functions import (
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     filter_numeric_rows,
+    format_criterion,
     get_python_operator,
     load_table,
+    merge_composed_population_tables,
     merge_population_tables,
     update_population,
+    RecursiveSearchpathPlugin,
 )
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
+from hydra.core.plugins import Plugins
 
 load_dotenv()
+Plugins.instance().register(RecursiveSearchpathPlugin)
+
+
+def match_value_with_child_cpr_on_birth_id(
+    operator,
+    value,
+    value_table_path,
+    value_column,
+    value_table_birth_id_column,
+    mapping_table_path,
+    mapping_table_birth_id_column,
+    mapping_table_child_cpr_column,
+    population,
+    population_key_column,
+):
+    value_table = load_table(value_table_path)
+
+    py_operator = get_python_operator(operator)
+    if isinstance(value, ListConfig):
+        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
+    else:
+        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+
+    mapping_table = load_table(mapping_table_path)
+    mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
+
+    joined = value_table.join(
+        mapping_table,
+        left_on=value_table_birth_id_column,
+        right_on=mapping_table_birth_id_column,
+        how="inner",
+    )
+
+    matches = set(joined[mapping_table_child_cpr_column].unique())
+    return matches
+
+
+def match_value_with_child_cpr_on_birthdate(
+    operator,
+    value,
+    value_table_path,
+    value_column,
+    value_time_column,
+    value_mother_cpr_column,
+    population,
+    population_mother_cpr_column,
+    population_child_cpr_column,
+    population_birth_column,
+    population_gestational_age_column,
+    population_key_column,
+):
+    value_table = load_table(value_table_path)
+
+    # Filter based on operator and value
+    py_operator = get_python_operator(operator)
+    if isinstance(value, ListConfig):
+        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
+    else:
+        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+
+    # Join on mother's CPR
+    joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
+
+    # Calculate conception date: birthdate - gestational_age weeks
+    joined = filter_numeric_rows(joined, population_gestational_age_column)
+    joined = joined.with_columns(
+        conception_date=pl.col(population_birth_column).str.to_datetime()
+        - pl.duration(days=pl.col(population_gestational_age_column).cast(pl.Int64))
+    )
+
+    # Check if procedure_time is within conception_date +/- time_window_days
+    joined = joined.filter(
+        (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
+        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birth_column).str.to_datetime())
+    )
+    # Get the unique child CPRs
+    matches = set(joined[population_child_cpr_column].unique())
+    return matches
+
 
 custom_functions = {
     "find_close_births": find_close_births,
     "find_images_within_time_windows": find_images_within_time_windows,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
-    "merge_population_on": merge_population_on,
-    "match_images_with_child": match_images_with_child,
     "find_multiple_births": find_multiple_births,
+    "match_images_with_child": match_images_with_child,
+    "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
+    "match_value_with_child_cpr_on_birth_id": match_value_with_child_cpr_on_birth_id,
+    "merge_population_on": merge_population_on,
 }
 
 
@@ -85,14 +170,14 @@ def extract_from_cfg(cfg, population):
             subset=set(criterion_population),
             action=criterion.action,
         )
-        logging.info(f"Population size: {len(population)} after filtering on criteria {criterion} \n")
+        logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
         all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
 
     logging.info("\n ### Applying custom criteria ### \n")
     for custom_cfg in cfg.get("custom_criteria", {}):
         fn = custom_functions[custom_cfg.function]
         args = custom_cfg.args
-        set_of_matches = fn(**args, population=set(population.get_column(cfg.population.population_key)))
+        set_of_matches = fn(**args, population=population, population_key_column=cfg.population.population_key)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
             key=cfg.population.population_key,
@@ -157,6 +242,7 @@ def make_train_test_split(holdout_csv_path, population, split_key):
 )
 def main(cfg: DictConfig) -> None:
     population = merge_population_tables(cfg.population.tables)
+    population = merge_composed_population_tables(population, cfg.population.population_key, cfg.population.composed_tables)
     population, discards = extract_from_cfg(cfg, population=population)
     os.makedirs(cfg.paths.output_dir, exist_ok=True)
     d = {}
@@ -179,7 +265,7 @@ def main(cfg: DictConfig) -> None:
 
         intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
         if len(intersection) > 0:
-            logging.warn(
+            logging.warning(
                 f"leak detected in train and test splits. Removing leaked samples from TEST but this should be investigated. Leaked IDs: {intersection}"
             )
             test_pop = test_pop.filter(~pl.col(cfg.population.population_key).is_in(intersection))
