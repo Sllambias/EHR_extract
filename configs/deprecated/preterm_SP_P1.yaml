@@ -35,6 +35,7 @@ conditional_criteria:
   - action: include
     conditions:
       - condition:
+        column: 
         table: ${paths.input_dir_SP}/Population.csv
         match_on: BABY_CPR
   # GA available at birth
