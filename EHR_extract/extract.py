@@ -241,11 +241,15 @@ def make_train_test_split(holdout_csv_path, population, split_key):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
-    population = merge_population_tables(cfg.population.tables)
+    population = pl.DataFrame()
+
+    if cfg.population.get("tables", None) is not None:
+        population = merge_population_tables(cfg.population.tables, population)
     if cfg.population.get("composed_tables", None) is not None:
         population = merge_composed_population_tables(
             population, cfg.population.population_key, cfg.population.composed_tables
         )
+
     population, discards = extract_from_cfg(cfg, population=population)
     os.makedirs(cfg.paths.output_dir, exist_ok=True)
     d = {}

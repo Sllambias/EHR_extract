@@ -69,8 +69,7 @@ def update_population(population, key, subset, action):
     return population, discards, len(discards), pre_discard_population
 
 
-def merge_population_tables(table_cfgs: list, strict=True):
-    population = pl.DataFrame()
+def merge_population_tables(table_cfgs: list, population, strict=True):
     for table_cfg in table_cfgs:
         tab = load_table(table_cfg.table, strict=strict)
         tab = tab.select(list(table_cfg.columns.values()))

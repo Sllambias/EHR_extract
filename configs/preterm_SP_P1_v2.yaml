@@ -18,18 +18,6 @@ population:
   split_key: CPR_MOR
   file_path_key: FILE_PATH
   tables: 
-    - table: ${paths.input_dir_SDS}/mfr.csv
-      columns:
-        CPR_BARN: CPR_BARN
-        CPR_MOR: CPR_MODER
-        GA: GESTATIONSALDER_DAGE
-        BIRTHDAY: FOEDSELSDATO
-    - table: ${paths.input_dir_SDS}/nyfoedte.csv
-      columns:
-        CPR_BARN: CPRnummer_Barn
-        CPR_MOR: CPRnummer_Mor
-        GA: Gestationsalder
-        BIRTHDAY: FoedselsDato_Barn
   composed_tables:
     - merge_on: CPR_BARN
       format_SP_GA: True
