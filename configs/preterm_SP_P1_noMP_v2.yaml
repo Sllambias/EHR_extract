@@ -60,20 +60,26 @@ conditional_criteria:
         column: Gestationsalder
         operator: ">"
         value: 0
+      - condition: or
+        table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+        match_on: BABY_CPR
+        column: Gestationsalder
+        operator: ">"
+        value: 0
   # Only first pregnancy (no SP)
-  - action: include
+  - action: exclude
     conditions:
       - condition: 
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: PARITET
-        operator: "=="
+        operator: "!="
         value: "1"
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Paritet
-        operator: "=="
+        operator: "!="
         value: "1"
   # Only live birth (no SP)
   - action: exclude

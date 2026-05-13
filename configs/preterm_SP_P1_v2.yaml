@@ -60,6 +60,12 @@ conditional_criteria:
         column: Gestationsalder
         operator: ">"
         value: 0
+      - condition: or
+        table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+        match_on: BABY_CPR
+        column: Gestationsalder
+        operator: ">"
+        value: 0
   # Only first pregnancy (no SP)
   - action: include
     conditions:
