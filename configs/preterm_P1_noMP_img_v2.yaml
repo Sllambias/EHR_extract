@@ -1,6 +1,5 @@
 defaults:
   - default@
-  - preterm_SP_P1_noMP_v2@
   - _self_
 
 paths:
@@ -13,6 +12,7 @@ paths:
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
 
 strict: True
+preterm_cutoff: 259
 
 population: 
   population_key: CPR_BARN

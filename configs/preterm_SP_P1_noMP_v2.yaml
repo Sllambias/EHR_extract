@@ -1,6 +1,5 @@
 defaults:
   - default@
-  - preterm_SP_P1_v2@
   - _self_
 
 paths:
@@ -12,7 +11,28 @@ paths:
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
 
+strict: True
+preterm_cutoff: 259
 
+population: 
+  population_key: CPR_BARN
+  split_key: CPR_MOR
+  file_path_key: FILE_PATH
+  tables: 
+  composed_tables:
+    - merge_on: CPR_BARN
+      format_SP_GA: True
+      tables:
+        - table: ${paths.input_dir_SP}/Population.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            CPR_MOR: MOR_CPR
+            BIRTHDAY: Fødselstidspunkt
+        - table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            GA: Gestationsalder
+            
 conditional_criteria:
   # GA available at birth
   - action: exclude
