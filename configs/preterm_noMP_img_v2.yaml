@@ -76,21 +76,6 @@ conditional_criteria:
         column: Gestationsalder
         operator: "not_null"
         value: 
-  # Only first pregnancy (no SP)
-  - action: exclude
-    conditions:
-      - condition: 
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PARITET
-        operator: "!="
-        value: "1"
-      - condition: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Paritet
-        operator: "!="
-        value: "1"
   # Only live birth (no SP)
   - action: exclude
     conditions:
