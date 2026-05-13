@@ -34,25 +34,25 @@ population:
 
 conditional_criteria:
   # GA available at birth
-  - action: include
+  - action: exclude
     conditions: 
       - condition: 
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: GESTATIONSALDER_DAGE
-        operator: "not_null"
+        operator: "missing"
         value: 
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Gestationsalder
-        operator: "not_null"
+        operator: "missing"
         value: 
       - condition: or
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
-        operator: "not_null"
+        operator: "missing"
         value: 
   # Only first pregnancy (no SP)
   - action: exclude
