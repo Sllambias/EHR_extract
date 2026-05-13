@@ -168,7 +168,7 @@ custom_criteria:
   # C-section SP 
   - function: match_value_with_child_cpr_on_birthdate_if_ga_below_threshold
     args:
-      value: "KMCA00"
+      value: "KMCA"
       operator: startswith
       value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
       value_column: ProcedureCode
