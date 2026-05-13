@@ -52,20 +52,20 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: GESTATIONSALDER_DAGE
-        operator: ">"
-        value: 0
+        operator: "not_null"
+        value: 
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Gestationsalder
-        operator: ">"
-        value: 0
-      - condition: or
+        operator: "not_null"
+        value: 
+      - condition: 
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
-        operator: ">"
-        value: 0
+        operator: "not_null"
+        value: 
   # Only first pregnancy (no SP)
   - action: include
     conditions:

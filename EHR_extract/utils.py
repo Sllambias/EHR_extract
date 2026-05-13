@@ -29,6 +29,8 @@ def get_python_operator(operator_str):
         raise NotImplementedError("NOT IN is not implemented as it should not be used. Be precise and use the IN operator.")
     elif operator_str == "startswith":
         return lambda col, val: col.str.starts_with(val)
+    elif operator_str == "not_null":
+        return lambda col, val: col.is_not_null()
     elif operator_str == "==":
         return lambda col, val: col.cast(pl.String) == val
     elif operator_str == "!=":
