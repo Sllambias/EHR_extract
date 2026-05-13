@@ -120,11 +120,6 @@ def find_close_births(
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
-    table = table.filter(pl.col(match_on).is_in(population))
-    logging.debug(
-        f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} \
-            after filtering on {match_on}"
-    )
 
     table = table.with_columns(pl.col(delivery_date_column).str.to_date())
     table = table.sort([mom_column, delivery_date_column])
@@ -140,6 +135,8 @@ def find_close_births(
     close_siblings = table.filter(
         (pl.col("diff").dt.total_days() < 280) & (pl.col(birth_id_column) != pl.col("prev_child_birth_ID"))
     )
+    close_siblings = close_siblings.filter(pl.col(match_on).is_in(population))
+
     # Get the CPR_BARN values to exclude
     siblings_to_exclude = set(close_siblings[match_on]) | set(close_siblings["prev_child_ID"])
     return siblings_to_exclude
@@ -150,12 +147,12 @@ def find_multiple_births(table, match_on, birth_id_column, population, populatio
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
-    table = table.filter(pl.col(match_on).is_in(population))
+
+    multiple_births = table.filter(table[birth_id_column].is_duplicated())
+    multiple_births = multiple_births.filter(pl.col(match_on).is_in(population))
     logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} \
             after filtering on {match_on}"
     )
-
-    multiple_births = table.filter(table[birth_id_column].is_duplicated())
     children_from_multiple_births = set(multiple_births[match_on])
     return children_from_multiple_births
