@@ -1,3 +1,10 @@
+# How to generate populations:
+1. Formalize inclusion/exclusion criteria in a well-defined config.
+2. 
+
+
+
+
 ### The population
 The ```population:``` defines the base population and the dataframe that will be used to filter the population. The required keys are 
 - `population.population_key` which defines the key/column which defines the population

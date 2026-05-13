@@ -45,7 +45,7 @@ population:
             GA: Gestationsalder
 
 imaging_table:
-  table: /projects/users/people/seblla/all_images_2026-04-27.csv
+  table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-04-27.csv
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path
