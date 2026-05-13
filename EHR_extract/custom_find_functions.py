@@ -14,7 +14,7 @@ def match_images_with_child(
     table = table.select(list(table_cfg.columns.values()))
     table = table.rename({v: k for k, v in table_cfg.columns.items()})
     table = table.join(population, left_on=mom_key, right_on=mom_key)
-    table = table.with_columns(pl.col(birthday_key).str.to_date())
+    table = table.with_columns(pl.col(birthday_key).str.to_datetime())
     table = table.with_columns(pl.col(study_date_key).cast(pl.String).str.to_date("%Y%m%d"))
     table = table.with_columns(pl.col(ga_key).str.to_integer(strict=False))
     table = table.unique()
@@ -23,6 +23,7 @@ def match_images_with_child(
             pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
         )
     )
+
     table = table.filter(pl.col("image_during_pregnancy"))
     logging.info(f"Valid images: {len(table)} after matching image + EHR matching.  \n")
     return table

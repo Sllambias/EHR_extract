@@ -10,7 +10,7 @@ paths:
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
-  
+
 strict: True
 
 population: 
@@ -30,6 +30,19 @@ population:
         CPR_MOR: CPRnummer_Mor
         GA: Gestationsalder
         BIRTHDAY: FoedselsDato_Barn
+  composed_tables:
+    - merge_on: CPR_BARN
+      format_SP_GA: True
+      tables:
+        - table: ${paths.input_dir_SP}/Population.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            CPR_MOR: MOR_CPR
+            BIRTHDAY: Fødselstidspunkt
+        - table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            GA: Gestationsalder
 
 imaging_table:
   table: /projects/users/people/seblla/all_images_2026-04-27.csv
@@ -49,45 +62,66 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: GESTATIONSALDER_DAGE
-        operator: ">"
-        value: 0
+        operator: "not_null"
+        value: 
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Gestationsalder
-        operator: ">"
-        value: 0
-  # Only live birth
-  - action: include
+        operator: "not_null"
+        value: 
+      - condition: 
+        table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+        match_on: BABY_CPR
+        column: Gestationsalder
+        operator: "not_null"
+        value: 
+  # Only first pregnancy (no SP)
+  - action: exclude
+    conditions:
+      - condition: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: PARITET
+        operator: "!="
+        value: "1"
+      - condition: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Paritet
+        operator: "!="
+        value: "1"
+  # Only live birth (no SP)
+  - action: exclude
     conditions:
       - condition: 
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: LEVENDE_ELLER_DOEDFOEDT
-        operator: "=="
+        operator: "!="
         value: Levendefødt
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: LevendefoedtDoedfoedt
-        operator: "=="
+        operator: "!="
         value: "1"
-  # Not C-section (kejsersnit)
-  - action: include
+  # No C-section/kejsersnit (SP in custom criteria)
+  - action: exclude
     conditions:
       - condition:
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Kejsersnit
-        operator: "=="
+        operator: "!="
         value: "-1"
       - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_KEJSERSNIT
-        operator: "!="
+        operator: "=="
         value: "1"
-  # Not induced
+  # Not induced (SP in custom criteria)
   - action: exclude
     conditions:
       - condition:
@@ -116,7 +150,61 @@ conditional_criteria:
         value: "Ja"
 
 custom_criteria:
-  # Remove multiple (twin etc.) births
+  # C-section SP 
+  - function: match_value_with_child_cpr_on_birthdate
+    args:
+      value: "KMCA00"
+      operator: startswith
+      value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+      value_column: ProcedureCode
+      value_time_column: ServiceDatetime
+      value_mother_cpr_column: MOR_CPR
+      population_birth_column: BIRTHDAY
+      population_gestational_age_column: GA
+      population_child_cpr_column: CPR_BARN
+      population_mother_cpr_column: CPR_MOR
+    action: exclude
+  # induction SP
+  - function: match_value_with_child_cpr_on_birthdate
+    args:
+      value: ["KMAC00" , "KMAC96A", "BKHD2", "BKHD20"]
+      operator: "=="
+      value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+      value_column: ProcedureCode
+      value_time_column: ServiceDatetime
+      value_mother_cpr_column: MOR_CPR
+      population_birth_column: BIRTHDAY
+      population_gestational_age_column: GA
+      population_child_cpr_column: CPR_BARN
+      population_mother_cpr_column: CPR_MOR
+    action: exclude
+  # induction SP continued
+  - function: match_value_with_child_cpr_on_birthdate
+    args:
+      value: ["DO837" , "DO847"]
+      operator: startswith
+      value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+      value_column: Diagnosekode
+      value_time_column: Noteret_dato
+      value_mother_cpr_column: MOR_CPR
+      population_birth_column: BIRTHDAY
+      population_gestational_age_column: GA
+      population_child_cpr_column: CPR_BARN
+      population_mother_cpr_column: CPR_MOR
+    action: exclude
+  # induction SP continued
+  - function: match_value_with_child_cpr_on_birth_id
+    args:
+      value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
+      operator: "=="
+      value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+      value_column: Måde
+      value_table_birth_id_column: BABY_Fødsel_ID
+      mapping_table_path: ${paths.input_dir_SP}/Population.csv
+      mapping_table_birth_id_column: BABY_Fødsel_ID
+      mapping_table_child_cpr_column: BABY_CPR
+    action: exclude
+  # Remove multiple (twin etc.) births (no SP)
   - function: find_multiple_births
     args: 
       table: ${paths.input_dir_SDS}/nyfoedte.csv
@@ -129,7 +217,7 @@ custom_criteria:
       match_on: CPR_BARN
       birth_id_column: FOEDSELSLOEBENUMMER
     action: exclude
-  # Removes close pregnancies
+  # Removes close pregnancies (no SP)
   - function: find_close_births
     args:
       table: ${paths.input_dir_SDS}/nyfoedte.csv
