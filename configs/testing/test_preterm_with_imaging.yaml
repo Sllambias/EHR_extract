@@ -1,6 +1,6 @@
 defaults:
   - default@
-  - preterm_P1_noMP_img_v2@
+  - preterm_noMP_img_v2@
   - _self_
 
 paths:

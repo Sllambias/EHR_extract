@@ -48,7 +48,7 @@ conditional_criteria:
         column: Gestationsalder
         operator: "not_null"
         value: 
-      - condition: 
+      - condition: or
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
