@@ -22,6 +22,7 @@ from EHR_extract.utils import (
     merge_population_tables,
     update_population,
     RecursiveSearchpathPlugin,
+    deduplicate_barn_cpr,
 )
 from omegaconf import DictConfig, ListConfig, OmegaConf
 from hydra.core.plugins import Plugins
@@ -30,7 +31,7 @@ load_dotenv()
 Plugins.instance().register(RecursiveSearchpathPlugin)
 
 
-def match_value_with_child_cpr_on_birth_id(
+def match_value_with_child_cpr_on_birth_id_if_ga_below_threshold(
     operator,
     value,
     value_table_path,
@@ -41,6 +42,8 @@ def match_value_with_child_cpr_on_birth_id(
     mapping_table_child_cpr_column,
     population,
     population_key_column,
+    population_gestational_age_column,
+    ga_threshold,
 ):
     value_table = load_table(value_table_path)
 
@@ -59,12 +62,14 @@ def match_value_with_child_cpr_on_birth_id(
         right_on=mapping_table_birth_id_column,
         how="inner",
     )
+    joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
+    joined = joined.filter(pl.col(population_gestational_age_column).cast(pl.Int64) < ga_threshold)
 
     matches = set(joined[mapping_table_child_cpr_column].unique())
     return matches
 
 
-def match_value_with_child_cpr_on_birthdate(
+def match_value_with_child_cpr_on_birthdate_if_ga_below_threshold(
     operator,
     value,
     value_table_path,
@@ -77,6 +82,7 @@ def match_value_with_child_cpr_on_birthdate(
     population_birth_column,
     population_gestational_age_column,
     population_key_column,
+    ga_threshold,
 ):
     value_table = load_table(value_table_path)
 
@@ -102,6 +108,8 @@ def match_value_with_child_cpr_on_birthdate(
         (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
         & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birth_column).str.to_datetime())
     )
+    joined = joined.filter(pl.col(population_gestational_age_column).cast(pl.Int64) < ga_threshold)
+
     # Get the unique child CPRs
     matches = set(joined[population_child_cpr_column].unique())
     return matches
@@ -113,8 +121,8 @@ custom_functions = {
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
     "find_multiple_births": find_multiple_births,
     "match_images_with_child": match_images_with_child,
-    "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
-    "match_value_with_child_cpr_on_birth_id": match_value_with_child_cpr_on_birth_id,
+    "match_value_with_child_cpr_on_birthdate_if_ga_below_threshold": match_value_with_child_cpr_on_birthdate_if_ga_below_threshold,
+    "match_value_with_child_cpr_on_birth_id_if_ga_below_threshold": match_value_with_child_cpr_on_birth_id_if_ga_below_threshold,
     "merge_population_on": merge_population_on,
 }
 
@@ -128,7 +136,10 @@ def extract_from_cfg(cfg, population):
     for criterion in cfg.get("conditional_criteria", {}):
         criterion_population = set()
         for condition in criterion.conditions:
-            table = load_table(condition.table, strict=cfg.strict)
+            if condition.table == "population":
+                table = population.clone()
+            else:
+                table = load_table(condition.table, strict=cfg.strict)
             logging.debug(
                 f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
                     for table: {condition.table}"
@@ -249,7 +260,7 @@ def main(cfg: DictConfig) -> None:
         population = merge_composed_population_tables(
             population, cfg.population.population_key, cfg.population.composed_tables
         )
-
+    population = deduplicate_barn_cpr(population, population_key=cfg.population.population_key)
     population, discards = extract_from_cfg(cfg, population=population)
     os.makedirs(cfg.paths.output_dir, exist_ok=True)
     d = {}

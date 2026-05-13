@@ -12,6 +12,7 @@ paths:
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
   
 strict: True 
+preterm_cutoff: 259
 
 population: 
   population_key: CPR_BARN
@@ -93,12 +94,24 @@ conditional_criteria:
         column: Kejsersnit
         operator: "!="
         value: "-1"
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
       - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: MARKOER_KEJSERSNIT
         operator: "=="
         value: "1"
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
   # Not induced (SP in custom criteria)
   - action: exclude
     conditions:
@@ -108,28 +121,52 @@ conditional_criteria:
         column: MARKOER_IGANGSAETTELSE
         operator: "=="
         value: "1"
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Ballonkateter
         operator: "=="
         value: "Ja"
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_Medicinsk
         operator: "=="
         value: "Ja"
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
       - condition: or
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Igangsaettelse_HSP
         operator: "=="
         value: "Ja"
-
+      - condition: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
+        
 custom_criteria:
   # C-section SP 
-  - function: match_value_with_child_cpr_on_birthdate
+  - function: match_value_with_child_cpr_on_birthdate_if_ga_below_threshold
     args:
       value: "KMCA00"
       operator: startswith
@@ -141,9 +178,10 @@ custom_criteria:
       population_gestational_age_column: GA
       population_child_cpr_column: CPR_BARN
       population_mother_cpr_column: CPR_MOR
+      ga_threshold: ${preterm_cutoff}
     action: exclude
   # induction SP
-  - function: match_value_with_child_cpr_on_birthdate
+  - function: match_value_with_child_cpr_on_birthdate_if_ga_below_threshold
     args:
       value: ["KMAC00" , "KMAC96A", "BKHD2", "BKHD20"]
       operator: "=="
@@ -155,9 +193,10 @@ custom_criteria:
       population_gestational_age_column: GA
       population_child_cpr_column: CPR_BARN
       population_mother_cpr_column: CPR_MOR
+      ga_threshold: ${preterm_cutoff}
     action: exclude
   # induction SP continued
-  - function: match_value_with_child_cpr_on_birthdate
+  - function: match_value_with_child_cpr_on_birthdate_if_ga_below_threshold
     args:
       value: ["DO837" , "DO847"]
       operator: startswith
@@ -169,9 +208,10 @@ custom_criteria:
       population_gestational_age_column: GA
       population_child_cpr_column: CPR_BARN
       population_mother_cpr_column: CPR_MOR
+      ga_threshold: ${preterm_cutoff}
     action: exclude
   # induction SP continued
-  - function: match_value_with_child_cpr_on_birth_id
+  - function: match_value_with_child_cpr_on_birth_id_if_ga_below_threshold
     args:
       value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
       operator: "=="
@@ -181,6 +221,8 @@ custom_criteria:
       mapping_table_path: ${paths.input_dir_SP}/Population.csv
       mapping_table_birth_id_column: BABY_Fødsel_ID
       mapping_table_child_cpr_column: BABY_CPR
+      population_gestational_age_column: GA
+      ga_threshold: ${preterm_cutoff}
     action: exclude
   # Removes close pregnancies (no SP)
   - function: find_close_births

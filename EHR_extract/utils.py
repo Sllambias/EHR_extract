@@ -69,12 +69,22 @@ def update_population(population, key, subset, action):
     return population, discards, len(discards), pre_discard_population
 
 
+def deduplicate_barn_cpr(population, population_key):
+    missing_count = pl.concat_list([pl.col(column).is_null().cast(pl.UInt32) for column in population.columns]).list.sum()
+    population = population.with_columns(_missing_count=missing_count)
+    population = population.sort([population_key, "_missing_count"], descending=[False, True])
+    population = population.unique(subset=[population_key], keep="first").drop("_missing_count")
+    return population
+
+
 def merge_population_tables(table_cfgs: list, population, strict=True):
     for table_cfg in table_cfgs:
         tab = load_table(table_cfg.table, strict=strict)
         tab = tab.select(list(table_cfg.columns.values()))
         tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
         tab = tab.select(sorted(tab.columns))
+        if "GA" in tab.columns:
+            tab = filter_numeric_rows(tab, "GA")
         population = population.vstack(tab)
     return population
 
