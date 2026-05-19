@@ -1,7 +1,6 @@
 import logging
 import polars as pl
 from EHR_extract.utils import filter_numeric_rows, get_python_operator, load_table
-from omegaconf import ListConfig
 
 
 def match_value_with_child_cpr_on_birth_id(
@@ -19,10 +18,7 @@ def match_value_with_child_cpr_on_birth_id(
     value_table = load_table(value_table_path)
 
     py_operator = get_python_operator(operator)
-    if isinstance(value, ListConfig):
-        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
-    else:
-        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    value_table = value_table.filter(py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path)
     mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
@@ -57,10 +53,7 @@ def match_value_with_child_cpr_on_birthdate(
 
     # Filter based on operator and value
     py_operator = get_python_operator(operator)
-    if isinstance(value, ListConfig):
-        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
-    else:
-        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    value_table = value_table.filter(py_operator(pl.col(value_column), value))
     # Join on mother's CPR
     joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
 

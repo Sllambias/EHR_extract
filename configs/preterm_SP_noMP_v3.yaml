@@ -170,7 +170,7 @@ conditional_criteria:
         function: match_value_with_child_cpr_on_birthdate
         args:
           value: ["KMAC00" , "KMAC96A", "BKHD2", "BKHD20"]
-          operator: "=="
+          operator: in
           value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
           value_column: ProcedureCode
           value_time_column: ServiceDatetime
@@ -188,7 +188,26 @@ conditional_criteria:
       - custom: or
         function: match_value_with_child_cpr_on_birthdate
         args:
-          value: ["DO837" , "DO847"]
+          value: "DO837" 
+          operator: startswith
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          value_column: Diagnosekode
+          value_time_column: Noteret_dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - standard: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: "DO847"
           operator: startswith
           value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
           value_column: Diagnosekode
@@ -208,7 +227,7 @@ conditional_criteria:
         function: match_value_with_child_cpr_on_birth_id
         args:
           value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
-          operator: "=="
+          operator: in
           value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
           value_column: Måde
           value_table_birth_id_column: BABY_Fødsel_ID
@@ -263,7 +282,7 @@ conditional_criteria:
         function: match_value_with_child_cpr_on_birth_id
         args:
           value: ["Foster 2", "Foster 3", "Foster 4"]
-          operator: "=="
+          operator: in
           value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
           value_column: Foster nr.
           value_table_birth_id_column: BABY_Fødsel_ID
@@ -284,4 +303,3 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
 
-      

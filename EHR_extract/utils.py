@@ -26,7 +26,7 @@ def get_python_operator(operator_str):
     if operator_str == "in":
         return lambda col, val: col.is_in(val)
     elif operator_str == "not_in":
-        raise NotImplementedError("NOT IN is not implemented as it should not be used. Be precise and use the IN operator.")
+        return lambda col, val: ~col.is_in(val)
     elif operator_str == "startswith":
         return lambda col, val: col.str.starts_with(val)
     elif operator_str == "missing":
