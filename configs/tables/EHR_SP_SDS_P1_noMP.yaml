@@ -266,7 +266,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: CPR_MODER
+        match_on: V_CPR
         column: C_DIAG
         operator: "in"
         value: ["DE282"]
