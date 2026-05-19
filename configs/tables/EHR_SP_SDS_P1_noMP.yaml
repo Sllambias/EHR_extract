@@ -270,7 +270,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DE282"]
-        date_col: D_ODTO
+        date_col: D_INDDTO
 #   - name: endometriose
 #     key_column: b_cpr
 #     match_on: m_cpr
