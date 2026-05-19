@@ -40,19 +40,50 @@ def expr_startswith(col: pl.Expr, val) -> pl.Expr:
         [s.str.starts_with(p) for p in val]
     )
 
-def load_table(table_cfg, strict=True, n_rows=None, has_header=True, null_values=None):
+def load_table(
+    table_cfg,
+    strict=True,
+    n_rows=None,
+    has_header=True,
+    null_values=None,
+    _join_depth: int = 0,
+):
     if isinstance(table_cfg, str):
-        return load_table_path(table_cfg, strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
-    else:
-        table1 = load_table(table_cfg["table1"], strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
-        table2 = load_table(table_cfg["table2"], strict=strict, n_rows=n_rows, has_header=has_header, null_values=null_values)
-        left_on = table_cfg["left_on"]
-        right_on = table_cfg["right_on"]
-        if isinstance(left_on, list):
-            left_on = [left_on]
-        if isinstance(right_on, list):
-            right_on = [right_on]
-        return table1.join(table2, left_on=left_on, right_on=right_on, how="left")
+        return load_table_path(
+            table_cfg,
+            strict=strict,
+            n_rows=n_rows,
+            has_header=has_header,
+            null_values=null_values,
+        )
+    table1 = load_table(
+        table_cfg["table1"],
+        strict=strict,
+        n_rows=n_rows,
+        has_header=has_header,
+        null_values=null_values,
+        _join_depth=_join_depth + 1,
+    )
+    table2 = load_table(
+        table_cfg["table2"],
+        strict=strict,
+        n_rows=n_rows,
+        has_header=has_header,
+        null_values=null_values,
+        _join_depth=_join_depth + 1,
+    )
+    left_on = table_cfg["left_on"]
+    right_on = table_cfg["right_on"]
+    # Use a unique suffix per nested join so `_right` from an inner join
+    # does not collide when an outer join also has overlapping columns.
+    suffix = f"_join{_join_depth}"
+    return table1.join(
+        table2,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+        suffix=suffix,
+    )
 
 def get_python_operator(operator_str):
     if operator_str == "in":
