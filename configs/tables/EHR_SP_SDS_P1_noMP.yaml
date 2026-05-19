@@ -267,7 +267,7 @@ conditional_bool_criteria:
           left_on: V_CPR
           right_on: CPR_MODER
         match_on: CPR_MODER
-        column: DiagnoseKode
+        column: C_DIAG
         operator: "in"
         value: ["DE282"]
         date_col: D_ODTO
