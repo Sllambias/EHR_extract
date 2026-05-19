@@ -114,9 +114,11 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: BMI_MODER
+        date_col: FOEDSELSDATO
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: BMI_Mor
+        date_col: FoedselsDato_Barn
     dtype: float
   # - name: maternal_BMI
   #   key_column: b_cpr
