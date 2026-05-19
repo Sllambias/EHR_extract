@@ -6,14 +6,18 @@ import polars as pl
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
     find_close_births,
+    find_duplicated_ids,
     find_images_with_predicted_classes,
     find_images_within_time_windows,
-    find_multiple_births,
     match_images_with_child,
+    match_value_with_child_cpr_on_birth_id,
+    match_value_with_child_cpr_on_birthdate,
     merge_population_on,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
+    RecursiveSearchpathPlugin,
+    deduplicate_barn_cpr,
     filter_numeric_rows,
     format_criterion,
     get_python_operator,
@@ -21,110 +25,54 @@ from EHR_extract.utils import (
     merge_composed_population_tables,
     merge_population_tables,
     update_population,
-    RecursiveSearchpathPlugin,
-    deduplicate_barn_cpr,
 )
-from omegaconf import DictConfig, ListConfig, OmegaConf
 from hydra.core.plugins import Plugins
+from omegaconf import DictConfig, OmegaConf
 
 load_dotenv()
 Plugins.instance().register(RecursiveSearchpathPlugin)
-
-
-def match_value_with_child_cpr_on_birth_id_if_ga_below_threshold(
-    operator,
-    value,
-    value_table_path,
-    value_column,
-    value_table_birth_id_column,
-    mapping_table_path,
-    mapping_table_birth_id_column,
-    mapping_table_child_cpr_column,
-    population,
-    population_key_column,
-    population_gestational_age_column,
-    ga_threshold,
-):
-    value_table = load_table(value_table_path)
-
-    py_operator = get_python_operator(operator)
-    if isinstance(value, ListConfig):
-        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
-    else:
-        value_table = value_table.filter(py_operator(pl.col(value_column), value))
-
-    mapping_table = load_table(mapping_table_path)
-    mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
-
-    joined = value_table.join(
-        mapping_table,
-        left_on=value_table_birth_id_column,
-        right_on=mapping_table_birth_id_column,
-        how="inner",
-    )
-    joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
-    joined = joined.filter(pl.col(population_gestational_age_column).cast(pl.Int64) < ga_threshold)
-
-    matches = set(joined[mapping_table_child_cpr_column].unique())
-    return matches
-
-
-def match_value_with_child_cpr_on_birthdate_if_ga_below_threshold(
-    operator,
-    value,
-    value_table_path,
-    value_column,
-    value_time_column,
-    value_mother_cpr_column,
-    population,
-    population_mother_cpr_column,
-    population_child_cpr_column,
-    population_birth_column,
-    population_gestational_age_column,
-    population_key_column,
-    ga_threshold,
-):
-    value_table = load_table(value_table_path)
-
-    # Filter based on operator and value
-    py_operator = get_python_operator(operator)
-    if isinstance(value, ListConfig):
-        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
-    else:
-        value_table = value_table.filter(py_operator(pl.col(value_column), value))
-
-    # Join on mother's CPR
-    joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
-
-    # Calculate conception date: birthdate - gestational_age weeks
-    joined = filter_numeric_rows(joined, population_gestational_age_column)
-    joined = joined.with_columns(
-        conception_date=pl.col(population_birth_column).str.to_datetime()
-        - pl.duration(days=pl.col(population_gestational_age_column).cast(pl.Int64))
-    )
-
-    # Check if procedure_time is within conception_date +/- time_window_days
-    joined = joined.filter(
-        (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
-        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birth_column).str.to_datetime())
-    )
-    joined = joined.filter(pl.col(population_gestational_age_column).cast(pl.Int64) < ga_threshold)
-
-    # Get the unique child CPRs
-    matches = set(joined[population_child_cpr_column].unique())
-    return matches
 
 
 custom_functions = {
     "find_close_births": find_close_births,
     "find_images_within_time_windows": find_images_within_time_windows,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
-    "find_multiple_births": find_multiple_births,
+    "find_duplicated_ids": find_duplicated_ids,
     "match_images_with_child": match_images_with_child,
-    "match_value_with_child_cpr_on_birthdate_if_ga_below_threshold": match_value_with_child_cpr_on_birthdate_if_ga_below_threshold,
-    "match_value_with_child_cpr_on_birth_id_if_ga_below_threshold": match_value_with_child_cpr_on_birth_id_if_ga_below_threshold,
+    "match_value_with_child_cpr_on_birth_id": match_value_with_child_cpr_on_birth_id,
+    "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
     "merge_population_on": merge_population_on,
 }
+
+
+def handle_standard_condition(condition, population, population_key_column, population_key, strict):
+    if condition.table == "population":
+        table = population.clone()
+    else:
+        table = load_table(condition.table, strict=strict)
+    logging.debug(
+        f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
+            for table: {condition.table}"
+    )
+
+    table = table.filter(pl.col(condition.match_on).is_in(population[population_key]))
+    logging.debug(
+        f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+        after filtering on {condition.match_on}"
+    )
+
+    if condition.get("operator", None) is None:
+        return set(table[condition.match_on])
+
+    py_operator = get_python_operator(condition.operator)
+    if condition.operator in [">", "<", ">=", "<="]:
+        table = filter_numeric_rows(table, condition.column)
+    table = table.filter(py_operator(pl.col(condition.column), condition.value))
+    logging.debug(
+        f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+            after filtering on {condition.column} {condition.operator} {condition.value}"
+    )
+    return set(table[condition.match_on])
 
 
 def extract_from_cfg(cfg, population):
@@ -136,41 +84,24 @@ def extract_from_cfg(cfg, population):
     for criterion in cfg.get("conditional_criteria", {}):
         criterion_population = set()
         for condition in criterion.conditions:
-            if condition.table == "population":
-                table = population.clone()
-            else:
-                table = load_table(condition.table, strict=cfg.strict)
-            logging.debug(
-                f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
-                    for table: {condition.table}"
-            )
+            if "standard" in condition.keys():
+                matched_ids = handle_standard_condition(
+                    condition, population, cfg.population.population_key, cfg.population.population_key, cfg.strict
+                )
+                conditional = condition.standard
+            elif "custom" in condition.keys():
+                fn = custom_functions[condition.function]
+                args = condition.args
+                matched_ids = fn(**args, population=population, population_key_column=cfg.population.population_key)
+                conditional = condition.custom
 
-            table = table.filter(pl.col(condition.match_on).is_in(population[cfg.population.population_key]))
-            logging.debug(
-                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
-                after filtering on {condition.match_on}"
-            )
-
-            if condition.get("operator", None) is None:
-                last_condition_population = set(table[condition.match_on])
-                continue
-
-            py_operator = get_python_operator(condition.operator)
-            if condition.operator in [">", "<", ">=", "<="]:
-                table = filter_numeric_rows(table, condition.column)
-            table = table.filter(py_operator(pl.col(condition.column), condition.value))
-            logging.debug(
-                f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
-                    after filtering on {condition.column} {condition.operator} {condition.value}"
-            )
-
-            if condition.condition is None:
-                last_condition_population = set(table[condition.match_on])
-            elif condition.condition == "and":
-                last_condition_population = last_condition_population.intersection(set(table[condition.match_on]))
-            elif condition.condition == "or":
+            if conditional is None:
+                last_condition_population = matched_ids
+            elif conditional == "and":
+                last_condition_population = last_condition_population.intersection(matched_ids)
+            elif conditional == "or":
                 criterion_population = last_condition_population
-                last_condition_population = set(table[condition.match_on])
+                last_condition_population = matched_ids
             else:
                 logging.warn("wow, weird condition")
 
@@ -183,21 +114,6 @@ def extract_from_cfg(cfg, population):
         )
         logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
         all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
-
-    logging.info("\n ### Applying custom criteria ### \n")
-    for custom_cfg in cfg.get("custom_criteria", {}):
-        fn = custom_functions[custom_cfg.function]
-        args = custom_cfg.args
-        set_of_matches = fn(**args, population=population, population_key_column=cfg.population.population_key)
-        population, discards, n_discards, n_population_before_discard = update_population(
-            population=population,
-            key=cfg.population.population_key,
-            subset=set_of_matches,
-            action=custom_cfg.action,
-        )
-        all_discards.append([OmegaConf.to_container(custom_cfg), list(discards), n_discards, n_population_before_discard])
-
-        logging.info(f"Population size: {len(population)} after filtering on custom criteria {custom_cfg.function} \n")
 
     logging.info("\n ### Applying imaging matching criteria ### \n")
     if "imaging_table" in cfg.keys():

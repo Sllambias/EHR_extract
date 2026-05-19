@@ -1,8 +1,8 @@
+import os
 import polars as pl
+from EHR_extract.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
-from EHR_extract.paths import get_config_path
-import os
 
 
 def load_table(path, strict=True, n_rows=None, has_header=True):
@@ -31,6 +31,8 @@ def get_python_operator(operator_str):
         return lambda col, val: col.str.starts_with(val)
     elif operator_str == "missing":
         return lambda col, val: col.is_null()
+    elif operator_str == "not missing":
+        return lambda col, val: col.is_not_null()
     elif operator_str == "==":
         return lambda col, val: col.cast(pl.String) == val
     elif operator_str == "!=":
@@ -123,11 +125,14 @@ def format_sp_ga(ga_str):
 
 
 def format_criterion(criterion):
+    def get_standard_format(condition):
+        return f"{condition.get('standard', None)} {condition.get('column', None)} {condition.get('operator', None)} {condition.get('value', None)}"
+
+    def get_custom_format(condition):
+        return f"{condition.get('custom', None)} {condition.get('function', None)} {condition['args'].get('operator', None)} {condition['args'].get('value', None)}"
+
     crit_str = f"{criterion.action} IF: "
-    s = [
-        f"{cond.get('condition', None)} {cond.get('column', None)} {cond.get('operator', None)} {cond.get('value', None)}"
-        for cond in criterion.conditions
-    ]
+    s = [get_standard_format(cond) if "standard" in cond else get_custom_format(cond) for cond in criterion.conditions]
     output = crit_str + " ".join(s)
     return output
 

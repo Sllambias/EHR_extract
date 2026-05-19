@@ -1,6 +1,84 @@
 import logging
 import polars as pl
-from EHR_extract.utils import filter_numeric_rows, load_table
+from EHR_extract.utils import filter_numeric_rows, get_python_operator, load_table
+from omegaconf import ListConfig
+
+
+def match_value_with_child_cpr_on_birth_id(
+    operator,
+    value,
+    value_table_path,
+    value_column,
+    value_table_birth_id_column,
+    mapping_table_path,
+    mapping_table_birth_id_column,
+    mapping_table_child_cpr_column,
+    population,
+    population_key_column,
+):
+    value_table = load_table(value_table_path)
+
+    py_operator = get_python_operator(operator)
+    if isinstance(value, ListConfig):
+        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
+    else:
+        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+
+    mapping_table = load_table(mapping_table_path)
+    mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
+
+    joined = value_table.join(
+        mapping_table,
+        left_on=value_table_birth_id_column,
+        right_on=mapping_table_birth_id_column,
+        how="inner",
+    )
+    joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
+
+    matches = set(joined[mapping_table_child_cpr_column].unique())
+    return matches
+
+
+def match_value_with_child_cpr_on_birthdate(
+    operator,
+    value,
+    value_table_path,
+    value_column,
+    value_time_column,
+    value_mother_cpr_column,
+    population,
+    population_mother_cpr_column,
+    population_child_cpr_column,
+    population_birth_column,
+    population_gestational_age_column,
+    population_key_column,
+):
+    value_table = load_table(value_table_path)
+
+    # Filter based on operator and value
+    py_operator = get_python_operator(operator)
+    if isinstance(value, ListConfig):
+        value_table = value_table.filter(pl.any_horizontal([py_operator(pl.col(value_column), val) for val in value]))
+    else:
+        value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    # Join on mother's CPR
+    joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
+
+    # Calculate conception date: birthdate - gestational_age weeks
+    joined = filter_numeric_rows(joined, population_gestational_age_column)
+    joined = joined.with_columns(
+        conception_date=pl.col(population_birth_column).str.to_datetime()
+        - pl.duration(days=pl.col(population_gestational_age_column).cast(pl.Int64))
+    )
+    # Check if procedure_time is within conception_date +/- time_window_days
+    joined = joined.filter(
+        (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
+        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birth_column).str.to_datetime())
+    )
+
+    # Get the unique child CPRs
+    matches = set(joined[population_child_cpr_column].unique())
+    return matches
 
 
 def match_images_with_child(
@@ -113,10 +191,19 @@ def find_images_with_predicted_classes(
 
 
 def find_close_births(
-    table, match_on, mom_column, birth_id_column, delivery_date_column, threshold_days, population, population_key_column
+    value,
+    operator,
+    table,
+    match_on,
+    mom_column,
+    birth_id_column,
+    delivery_date_column,
+    population,
+    population_key_column,
 ):
     # Sort by mother and birth date
     population = set(population.get_column(population_key_column))
+    py_operator = get_python_operator(operator)
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
@@ -133,7 +220,7 @@ def find_close_births(
     # Filter to find children with siblings born less than 40 weeks apart
     # 40 weeks = 280 days
     close_siblings = table.filter(
-        (pl.col("diff").dt.total_days() < 280) & (pl.col(birth_id_column) != pl.col("prev_child_birth_ID"))
+        (py_operator(pl.col("diff").dt.total_days(), value)) & (pl.col(birth_id_column) != pl.col("prev_child_birth_ID"))
     )
     close_siblings = close_siblings.filter(pl.col(match_on).is_in(population))
 
@@ -142,17 +229,17 @@ def find_close_births(
     return siblings_to_exclude
 
 
-def find_multiple_births(table, match_on, birth_id_column, population, population_key_column):
+def find_duplicated_ids(table, match_on, id_column, population, population_key_column):
     population = set(population.get_column(population_key_column))
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
 
-    multiple_births = table.filter(table[birth_id_column].is_duplicated())
-    multiple_births = multiple_births.filter(pl.col(match_on).is_in(population))
+    duplicated_ids = table.filter(table[id_column].is_duplicated())
+    duplicated_ids = duplicated_ids.filter(pl.col(match_on).is_in(population))
     logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} \
             after filtering on {match_on}"
     )
-    children_from_multiple_births = set(multiple_births[match_on])
-    return children_from_multiple_births
+    duplicated_ids = set(duplicated_ids[match_on])
+    return duplicated_ids
