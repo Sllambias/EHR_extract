@@ -278,7 +278,7 @@ conditional_criteria:
       - custom: or
         function: match_value_with_child_cpr_on_birthdate
         args:
-          value: ["0", "1"]
+          value: ["0", "1", "0.0", "1.0"]
           operator: "!="
           value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
           value_column: Para
