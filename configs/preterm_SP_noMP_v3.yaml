@@ -18,19 +18,6 @@ population:
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
-  tables: 
-    - table: ${paths.input_dir_SDS}/mfr.csv
-      columns:
-        CPR_BARN: CPR_BARN
-        CPR_MOR: CPR_MODER
-        GA: GESTATIONSALDER_DAGE
-        BIRTHDAY: FOEDSELSDATO
-    - table: ${paths.input_dir_SDS}/nyfoedte.csv
-      columns:
-        CPR_BARN: CPRnummer_Barn
-        CPR_MOR: CPRnummer_Mor
-        GA: Gestationsalder
-        BIRTHDAY: FoedselsDato_Barn
   composed_tables:
     - merge_on: CPR_BARN
       format_SP_GA: True
@@ -44,16 +31,6 @@ population:
           columns:
             CPR_BARN: BABY_CPR
             GA: Gestationsalder
-
-imaging_table:
-  table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-04-27.csv
-  columns:
-    CPR_MOR: phair_hash
-    FILE_PATH: file_path
-    STUDY_DATE: study_date
-    PDX: physical_delta_x
-    PDY: physical_delta_y
-    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
 
 conditional_criteria:
   # GA available at birth
@@ -363,28 +340,5 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
+
       
-
-imaging_matching_criteria:
-  # Filter1: Scan-to-delivery interval
-  # Filter2: GA at scan
-  - function: find_images_within_time_windows
-    args: 
-      scan_date_column: STUDY_DATE
-      image_path_column: ${population.file_path_key}
-      population_ga_in_days_at_delivery_column: GA
-      population_delivery_date_column: BIRTHDAY
-      min_diff_days_scan_to_delivery: 0 #0
-      max_diff_days_scan_to_delivery: 210 #210
-      min_ga_in_days_at_scan: 196 #196
-      max_ga_in_days_at_scan: 259 #259
-  # Only Cervix (14)
-  - function: find_images_with_predicted_classes
-    args:
-      table: /projects/users/data/UCPH/DeepFetal/projects/common/PN_plane_classification_april2026/Cervix_preds_v1/cervix_preds.csv
-      classes: [14]
-      image_path_column: file_path
-      class_column: pred
-      population_image_path_column: ${population.file_path_key}
-    
-
