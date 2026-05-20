@@ -98,6 +98,7 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/indvandrer_efterkommer.csv
         match_on: V_PNR
         column: oprindelses_land_tekst
+        date_col: gen # just to make it work
     dtype: string
   - name: maternal_age
     key_column: b_cpr
@@ -105,9 +106,11 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: ALDER_MODER
+        date_col: FOEDSELSDATO
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Alder_Mor
+        date_col: FoedselsDato_Barn
     dtype: integer
   - name: maternal_BMI
     key_column: b_cpr
@@ -115,9 +118,11 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: BMI_MODER
+        date_col: FOEDSELSDATO
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: BMI_Mor
+        date_col: FoedselsDato_Barn
     dtype: float
   - name: smoking_status
     key_column: b_cpr
@@ -125,9 +130,11 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: RYGERSTATUS_MODER
+        date_col: FOEDSELSDATO
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Tobaksforbrug
+        date_col: FoedselsDato_Barn
     dtype: string
   - name: parity
     key_column: b_cpr
@@ -135,9 +142,11 @@ extract_criteria:
       - table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
         column: PARITET
+        date_col: FOEDSELSDATO
       - table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Paritet
+        date_col: FoedselsDato_Barn
     dtype: string
 
 conditional_bool_criteria:
