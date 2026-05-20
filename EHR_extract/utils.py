@@ -102,6 +102,11 @@ def get_python_operator(operator_str):
         return lambda col, val: col.cast(pl.Float64, strict=False) >= val
     elif operator_str == "<=":
         return lambda col, val: col.cast(pl.Float64, strict=False) <= val
+    elif operator_str == "between":
+        # Inclusive range: value is [low, high]
+        return lambda col, val: col.cast(pl.Float64, strict=False).is_between(
+            val[0], val[1], closed="both"
+        )
     elif operator_str == "not_null":
         return lambda col, val: col.is_not_null()
     elif operator_str == "startswith":

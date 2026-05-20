@@ -512,17 +512,17 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["KMCA"]
         date_col: ServiceDate
-      - condition: or
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [BABY_Fødsel_ID]
-          right_on: [BABY_Fødsel_ID]
-        match_on: MOR_CPR
-        column: "Udslettet dato/tid"
-        operator: "not_null"
-        value: null
-        date_col: Fødselstidspunkt
+      # - condition: or
+      #   table: 
+      #     table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+      #     table2: ${paths.input_dir_SP}/Population.csv
+      #     left_on: [BABY_Fødsel_ID]
+      #     right_on: [BABY_Fødsel_ID]
+      #   match_on: MOR_CPR
+      #   column: "Udslettet dato/tid"
+      #   operator: "not_null"
+      #   value: null
+      #   date_col: Fødselstidspunkt
   # preclampsia
   - name: previous_preclampsia
     key_column: b_cpr
