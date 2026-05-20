@@ -519,7 +519,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [MOR_CPR]
           right_on: [MOR_CPR]
-        match_on: BABY_CPR
+        match_on: MOR_CPR
         column: ProcedureCode
         operator: "startswith"
         value: ["KMCA"]
