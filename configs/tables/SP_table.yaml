@@ -59,6 +59,7 @@ base_table:
         maternal_birth_date_col: Fødselsdato
         maternal_id_col: MOR_CPR
         baby_birth_date_col: pregnancy_start
+        key_column: b_cpr
         maternal_age_col: maternal_age
       dtype: integer
 
