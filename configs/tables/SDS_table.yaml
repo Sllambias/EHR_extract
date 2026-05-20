@@ -279,7 +279,7 @@ conditional_bool_criteria:
     conditions:
       - condition: 
         table:
-          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
+          table1: ${paths.input_dir_SDS}/mor_procedurer.csv # maybe not correct
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
@@ -905,16 +905,16 @@ conditional_bool_criteria:
     time_window: during_pregnancy
     conditions:
       - condition: 
-          table:
-            table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: DW_EK_Foedsel
-            right_on: DW_EK_Foedsel
-          match_on: CPRnummer_Mor
-          column: DiagnoseKode
-          operator: "startswith"
-          value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
-          date_col: FoedselsDato_Barn
+        table:
+          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: DiagnoseKode
+        operator: "startswith"
+        value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
+        date_col: FoedselsDato_Barn
       - condition: or
         table:
           table1: 
