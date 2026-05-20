@@ -906,21 +906,21 @@ conditional_bool_criteria:
           operator: "startswith"
           value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
           date_col: FoedselsDato_Barn
-        - condition: or
-          table:
-            table1: 
-              table1: ${paths.input_dir_SDS}/t_diag.csv
-              table2: ${paths.input_dir_SDS}/t_adm.csv
-              left_on: V_RECNUM
-              right_on: K_RECNUM
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: V_CPR
-            right_on: CPR_MODER
-          match_on: V_CPR
-          column: C_DIAG
-          operator: "startswith"
-          value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
-          date_col: D_INDDTO
+      - condition: or
+        table:
+          table1: 
+            table1: ${paths.input_dir_SDS}/t_diag.csv
+            table2: ${paths.input_dir_SDS}/t_adm.csv
+            left_on: V_RECNUM
+            right_on: K_RECNUM
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: V_CPR
+          right_on: CPR_MODER
+        match_on: V_CPR
+        column: C_DIAG
+        operator: "startswith"
+        value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
+        date_col: D_INDDTO
 # #   ### Current pregnancy (mechanical)
   # female fetus
   - name: female_fetus
