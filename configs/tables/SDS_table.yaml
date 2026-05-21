@@ -893,7 +893,7 @@ conditional_bool_criteria:
           right_on: CPR_MODER
         match_on: V_CPR
         column: C_TILOPR
-        operator: "in"
+        operator: "startswith"
         value: ["KLDC00", "KLDC03"]
         date_col: D_ODTO
       - condition: or
@@ -908,7 +908,7 @@ conditional_bool_criteria:
           right_on: CPR_MODER
         match_on: V_CPR
         column: C_OPR
-        operator: "in"
+        operator: "startswith"
         value: ["KLDC00", "KLDC03"]
         date_col: D_ODTO
 
