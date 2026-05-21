@@ -901,7 +901,7 @@ conditional_bool_criteria:
 #     # short cervix
   - name: current_short_cervix 
     key_column: b_cpr
-    match_on: b_cpr
+    match_on: m_cpr
     time_window: during_pregnancy
     conditions:
       - condition: 
@@ -983,7 +983,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO340", "DQ518", "DQ519", "DQ51"] 
@@ -998,7 +998,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DO340", "DQ518", "DQ519", "DQ51"]
@@ -1015,7 +1015,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
@@ -1030,7 +1030,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DD259", "DD250", "DD250C", "DD251", "DD252", "DD250A", "DD250B", "DO341"]
@@ -1047,7 +1047,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO410", "DO409"]
@@ -1062,7 +1062,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DO410", "DO409"]
@@ -1081,7 +1081,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139", "DO14", "DO13"]
@@ -1096,7 +1096,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139", "DO14", "DO13"]
@@ -1124,7 +1124,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO468A", "DO209", "DO208", "DO208A", "DO20", "DO46"]
@@ -1139,7 +1139,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DO468A", "DO209", "DO208", "DO208A", "DO20", "DO46"]
@@ -1156,7 +1156,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DN390A", "DN390", "DA499", "DB349", "DZ038A", "DO234", "DO233", "DO235", "DO239"]
@@ -1171,7 +1171,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DN390A", "DN390", "DA499", "DB349", "DZ038A", "DO234", "DO233", "DO235", "DO239"]
@@ -1188,7 +1188,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO422", "DO420", "DO424", "DO423"]
@@ -1203,7 +1203,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DO422", "DO420", "DO424", "DO423"]
@@ -1227,7 +1227,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/nyfoedte.csv
           left_on: DW_EK_Foedsel
           right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Mor
+        match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
         value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
@@ -1245,7 +1245,7 @@ conditional_bool_criteria:
           table2: ${paths.input_dir_SDS}/mfr.csv
           left_on: V_CPR
           right_on: CPR_MODER
-        match_on: V_CPR
+        match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
         value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
