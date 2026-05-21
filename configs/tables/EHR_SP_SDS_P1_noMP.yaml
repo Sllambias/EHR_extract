@@ -18,7 +18,7 @@ base_table:
   population: ${paths.population}
   population_column: b_cpr
   tables:
-    - table: ../../data/img_data_link/ptb_population/preterm_SP_P1_noMP_v2/preterm_SP_P1_noMP_v2_population_train_and_test.csv
+    - table: ../../data/img_data_link/ptb_population/preterm_P1_noMP_v3/preterm_P1_noMP_v3_population_train_and_test.csv
       columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
