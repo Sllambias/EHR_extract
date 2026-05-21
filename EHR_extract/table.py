@@ -22,6 +22,7 @@ from EHR_extract.utils import (
     dtype_from_cfg,
     convert_to_date,
     date_bound_expr,
+    warn_time_filter_dates,
     convert_to_datetime,
     safe_save_df,
     check_duplicates,
@@ -189,12 +190,22 @@ def get_conditional_bool_criteria(cfg, main_table):
                 how="left",
             )
             
-            # Filter on time 
+            # Filter on time
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)
+            hi = date_bound_expr(**max_date)
+            warn_time_filter_dates(
+                tmp_table,
+                label=f"{condition_name}/{condition.date_col}",
+                event_col=condition.date_col,
+                event_d=event_d,
+                lo=lo,
+                hi=hi,
+                min_date_cfg=min_date,
+                max_date_cfg=max_date,
+            )
             if lo is not None:
                 tmp_table = tmp_table.filter(event_d >= lo)
-            hi = date_bound_expr(**max_date)
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
             print("\tNumber of matches after time filter:", len(tmp_table))
