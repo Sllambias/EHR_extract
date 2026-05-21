@@ -179,6 +179,7 @@ def get_conditional_bool_criteria(cfg, main_table):
             table = table.filter(
                 py_operator(pl.col(condition.column), condition.value)
             )
+            print("Number of matches after operator:", len(table))
 
             # Merge
             tmp_table = main_table.join(
@@ -196,7 +197,7 @@ def get_conditional_bool_criteria(cfg, main_table):
             hi = date_bound_expr(**max_date)
             if hi is not None:
                 tmp_table = tmp_table.filter(event_d <= hi)
-            print("\tNumber of matches:", len(tmp_table))
+            print("\tNumber of matches after time filter:", len(tmp_table))
 
             if condition.condition is None:
                 last_condition = set(tmp_table[key_col])
