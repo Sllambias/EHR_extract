@@ -896,6 +896,21 @@ conditional_bool_criteria:
         operator: "in"
         value: ["KLDC00", "KLDC03"]
         date_col: D_ODTO
+      - condition: or
+        table:
+          table1: 
+            table1: ${paths.input_dir_SDS}/t_sksopr.csv
+            table2: ${paths.input_dir_SDS}/t_adm.csv
+            left_on: V_RECNUM
+            right_on: K_RECNUM
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: V_CPR
+          right_on: CPR_MODER
+        match_on: V_CPR
+        column: C_OPR
+        operator: "in"
+        value: ["KLDC00", "KLDC03"]
+        date_col: D_ODTO
 
 
 #     # short cervix
