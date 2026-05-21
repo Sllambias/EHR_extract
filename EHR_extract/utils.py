@@ -188,7 +188,13 @@ def convert_to_date(
     if datetime_format is None:
         return pl.coalesce([typed, parsed_date])
     parsed_dt_as_date = s_str.str.strptime(pl.Datetime, datetime_format, strict=False).dt.date()
-    return pl.coalesce([typed, parsed_date, parsed_dt_as_date])
+    parsed_iso_dt = s_str.str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S", strict=False).dt.date()
+    parsed_iso_dt_frac = s_str.str.strptime(
+        pl.Datetime, "%Y-%m-%dT%H:%M:%S%.f", strict=False
+    ).dt.date()
+    return pl.coalesce(
+        [typed, parsed_date, parsed_dt_as_date, parsed_iso_dt, parsed_iso_dt_frac]
+    )
 
 def convert_to_datetime(
     name: str,
