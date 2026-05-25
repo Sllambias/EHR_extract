@@ -2061,8 +2061,8 @@ custom_extract_criteria:
             left_on: [PATIENT_CPR]
             right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
-          target_col: ANALYSISCODE
-          date_col: VALUE
+          target_col: VALUE
+          date_col: SAMPLINGTIME
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2073,8 +2073,8 @@ custom_extract_criteria:
             left_on: [PATIENT_CPR]
             right_on: [CPR_MODER]
           right_on: CPR_BARN
-          target_col: ANALYSISCODE
-          date_col: VALUE
+          target_col: VALUE
+          date_col: SAMPLINGTIME
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2093,8 +2093,8 @@ custom_extract_criteria:
             left_on: [PATIENT_CPR]
             right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
-          target_col: ANALYSISCODE
-          date_col: VALUE
+          target_col: VALUE
+          date_col: SAMPLINGTIME
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2105,8 +2105,8 @@ custom_extract_criteria:
             left_on: [PATIENT_CPR]
             right_on: [CPR_MODER]
           right_on: CPR_BARN
-          target_col: ANALYSISCODE
-          date_col: VALUE
+          target_col: VALUE
+          date_col: SAMPLINGTIME
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
