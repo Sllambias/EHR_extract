@@ -2062,7 +2062,7 @@ custom_extract_criteria:
             right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
           target_col: VALUE
-          date_col: SAMPLINGTIME
+          date_col: SAMPLINGDATE
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2074,7 +2074,7 @@ custom_extract_criteria:
             right_on: [CPR_MODER]
           right_on: CPR_BARN
           target_col: VALUE
-          date_col: SAMPLINGTIME
+          date_col: SAMPLINGDATE
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2094,7 +2094,7 @@ custom_extract_criteria:
             right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
           target_col: VALUE
-          date_col: SAMPLINGTIME
+          date_col: SAMPLINGDATE
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
@@ -2106,7 +2106,7 @@ custom_extract_criteria:
             right_on: [CPR_MODER]
           right_on: CPR_BARN
           target_col: VALUE
-          date_col: SAMPLINGTIME
+          date_col: SAMPLINGDATE
           filters:
             - column: ANALYSISCODE
               operator: "startswith"
