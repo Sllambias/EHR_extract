@@ -232,6 +232,8 @@ def _extract_filtered_values_from_source(
         py_operator = get_python_operator(filter.operator)
         table = table.filter(py_operator(pl.col(filter.column), filter.value))
 
+    print("matches after operators", len(table))
+
     tmp_table = main_table.join(
         table,
         left_on=left_on,
@@ -246,6 +248,8 @@ def _extract_filtered_values_from_source(
     hi = date_bound_expr(**max_date)
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
+    
+    print("matches after time filtering", len(tmp_table))
 
     pl_dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
