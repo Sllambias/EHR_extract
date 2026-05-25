@@ -211,8 +211,9 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
-def extract_filtered_values(
+def _extract_filtered_values_from_source(
     main_table,
+    *,
     table,
     left_on,
     right_on,
@@ -227,8 +228,7 @@ def extract_filtered_values(
 ):
     table = load_table(table, strict=False)
 
-    # Filter
-    for filter in filters:
+    for filter in filters or []:
         py_operator = get_python_operator(filter.operator)
         table = table.filter(py_operator(pl.col(filter.column), filter.value))
 
@@ -239,7 +239,6 @@ def extract_filtered_values(
         how="left",
     )
 
-    # Filter on time
     event_d = convert_to_date(date_col)
     lo = date_bound_expr(**min_date)
     if lo is not None:
@@ -248,16 +247,85 @@ def extract_filtered_values(
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
 
-    # Filter on type
-    dtype = dtype_from_cfg(dtype)
-    tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
+    pl_dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
 
     tmp_table = take_latest_row(tmp_table, left_on, date_col)
     tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
-    tmp_table = check_duplicates(tmp_table, left_on, allow_duplicates=allow_duplicates)
+    return check_duplicates(tmp_table, left_on, allow_duplicates=allow_duplicates)
 
-    main_table = main_table.join(tmp_table, left_on=left_on, right_on=left_on, how="left")
-    main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
+
+def _merge_source_specs(table=None, sources=None, **shared):
+    """Build per-source arg dicts; `sources` overrides shared fields per entry."""
+    keys = ("table", "left_on", "right_on", "target_col", "date_col", "filters")
+    if sources is not None:
+        specs = []
+        for src in sources:
+            spec = {k: shared.get(k) for k in keys}
+            for k in keys:
+                if k in src and src[k] is not None:
+                    spec[k] = src[k]
+            specs.append(spec)
+        return specs
+    if table is None:
+        raise ValueError("extract_filtered_values requires `table` or `sources`")
+    return [{k: shared.get(k) for k in keys} | {"table": table}]
+
+
+def extract_filtered_values(
+    main_table,
+    left_on,
+    right_on,
+    target_col,
+    date_col,
+    min_date,
+    max_date,
+    filters,
+    new_col_name,
+    dtype,
+    allow_duplicates=False,
+    table=None,
+    sources=None,
+):
+    specs = _merge_source_specs(
+        table=table,
+        sources=sources,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        filters=filters,
+    )
+    for i, spec in enumerate(specs):
+        chunk = _extract_filtered_values_from_source(
+            main_table,
+            left_on=left_on,
+            right_on=spec["right_on"],
+            target_col=spec["target_col"],
+            date_col=spec["date_col"],
+            min_date=min_date,
+            max_date=max_date,
+            filters=spec["filters"],
+            new_col_name=new_col_name,
+            dtype=dtype,
+            allow_duplicates=allow_duplicates,
+            table=spec["table"],
+        )
+        fb_col = f"__{new_col_name}_fb"
+        if i == 0:
+            if new_col_name in main_table.columns:
+                main_table = main_table.drop(new_col_name)
+            main_table = main_table.join(chunk, on=left_on, how="left")
+        else:
+            main_table = main_table.join(
+                chunk.rename({new_col_name: fb_col}),
+                on=left_on,
+                how="left",
+            )
+            main_table = main_table.with_columns(
+                pl.coalesce([pl.col(new_col_name), pl.col(fb_col)]).alias(new_col_name)
+            ).drop(fb_col)
+        main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
     return main_table
 
 def extract_filtered_conditional_values(
@@ -328,10 +396,11 @@ def extract_filtered_conditional_values(
         assert(len(main_table[key_column].unique()) == len(main_table[key_column]))
     return main_table
 
-def extract_latest_value(
+def _extract_latest_value_from_source(
     main_table,
-    left_on,
+    *,
     table,
+    left_on,
     right_on,
     target_col,
     new_col_name,
@@ -339,7 +408,6 @@ def extract_latest_value(
     min_date,
     max_date,
     dtype,
-    allow_duplicates=False,
 ):
     table = load_table(table, strict=False)
 
@@ -350,7 +418,6 @@ def extract_latest_value(
         how="left",
     )
 
-    # Filter on time
     event_d = convert_to_date(date_col)
     lo = date_bound_expr(**min_date)
     if lo is not None:
@@ -359,11 +426,61 @@ def extract_latest_value(
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
 
-    # Filter on type
-    dtype = dtype_from_cfg(dtype)
-    tmp_table = tmp_table.filter(pl.col(target_col).cast(dtype, strict=False).is_not_null())
+    pl_dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
 
     tmp_table = take_latest_row(tmp_table, left_on, date_col)
-    tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+    return tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
 
-    return main_table.join(tmp_table, on=left_on, how="left")
+
+def extract_latest_value(
+    main_table,
+    left_on,
+    right_on,
+    target_col,
+    new_col_name,
+    date_col,
+    min_date,
+    max_date,
+    dtype,
+    allow_duplicates=False,
+    table=None,
+    sources=None,
+):
+    specs = _merge_source_specs(
+        table=table,
+        sources=sources,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        filters=[],
+    )
+    for i, spec in enumerate(specs):
+        chunk = _extract_latest_value_from_source(
+            main_table,
+            table=spec["table"],
+            left_on=left_on,
+            right_on=spec["right_on"],
+            target_col=spec["target_col"],
+            new_col_name=new_col_name,
+            date_col=spec["date_col"],
+            min_date=min_date,
+            max_date=max_date,
+            dtype=dtype,
+        )
+        fb_col = f"__{new_col_name}_fb"
+        if i == 0:
+            if new_col_name in main_table.columns:
+                main_table = main_table.drop(new_col_name)
+            main_table = main_table.join(chunk, on=left_on, how="left")
+        else:
+            main_table = main_table.join(
+                chunk.rename({new_col_name: fb_col}),
+                on=left_on,
+                how="left",
+            )
+            main_table = main_table.with_columns(
+                pl.coalesce([pl.col(new_col_name), pl.col(fb_col)]).alias(new_col_name)
+            ).drop(fb_col)
+    return main_table
