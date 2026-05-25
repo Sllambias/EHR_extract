@@ -2079,6 +2079,78 @@ custom_extract_criteria:
             - column: ANALYSISCODE
               operator: "startswith"
               value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
   - name: current_papp_lab_dat
     time_window: during_pregnancy
     function: extract_filtered_values
@@ -2111,3 +2183,78 @@ custom_extract_criteria:
             - column: ANALYSISCODE
               operator: "startswith"
               value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPRnummer_Mor]
+          right_on: CPRnummer_Barn
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [CPR_MODER]
+          right_on: CPR_BARN
+          target_col: VALUE
+          date_col: SAMPLINGDATE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+
+
+
