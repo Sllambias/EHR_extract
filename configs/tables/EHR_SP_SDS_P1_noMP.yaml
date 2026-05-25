@@ -2056,23 +2056,23 @@ custom_extract_criteria:
       dtype: float
       sources:
         - table:
-            table1: ${paths.input_dir_SP}/Mor - CPMI - Prøvesvar.csv
-            table2: ${paths.input_dir_SP}/Population.csv
-            left_on: [MOR_CPR]
-            right_on: [MOR_CPR]
-          right_on: BABY_CPR
-          target_col: Resultatværdi
-          date_col: Resultatdato
-          filters:
-            - column: BestOrd
-              operator: "in"
-              value: ["HCG (DOUBLETEST);P"]
-        - table:
-            table1: ${paths.input_dir_SDS}/.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table2: ${paths.input_dir_SP}/nyfoedte.csv
             left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
+            right_on: [CPRnummer_Barn]
           right_on: CPRnummer_Barn
+          target_col: ANALYSISCODE
+          date_col: VALUE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU01580"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [MOR_CPR]
+          right_on: CPR_BARN
           target_col: ANALYSISCODE
           date_col: VALUE
           filters:
@@ -2088,26 +2088,26 @@ custom_extract_criteria:
       dtype: float
       sources:
         - table:
-            table1: ${paths.input_dir_SP}/Mor - CPMI - Prøvesvar.csv
-            table2: ${paths.input_dir_SP}/Population.csv
-            left_on: [MOR_CPR]
-            right_on: [MOR_CPR]
-          right_on: BABY_CPR
-          target_col: Resultatværdi
-          date_col: Resultatdato
-          filters:
-            - column: BestOrd
-              operator: "in"
-              value: ["PAPP A (DOUBLETEST);P"]
-        - table:
-            table1: ${paths.input_dir_SDS}/.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table2: ${paths.input_dir_SP}/nyfoedte.csv
             left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
+            right_on: [CPRnummer_Barn]
           right_on: CPRnummer_Barn
           target_col: ANALYSISCODE
           date_col: VALUE
           filters:
-            - column: BestOrd
+            - column: ANALYSISCODE
               operator: "startswith"
-              value: ["NPU09072"]
+              value: ["NPU21725", "NPU27780", "NPU22157"]
+        - table:
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: [PATIENT_CPR]
+            right_on: [MOR_CPR]
+          right_on: CPRnummer_Barn
+          target_col: ANALYSISCODE
+          date_col: VALUE
+          filters:
+            - column: ANALYSISCODE
+              operator: "startswith"
+              value: ["NPU21725", "NPU27780", "NPU22157"]
