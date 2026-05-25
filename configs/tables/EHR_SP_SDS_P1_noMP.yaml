@@ -2059,7 +2059,7 @@ custom_extract_criteria:
             table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
             table2: ${paths.input_dir_SDS}/nyfoedte.csv
             left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Barn]
+            right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
           target_col: ANALYSISCODE
           date_col: VALUE
@@ -2072,7 +2072,7 @@ custom_extract_criteria:
             table2: ${paths.input_dir_SDS}/mfr.csv
             left_on: [PATIENT_CPR]
             right_on: [MOR_CPR]
-          right_on: CPR_BARN
+          right_on: BABY_CPR
           target_col: ANALYSISCODE
           date_col: VALUE
           filters:
@@ -2091,7 +2091,7 @@ custom_extract_criteria:
             table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
             table2: ${paths.input_dir_SDS}/nyfoedte.csv
             left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Barn]
+            right_on: [CPRnummer_Mor]
           right_on: CPRnummer_Barn
           target_col: ANALYSISCODE
           date_col: VALUE
@@ -2104,7 +2104,7 @@ custom_extract_criteria:
             table2: ${paths.input_dir_SDS}/mfr.csv
             left_on: [PATIENT_CPR]
             right_on: [MOR_CPR]
-          right_on: CPRnummer_Barn
+          right_on: BABY_CPR
           target_col: ANALYSISCODE
           date_col: VALUE
           filters:
