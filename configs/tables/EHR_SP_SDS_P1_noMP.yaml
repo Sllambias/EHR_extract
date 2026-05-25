@@ -2076,7 +2076,7 @@ custom_extract_criteria:
           target_col: ANALYSISCODE
           date_col: VALUE
           filters:
-            - column: BestOrd
+            - column: ANALYSISCODE
               operator: "startswith"
               value: ["NPU01580"]
   - name: current_papp_lab_dat
