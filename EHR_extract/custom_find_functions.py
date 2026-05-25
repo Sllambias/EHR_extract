@@ -211,7 +211,7 @@ def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, materna
     # Keep only original columns + the newly created age column.
     return merged.select(base_cols + [maternal_age_col])
 
-def _extract_filtered_values_from_source(
+def extract_filtered_values_from_source(
     main_table,
     *,
     table,
@@ -232,8 +232,6 @@ def _extract_filtered_values_from_source(
         py_operator = get_python_operator(filter.operator)
         table = table.filter(py_operator(pl.col(filter.column), filter.value))
 
-    print("matches after operators", len(table))
-
     tmp_table = main_table.join(
         table,
         left_on=left_on,
@@ -249,8 +247,6 @@ def _extract_filtered_values_from_source(
     if hi is not None:
         tmp_table = tmp_table.filter(event_d <= hi)
     
-    print("matches after time filtering", len(tmp_table))
-
     pl_dtype = dtype_from_cfg(dtype)
     tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
 
@@ -259,7 +255,7 @@ def _extract_filtered_values_from_source(
     return check_duplicates(tmp_table, left_on, allow_duplicates=allow_duplicates)
 
 
-def _merge_source_specs(table=None, sources=None, **shared):
+def merge_source_specs(table=None, sources=None, **shared):
     """Build per-source arg dicts; `sources` overrides shared fields per entry."""
     keys = ("table", "left_on", "right_on", "target_col", "date_col", "filters")
     if sources is not None:
@@ -291,7 +287,7 @@ def extract_filtered_values(
     table=None,
     sources=None,
 ):
-    specs = _merge_source_specs(
+    specs = merge_source_specs(
         table=table,
         sources=sources,
         left_on=left_on,
@@ -301,7 +297,7 @@ def extract_filtered_values(
         filters=filters,
     )
     for i, spec in enumerate(specs):
-        chunk = _extract_filtered_values_from_source(
+        chunk = extract_filtered_values_from_source(
             main_table,
             left_on=left_on,
             right_on=spec["right_on"],
@@ -400,7 +396,7 @@ def extract_filtered_conditional_values(
         assert(len(main_table[key_column].unique()) == len(main_table[key_column]))
     return main_table
 
-def _extract_latest_value_from_source(
+def extract_latest_value_from_source(
     main_table,
     *,
     table,
@@ -451,7 +447,7 @@ def extract_latest_value(
     table=None,
     sources=None,
 ):
-    specs = _merge_source_specs(
+    specs = merge_source_specs(
         table=table,
         sources=sources,
         left_on=left_on,
@@ -461,7 +457,7 @@ def extract_latest_value(
         filters=[],
     )
     for i, spec in enumerate(specs):
-        chunk = _extract_latest_value_from_source(
+        chunk = extract_latest_value_from_source(
             main_table,
             table=spec["table"],
             left_on=left_on,
