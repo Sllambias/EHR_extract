@@ -12,6 +12,7 @@ from EHR_extract.custom_find_functions import (
     match_images_with_child,
     match_value_with_child_cpr_on_birth_id,
     match_value_with_child_cpr_on_birthdate,
+    match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     merge_population_on,
 )
 from EHR_extract.paths import get_config_path
@@ -41,6 +42,7 @@ custom_functions = {
     "match_images_with_child": match_images_with_child,
     "match_value_with_child_cpr_on_birth_id": match_value_with_child_cpr_on_birth_id,
     "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
+    "match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate": match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     "merge_population_on": merge_population_on,
 }
 

@@ -3,6 +3,71 @@ import polars as pl
 from EHR_extract.utils import filter_numeric_rows, get_python_operator, load_table
 
 
+def match_value_on_birthdate(population, value_time_column, population_birthdate_column, population_gestational_age_column):
+    population = filter_numeric_rows(population, population_gestational_age_column)
+    population = population.with_columns(
+        conception_date=pl.col(population_birthdate_column).str.to_datetime()
+        - pl.duration(days=pl.col(population_gestational_age_column).cast(pl.Int64))
+    )
+    population = population.filter(
+        (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
+        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birthdate_column).str.to_datetime())
+    )
+    return population
+
+
+def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
+    operator,
+    value,
+    value_table_path,
+    value_column,
+    value_time_column,
+    value_id_column,
+    mapping_table_path,
+    mapping_table_id_column,
+    mapping_table_mom_cpr_column,
+    population,
+    population_mom_cpr_column,
+    population_child_cpr_column,
+    population_birth_column,
+    population_gestational_age_column,
+    population_key_column,
+):
+    """
+    This function takes tables A, B and C and matches a Value in Table A with a child CPR in Table C by:
+    Finding the values, LPR_ID and value_timestamps in Table A
+    Then matching the LPR_ID to the mom_CPR in Table B
+    Then matching the mom_CPR to child_CPR in Table C
+    and finally filtering the child_CPR if the value_timestamps fall within their pregnancy
+    """
+    value_table = load_table(value_table_path)
+    py_operator = get_python_operator(operator)
+    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+
+    mapping_table = load_table(mapping_table_path)
+    joined = value_table.join(
+        mapping_table,
+        left_on=value_id_column,
+        right_on=mapping_table_id_column,
+        how="inner",
+    )
+
+    joined = joined.join(
+        population,
+        left_on=mapping_table_mom_cpr_column,
+        right_on=population_mom_cpr_column,
+        how="inner",
+    )
+    joined = match_value_on_birthdate(
+        population=joined,
+        value_time_column=value_time_column,
+        population_birthdate_column=population_birth_column,
+        population_gestational_age_column=population_gestational_age_column,
+    )
+    matches = set(joined[population_child_cpr_column].unique())
+    return matches
+
+
 def match_value_with_child_cpr_on_birth_id(
     operator,
     value,
@@ -57,16 +122,11 @@ def match_value_with_child_cpr_on_birthdate(
     # Join on mother's CPR
     joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
 
-    # Calculate conception date: birthdate - gestational_age weeks
-    joined = filter_numeric_rows(joined, population_gestational_age_column)
-    joined = joined.with_columns(
-        conception_date=pl.col(population_birth_column).str.to_datetime()
-        - pl.duration(days=pl.col(population_gestational_age_column).cast(pl.Int64))
-    )
-    # Check if procedure_time is within conception_date +/- time_window_days
-    joined = joined.filter(
-        (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
-        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birth_column).str.to_datetime())
+    joined = match_value_on_birthdate(
+        population=joined,
+        value_time_column=value_time_column,
+        population_birthdate_column=population_birth_column,
+        population_gestational_age_column=population_gestational_age_column,
     )
 
     # Get the unique child CPRs
