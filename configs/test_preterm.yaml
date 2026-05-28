@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - /default@
-  - progesterone@
+  - preterm_P1_noMP_untreated_img_V3@
   - _self_
 
 paths:
