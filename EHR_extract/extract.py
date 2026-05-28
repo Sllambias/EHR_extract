@@ -96,18 +96,17 @@ def extract_from_cfg(cfg, population):
                 args = condition.args
                 matched_ids = fn(**args, population=population, population_key_column=cfg.population.population_key)
                 conditional = condition.custom
-
             if conditional is None:
-                last_condition_population = matched_ids
+                current_condition_population = matched_ids
             elif conditional == "and":
-                last_condition_population = last_condition_population.intersection(matched_ids)
+                current_condition_population = current_condition_population.intersection(matched_ids)
             elif conditional == "or":
-                criterion_population = last_condition_population
-                last_condition_population = matched_ids
+                criterion_population = criterion_population.union(current_condition_population)
+                current_condition_population = matched_ids
             else:
                 logging.warn("wow, weird condition")
 
-        criterion_population = criterion_population.union(last_condition_population)
+        criterion_population = criterion_population.union(current_condition_population)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,
             key=cfg.population.population_key,

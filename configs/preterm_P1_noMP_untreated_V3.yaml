@@ -535,8 +535,8 @@ conditional_criteria:
       - custom: or
         function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
         args:
-          value: BKHA1
-          operator: ==
+          value: "BKHA1"
+          operator: "=="
           value_table_path: ${paths.input_dir_SDS}/t_sksube.csv
           value_column: C_TILOPR
           value_time_column: D_ODTO
@@ -551,7 +551,7 @@ conditional_criteria:
       - custom: or
         function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
         args:
-          value: BKHA1
+          value: "BKHA1"
           operator: "=="
           value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
           value_column: DiagnoseKode
