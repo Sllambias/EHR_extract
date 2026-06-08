@@ -1,4 +1,9 @@
 # How to generate populations:
+1. Run get_imgs_from_db.py to get an up-to-date dump of the imaging database.
+2. Identify subjects. Currently defined as the population file in SP, the nyfoedte and mfr files in SDS and the imaging database at the given time. 
+3. Re-use existing splits or create new splits using split.py and a split config. 
+
+
 1. Formalize inclusion/exclusion criteria in a well-defined config.
 2. 
 
