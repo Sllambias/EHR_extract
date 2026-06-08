@@ -12,9 +12,10 @@ load_dotenv()
 
 
 def create_splits(population_cfg, holdout_frac=None, seed=None):
+    population = pl.DataFrame()
     rng = np.random.default_rng(seed=seed)
 
-    full_population = merge_population_tables(population_cfg.tables, strict=False)
+    full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
     full_population = set(full_population[population_cfg.population_key])
 
     n_unique_ids = len(full_population)
