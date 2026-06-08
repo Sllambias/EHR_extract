@@ -22,7 +22,7 @@ population:
     - table: ${paths.input_dir_SP}/Population.csv
       columns:
         CPR_MOR: MOR_CPR
-    - table: /projects/users/people/seblla/all_images_2026-05-29.csv
+    - table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-05-29.csv
       columns:
         CPR_MOR: phair_hash
         
