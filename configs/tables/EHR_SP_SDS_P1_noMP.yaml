@@ -120,54 +120,58 @@ extract_criteria:
         column: BMI_Mor
         date_col: FoedselsDato_Barn
     dtype: float
-  # - name: maternal_BMI
-  #   key_column: b_cpr
-  #   sources:
-  #     - table: 
-  #         table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [BABY_Fødsel_ID]
-  #         right_on: [BABY_Fødsel_ID]
-  #       match_on: BABY_CPR
-  #       column: "Vægt før graviditet"
-  #       date_col: Fødselstidspunkt
-  #   dtype: float
-    ## vægt fra vitale_parametre. 
+  - name: alcohol_consumption
+    key_column: m_cpr
+    sources:
+      - table: ${paths.input_dir_SP}/Mor - Alkohol.csv
+        match_on: MOR_CPR
+        column: Alkohol - Antal ugentlige genstande
+        date_col: "Kontakt dato"
+    dtype: string
+  - name: smoking_status
+    key_column: m_cpr
+    sources:
+      - table: ${paths.input_dir_SP}/Mor - Rygning.csv
+        match_on: MOR_CPR
+        column: Rygestatus
+        date_col: "Kontakt dato"
+    dtype: string
+    # vægt fra vitale_parametre. 
 
 conditional_bool_criteria:
-  ## Maternal characteristics
-  - name: smoking_status
-    key_column: b_cpr
-    match_on: m_cpr
-    time_window: before_and_during_pregnancy
-    conditions:
-      - condition:
-        table:  
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: Diagnosekode
-        operator: "startswith"
-        value: ["BKUA32"]
-        date_col: Noteret_dato
-  - name: drug_use
-    key_column: b_cpr
-    match_on: m_cpr
-    time_window: before_and_during_pregnancy
-    conditions:
-      - condition:
-        table:  
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: Diagnosekode
-        operator: "startswith"
-        value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
-        date_col: Noteret_dato
+  # ## Maternal characteristics
+  # - name: smoking_status
+  #   key_column: b_cpr
+  #   match_on: m_cpr
+  #   time_window: before_and_during_pregnancy
+  #   conditions:
+  #     - condition:
+  #       table:  
+  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+  #         table2: ${paths.input_dir_SP}/Population.csv
+  #         left_on: [MOR_CPR]
+  #         right_on: [MOR_CPR]
+  #       match_on: BABY_CPR
+  #       column: Diagnosekode
+  #       operator: "startswith"
+  #       value: ["BKUA32"]
+  #       date_col: Noteret_dato
+  # - name: drug_use
+  #   key_column: b_cpr
+  #   match_on: m_cpr
+  #   time_window: before_and_during_pregnancy
+  #   conditions:
+  #     - condition:
+  #       table:  
+  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+  #         table2: ${paths.input_dir_SP}/Population.csv
+  #         left_on: [MOR_CPR]
+  #         right_on: [MOR_CPR]
+  #       match_on: BABY_CPR
+  #       column: Diagnosekode
+  #       operator: "startswith"
+  #       value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
+  #       date_col: Noteret_dato
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
@@ -271,7 +275,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DE282"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: endometriose
     key_column: b_cpr
@@ -314,7 +318,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DN80"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: sleep_disorder
     key_column: b_cpr
@@ -357,7 +361,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DG473", "DG4730", "DG4732", "DG4734"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: previous_surgical_abortion
     key_column: b_cpr
@@ -480,7 +484,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DN96", "DO021"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table:
           table1: 
@@ -495,7 +499,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO03"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: bacterial_vaginosis
     key_column: b_cpr
@@ -538,7 +542,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DN768B", "DN768C"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: chlamydia
     key_column: b_cpr
@@ -581,7 +585,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DA56", "DA560", "DA560A", "DA560C", "DA560D", "DA560E", "DA561", "DA562", "DA749", "DA744"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: gonorrhea
     key_column: b_cpr
@@ -624,7 +628,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DA54", "DA540", "DA541", "DA542", "DA548", "DA549", "DO982"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: syphilis
     key_column: b_cpr
@@ -667,7 +671,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DA51", "DA510", "DA519", "DA539", "DO981"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: trichomoniasis
     key_column: b_cpr
@@ -710,7 +714,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DA59"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   - name: pyelonefritis
     key_column: b_cpr
@@ -775,7 +779,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "in"
         value: ["DN109C", "DN129", "DN118B"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table:
           table1: 
@@ -790,7 +794,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO23", "DO98"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
 #   ### Obstetric history
 
@@ -871,7 +875,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DZ358B", "DO609", "DO601"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       
 #     # late miscarriage
 
@@ -941,7 +945,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DZ351A"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 #     # pprom
 
   - name: previous_pprom
@@ -992,7 +996,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO422", "DO420", "DO424"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
     # short cervix
     #TODO add values from measurements
 
@@ -1037,7 +1041,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 #   # c-section
 
   - name: previous_c_section
@@ -1157,7 +1161,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table: 
           table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
@@ -1247,7 +1251,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DZ928C", "DO344B"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table:
           table1: 
@@ -1323,7 +1327,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO348G", "DO343", "DO343A", "DO343B", "DZ875A"] 
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 # #   ### Current pregnancy (mechanical)
 
   # female fetus
@@ -1454,7 +1458,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO340", "DQ518", "DQ519", "DQ51"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   # fibroids 
   - name: current_fibroids
@@ -1542,7 +1546,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO410", "DO409"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   ### Current pregnancy (medical)
   # preclampsia
@@ -1587,7 +1591,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DZ358Q", "DO144", "DO141", "DO140", "DO139", "DO14", "DO13"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table: 
           table1: ${paths.input_dir_SDS}/graviditetskomplikation.csv
@@ -1642,7 +1646,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO468A", "DO209", "DO208", "DO208A", "DO20", "DO46"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   # infection 
   - name: current_infection
@@ -1686,7 +1690,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DN390A", "DN390", "DA499", "DB349", "DZ038A", "DO234", "DO233", "DO235", "DO239"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
   # pprom
   - name: current_pprom
@@ -1730,7 +1734,7 @@ conditional_bool_criteria:
         column: C_DIAG
         operator: "startswith"
         value: ["DO422", "DO420", "DO424", "DO423"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
       - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
@@ -1790,7 +1794,7 @@ conditional_bool_criteria:
                        "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
                        "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
                        "DO268", "DO266"]
-        date_col: D_INDDTO
+        date_col: D_UDDTO
 
 #   ### Exclusion criteria
 
