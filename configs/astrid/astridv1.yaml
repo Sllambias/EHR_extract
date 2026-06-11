@@ -40,13 +40,13 @@ conditional_criteria:
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
-        operator: "<"
+        operator: ">"
         value: 224
       - standard: or
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
-        operator: ">"
+        operator: "<"
         value: 154
   - action: include
     conditions:
