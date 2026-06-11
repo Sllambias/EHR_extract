@@ -33,19 +33,18 @@ population:
             GA: Gestationsalder
 
 conditional_criteria:
-  # GA available at birth
   - action: exclude
     conditions: 
       - standard: 
-        table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
-        match_on: BABY_CPR
-        column: Gestationsalder
+        table: population
+        match_on: CPR_BARN
+        column: GA
         operator: ">"
         value: 224
       - standard: or
-        table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
-        match_on: BABY_CPR
-        column: Gestationsalder
+        table: population
+        match_on: CPR_BARN
+        column: GA
         operator: "<"
         value: 154
   - action: include
