@@ -120,22 +120,6 @@ extract_criteria:
         column: BMI_Mor
         date_col: FoedselsDato_Barn
     dtype: float
-  - name: alcohol_consumption
-    key_column: m_cpr
-    sources:
-      - table: ${paths.input_dir_SP}/Mor - Alkohol.csv
-        match_on: MOR_CPR
-        column: Alkohol - Antal ugentlige genstande
-        date_col: "Kontakt dato"
-    dtype: string
-  - name: smoking_status
-    key_column: m_cpr
-    sources:
-      - table: ${paths.input_dir_SP}/Mor - Rygning.csv
-        match_on: MOR_CPR
-        column: Rygestatus
-        date_col: "Kontakt dato"
-    dtype: string
     # vægt fra vitale_parametre. 
 
 conditional_bool_criteria:
@@ -1926,7 +1910,7 @@ custom_extract_criteria:
     function: extract_latest_value
     args:
       table: 
-        table1: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+        table1: ${paths.input_dir_SP}/Mor - Alkohol.csv
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
@@ -1934,14 +1918,14 @@ custom_extract_criteria:
       right_on: BABY_CPR
       target_col: "Alkohol - Antal ugentlige genstande"
       new_col_name: alcohol_consumption
-      date_col: "Dato for seneste opdatering"
+      date_col: "Kontakt dato"
       dtype: string
   - name: smoking_status
     time_window: before_and_during_pregnancy
     function: extract_latest_value
     args:
       table: 
-        table1: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+        table1: ${paths.input_dir_SP}/Mor - Rygning.csv
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
@@ -1949,7 +1933,7 @@ custom_extract_criteria:
       right_on: BABY_CPR
       target_col: Rygestatus
       new_col_name: smoking_status
-      date_col: "Dato for seneste opdatering"
+      date_col: "Kontakt dato"
       dtype: string
   ### Obstetric history
   - name: parity
