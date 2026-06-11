@@ -134,6 +134,26 @@ def match_value_with_child_cpr_on_birthdate(
     return matches
 
 
+def match_years_with_child_cpr_on_birthdate(
+    date_start,
+    date_end,
+    value_table_path,
+    value_time_column,
+    value_child_cpr_column,
+    population,
+    population_key_column,
+):
+    value_table = load_table(value_table_path)
+
+    start = pl.lit(date_start).str.to_date("%d%m%Y")
+    end = pl.lit(date_end).str.to_date("%d%m%Y")
+    value_table = value_table.filter(pl.col(value_time_column).str.to_datetime(strict=False).dt.date().is_between(start, end))
+
+    joined = population.join(value_table, left_on=population_key_column, right_on=value_child_cpr_column, how="inner")
+    matches = set(joined[population_key_column].unique())
+    return matches
+
+
 def match_images_with_child(
     population, table_cfg, study_date_key="STUDY_DATE", mom_key="CPR_MOR", birthday_key="BIRTHDAY", ga_key="GA"
 ):
