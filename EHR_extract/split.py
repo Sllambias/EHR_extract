@@ -6,8 +6,11 @@ import polars as pl
 from datetime import datetime
 from dotenv import load_dotenv
 from EHR_extract.paths import get_config_path
-from EHR_extract.utils import merge_population_tables
+from EHR_extract.utils import RecursiveSearchpathPlugin, merge_population_tables
+from hydra.core.plugins import Plugins
 from omegaconf import DictConfig
+
+Plugins.instance().register(RecursiveSearchpathPlugin)
 
 load_dotenv()
 
@@ -53,7 +56,7 @@ def create_splits(
 
 @hydra.main(
     config_path=get_config_path(),
-    config_name="splits/split_V3",
+    config_name="split_V3",
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
