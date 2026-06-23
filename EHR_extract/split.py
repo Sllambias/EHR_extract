@@ -44,7 +44,7 @@ def create_splits(
     train_df = pl.DataFrame({population_cfg.population_key: list(train_population)})
     test_df = pl.DataFrame({population_cfg.population_key: list(test_population)})
 
-    if prev_train_population:
+    if update_train_split or update_test_split:
         train_df = train_df.join(prev_train_population)
         test_df = test_df.join(prev_test_population)
     return train_df, test_df
