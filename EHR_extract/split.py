@@ -24,15 +24,14 @@ def create_splits(
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
     full_population = set(full_population[population_cfg.population_key])
 
-    print("before", len(full_population))
     if update_train_split or update_test_split:
         prev_train_population = pl.read_csv(update_train_split)
         prev_test_population = pl.read_csv(update_test_split)
 
         full_population.difference_update(set(prev_train_population[population_cfg.population_key]))
         full_population.difference_update(set(prev_test_population[population_cfg.population_key]))
-
-    print("after", len(full_population))
+        if len(full_population) == 0:
+            logging.warning("NO NEW SAMPLES IN UPDATE")
 
     n_unique_ids = len(full_population)
     holdout_size = int(n_unique_ids * holdout_frac)
