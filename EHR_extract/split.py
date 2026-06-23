@@ -1,4 +1,5 @@
 import hydra
+import logging
 import numpy as np
 import os
 import polars as pl
@@ -18,6 +19,16 @@ def create_splits(population_cfg, holdout_frac=None, seed=None):
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
     full_population = set(full_population[population_cfg.population_key])
 
+    print("before", len(full_population))
+    if population_cfg.get("update_train_split", False) and population_cfg.get("update_train_split", False):
+        prev_train_population = pl.read_csv(population_cfg.update_train_split)
+        prev_test_population = pl.read_csv(population_cfg.update_train_split)
+
+        full_population.difference_update(set(prev_train_population[population_cfg.population_key]))
+        full_population.difference_update(set(prev_test_population[population_cfg.population_key]))
+
+    print("after", len(full_population))
+
     n_unique_ids = len(full_population)
     holdout_size = int(n_unique_ids * holdout_frac)
 
@@ -30,6 +41,10 @@ def create_splits(population_cfg, holdout_frac=None, seed=None):
 
     train_df = pl.DataFrame({population_cfg.population_key: list(train_population)})
     test_df = pl.DataFrame({population_cfg.population_key: list(test_population)})
+
+    if prev_train_population:
+        train_df = train_df.join(prev_train_population)
+        test_df = test_df.join(prev_test_population)
     return train_df, test_df
 
 
@@ -47,8 +62,17 @@ def main(cfg: DictConfig) -> None:
 
     timestamp = datetime.today().strftime("%Y-%m-%d")
 
-    train_df.write_csv(os.path.join(cfg.paths.output_dir, f"train_split_{cfg.holdout_frac}_{timestamp}.csv"), separator=",")
-    test_df.write_csv(os.path.join(cfg.paths.output_dir, f"test_split_{cfg.holdout_frac}_{timestamp}.csv"), separator=",")
+    train_output_path = os.path.join(cfg.paths.output_dir, f"train_split_{cfg.holdout_frac}_{timestamp}.csv")
+    test_output_path = os.path.join(cfg.paths.output_dir, f"test_split_{cfg.holdout_frac}_{timestamp}.csv")
+
+    if os.path.exists(train_output_path) or os.path.exists(test_output_path):
+        logging.warning(
+            "SPLITS WITH IDENTICAL NAMES ALREADY EXIST. WILL NOT SAVE THE CURRENTLY GENERATED SPLITS."
+            "If this is intended manually delete the old splits or change the name/version of the current."
+        )
+    else:
+        train_df.write_csv(train_output_path, separator=",")
+        test_df.write_csv(test_output_path, separator=",")
 
 
 if __name__ == "__main__":
