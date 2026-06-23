@@ -23,8 +23,8 @@ def create_splits(
 
     print("before", len(full_population))
     if update_train_split or update_test_split:
-        prev_train_population = pl.read_csv(population_cfg.update_train_split)
-        prev_test_population = pl.read_csv(population_cfg.update_train_split)
+        prev_train_population = pl.read_csv(update_train_split)
+        prev_test_population = pl.read_csv(update_test_split)
 
         full_population.difference_update(set(prev_train_population[population_cfg.population_key]))
         full_population.difference_update(set(prev_test_population[population_cfg.population_key]))
