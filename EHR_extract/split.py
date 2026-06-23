@@ -12,7 +12,9 @@ from omegaconf import DictConfig
 load_dotenv()
 
 
-def create_splits(population_cfg, holdout_frac=None, seed=None):
+def create_splits(
+    population_cfg, update_train_split: bool = False, update_test_split: bool = False, holdout_frac=None, seed=None
+):
     population = pl.DataFrame()
     rng = np.random.default_rng(seed=seed)
 
@@ -20,7 +22,7 @@ def create_splits(population_cfg, holdout_frac=None, seed=None):
     full_population = set(full_population[population_cfg.population_key])
 
     print("before", len(full_population))
-    if population_cfg.get("update_train_split", False) and population_cfg.get("update_train_split", False):
+    if update_train_split or update_test_split:
         prev_train_population = pl.read_csv(population_cfg.update_train_split)
         prev_test_population = pl.read_csv(population_cfg.update_train_split)
 
@@ -56,6 +58,8 @@ def create_splits(population_cfg, holdout_frac=None, seed=None):
 def main(cfg: DictConfig) -> None:
     train_df, test_df = create_splits(
         population_cfg=cfg.population,
+        update_train_split=cfg.get("update_train_split", False),
+        update_test_split=cfg.get("update_test_split", False),
         holdout_frac=cfg.holdout_frac,
         seed=cfg.seed,
     )
