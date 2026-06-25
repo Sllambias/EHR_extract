@@ -9,7 +9,9 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V4/test_split_0.15_2026-06-08.csv
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  img_sequence_predictions: /projects/users/data/UCPH/DeepFetal/projects/common/PN_plane_classification_april2026/Cervix_preds_v1/cervix_preds.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
 
 strict: True
 preterm_cutoff: 238
@@ -376,7 +378,7 @@ conditional_criteria:
 
 
 imaging_table:
-  table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-05-29.csv
+  table: ${paths.imaging_table}
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path
@@ -402,7 +404,7 @@ imaging_matching_criteria:
   # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
-      table: /projects/users/data/UCPH/DeepFetal/projects/common/PN_plane_classification_april2026/Cervix_preds_v1/cervix_preds.csv
+      table: ${paths.img_sequence_prediction_file}
       classes: [14]
       image_path_column: file_path
       class_column: pred
