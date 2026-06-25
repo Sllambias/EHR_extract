@@ -404,7 +404,7 @@ imaging_matching_criteria:
   # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
-      table: ${paths.img_sequence_prediction}
+      table: ${paths.img_sequence_predictions}
       classes: [14]
       image_path_column: file_path
       class_column: pred
