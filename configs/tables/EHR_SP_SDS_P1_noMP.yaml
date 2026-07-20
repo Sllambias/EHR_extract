@@ -18,7 +18,7 @@ base_table:
   population: ${paths.population}
   population_column: b_cpr
   tables:
-    - table: ../../data/img_data_link/ptb_population/preterm_P1_noMP_v3/preterm_P1_noMP_v3_population_train_and_test.csv
+    - table: ../../data/img_data_link/ptb_population/preterm_P1_noMP_v4/preterm_P1_noMP_v4_population_train_and_test.csv
       columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
   key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
   dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
@@ -1186,7 +1186,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DZ928C", "DO344B"]
+        value: ["DZ928C", "DO344B", "DZ928D"]
         date_col: Noteret_dato
       - condition: or
         table:
@@ -1197,7 +1197,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: ProcedureCode
         operator: "startswith"
-        value: ["KLDC00", "KLDC03"]
+        value: ["KLDC00", "KLDC03", "KLD"]
         date_col: ServiceDate
       - condition: or
         table:
@@ -1208,7 +1208,7 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
-        value: ["DZ928C", "DO344B"]
+        value: ["DZ928C", "DO344B", "DZ928D"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -1219,7 +1219,7 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: ProcedureKode
         operator: "startswith"
-        value: ["KLDC00", "KLDC03"]
+        value: ["KLDC00", "KLDC03", "KLD"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -1234,7 +1234,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
-        value: ["DZ928C", "DO344B"]
+        value: ["DZ928C", "DO344B", "DZ928D"]
         date_col: D_UDDTO
       - condition: or
         table:
@@ -1249,7 +1249,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_TILOPR
         operator: "in"
-        value: ["KLDC00", "KLDC03"]
+        value: ["KLDC00", "KLDC03", "KLD"]
         date_col: D_ODTO
       - condition: or
         table:
@@ -1264,7 +1264,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_OPR
         operator: "in"
-        value: ["KLDC00", "KLDC03"]
+        value: ["KLDC00", "KLDC03", "KLD"]
         date_col: D_ODTO
 
 
@@ -1415,7 +1415,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DO340", "DQ518", "DQ519", "DQ51"]
+        value: ["DO340", "DQ518", "DQ519", "DQ51", "DO34"]
         date_col: Noteret_dato
       - condition: or
         table:
@@ -1426,7 +1426,7 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
-        value: ["DO340", "DQ518", "DQ519", "DQ51"] 
+        value: ["DO340", "DQ518", "DQ519", "DQ51", "DO34"] 
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -1441,7 +1441,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
-        value: ["DO340", "DQ518", "DQ519", "DQ51"]
+        value: ["DO340", "DQ518", "DQ519", "DQ51", "DO34"]
         date_col: D_UDDTO
 
   # fibroids 
@@ -1742,10 +1742,15 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "startswith"
-        value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
-                       "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
-                       "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
-                       "DO268", "DO266"]
+        value: ["DO98", "DO991", "DO992", "DO993", "DO994", "DO995", "DO996", "DO997", "DO998",
+                "DO10", "DO11", "DO240", "DO241", "DO243", "DO245", "DO249", 
+                "DE10", "DE11", "DE12", "DE14", "DI10", "DI11", "DI12", "DI13", 
+                "DI14", "DI15", "DJ4", "DN18", "DE0", "DM32", "DM0", "DG40", "DF", 
+                "DB20", "DB21", "DB23", "DB24", "DK50", "DK51", "DI2", "DI3", "DI4", "DI5"]
+        # value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
+        #                "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
+        #                "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
+        #                "DO268", "DO266"]
         date_col: Noteret_dato
       - condition: or
         table:
@@ -1756,10 +1761,15 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
-        value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
-                       "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
-                       "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
-                       "DO268", "DO266"]
+        value: ["DO98", "DO991", "DO992", "DO993", "DO994", "DO995", "DO996", "DO997", "DO998",
+                "DO10", "DO11", "DO240", "DO241", "DO243", "DO245", "DO249", 
+                "DE10", "DE11", "DE12", "DE14", "DI10", "DI11", "DI12", "DI13", 
+                "DI14", "DI15", "DJ4", "DN18", "DE0", "DM32", "DM0", "DG40", "DF", 
+                "DB20", "DB21", "DB23", "DB24", "DK50", "DK51", "DI2", "DI3", "DI4", "DI5"]
+        # value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
+        #                "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
+        #                "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
+        #                "DO268", "DO266"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -1774,10 +1784,11 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
-        value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
-                       "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
-                       "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
-                       "DO268", "DO266"]
+        value: ["DO98", "DO991", "DO992", "DO993", "DO994", "DO995", "DO996", "DO997", "DO998",
+                "DO10", "DO11", "DO240", "DO241", "DO243", "DO245", "DO249", 
+                "DE10", "DE11", "DE12", "DE14", "DI10", "DI11", "DI12", "DI13", 
+                "DI14", "DI15", "DJ4", "DN18", "DE0", "DM32", "DM0", "DG40", "DF", 
+                "DB20", "DB21", "DB23", "DB24", "DK50", "DK51", "DI2", "DI3", "DI4", "DI5"]
         date_col: D_UDDTO
 
 #   ### Exclusion criteria
@@ -1826,6 +1837,7 @@ conditional_bool_criteria:
         date_col: FOEDSELSDATO
 
   # labor induction
+  # Todo include ATC codes MG02AD06
   - name: current_induced_labor
     key_column: b_cpr
     match_on: b_cpr
@@ -1851,7 +1863,7 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: ProcedureCode
         operator: "in"
-        value: ["KMAC00", "KMAC96A", "BKHD2", "BKHD20"]
+        value: ["KMAC00", "KMAC96A", "KMAC96B", "BKHD2", "BKHD20"]
         date_col: ServiceDate
       - condition: or
         table: 
