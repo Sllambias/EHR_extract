@@ -81,15 +81,15 @@ def generate_holdout_csv(num_rows, output_path, sample_from):
 
 
 if __name__ == "__main__":
-    output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
+    output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     generate_test_csv(1000, output_csv_path)
 
     img_type_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv"
     generate_img_type_csv(
-        1000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
+        1000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     )
 
     holdout_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv"
     generate_holdout_csv(
-        50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv"
+        50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     )
