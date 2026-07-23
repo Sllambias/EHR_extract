@@ -14,12 +14,13 @@ paths:
   imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
 
 strict: True
-preterm_cutoff: 259
+preterm_cutoff: 238
 
 population: 
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
+  deduplication_key: CPR_BARN
   tables: 
     - table: ${paths.input_dir_SDS}/mfr.csv
       columns:

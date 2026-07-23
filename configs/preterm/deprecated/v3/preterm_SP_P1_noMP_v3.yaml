@@ -9,7 +9,7 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
 
 strict: True
 preterm_cutoff: 259
@@ -18,19 +18,7 @@ population:
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
-  tables: 
-    - table: ${paths.input_dir_SDS}/mfr.csv
-      columns:
-        CPR_BARN: CPR_BARN
-        CPR_MOR: CPR_MODER
-        GA: GESTATIONSALDER_DAGE
-        BIRTHDAY: FOEDSELSDATO
-    - table: ${paths.input_dir_SDS}/nyfoedte.csv
-      columns:
-        CPR_BARN: CPRnummer_Barn
-        CPR_MOR: CPRnummer_Mor
-        GA: Gestationsalder
-        BIRTHDAY: FoedselsDato_Barn
+  deduplication_key: CPR_BARN
   composed_tables:
     - merge_on: CPR_BARN
       format_SP_GA: True

@@ -12,6 +12,7 @@ paths:
 population: 
   population_key: CPR_MOR
   split_key: CPR_MOR
+  deduplication_key: null
   tables: 
     - table: ${paths.imaging_table}
       columns:

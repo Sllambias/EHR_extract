@@ -19,7 +19,7 @@ from EHR_extract.custom_find_functions import (
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     RecursiveSearchpathPlugin,
-    deduplicate_barn_cpr,
+    deduplicate_on_key,
     filter_numeric_rows,
     format_criterion,
     get_python_operator,
@@ -30,6 +30,7 @@ from EHR_extract.utils import (
 )
 from hydra.core.plugins import Plugins
 from omegaconf import DictConfig, OmegaConf
+from pathlib import Path
 
 load_dotenv()
 Plugins.instance().register(RecursiveSearchpathPlugin)
@@ -171,6 +172,11 @@ def make_train_test_split(holdout_csv_path, population, split_key):
     version_base="1.2",
 )
 def main(cfg: DictConfig) -> None:
+    output_dir_path = Path(cfg.paths.output_dir)
+    output_dir_path.mkdir(exist_ok=True)
+    discards_file_path = Path(cfg.paths.discards_save_path)
+    discards_file_path.parent.mkdir(exist_ok=True)
+
     population = pl.DataFrame()
 
     if cfg.population.get("tables", None) is not None:
@@ -179,9 +185,10 @@ def main(cfg: DictConfig) -> None:
         population = merge_composed_population_tables(
             population, cfg.population.population_key, cfg.population.composed_tables
         )
-    population = deduplicate_barn_cpr(population, population_key=cfg.population.population_key)
+    if cfg.population.deduplication_key is not None:
+        population = deduplicate_on_key(population, population_key=cfg.population.deduplication_key)
     population, discards = extract_from_cfg(cfg, population=population)
-    os.makedirs(cfg.paths.output_dir, exist_ok=True)
+
     d = {}
     for i in range(len(discards)):
         d[i] = {
@@ -192,8 +199,7 @@ def main(cfg: DictConfig) -> None:
             "discards": discards[i][1],
         }
 
-    with open(cfg.paths.discards_save_path + ".json", "w") as fp:
-        json.dump(d, fp, indent=4)
+    discards_file_path.write_text(json.dumps(d, indent=4))
 
     population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
 

@@ -9,15 +9,16 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
 
 strict: True
-preterm_cutoff: 259
+preterm_cutoff: 238
 
 population: 
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
+  deduplication_key: CPR_BARN
   tables: 
     - table: ${paths.input_dir_SDS}/mfr.csv
       columns:
@@ -276,6 +277,63 @@ conditional_criteria:
           mom_column: CPR_MODER
           birth_id_column: FOEDSELSLOEBENUMMER
           delivery_date_column: FOEDSELSDATO
+  # Only first pregnancy 
+  # Here we could potentially include null or "." as parity 1, but currently they are dropped.
+  # SDS: 1 = first pregnancy
+  # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
+  - action: exclude
+    conditions:
+      - standard: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: PARITET
+        operator: "!="
+        value: "1"
+      - standard: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Paritet
+        operator: "!="
+        value: "1"
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: [0.0, 1.0]
+          operator: not_in
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Para
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: and
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value:
+          operator: "not missing"
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Para
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: DZ348A #Flergangsfødende
+          operator: "=="
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          value_column: Diagnosekode
+          value_time_column: Noteret_dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
   # Remove multiple births (twins etc.)
   - action: exclude
     conditions:
