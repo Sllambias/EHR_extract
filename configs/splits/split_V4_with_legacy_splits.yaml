@@ -16,3 +16,5 @@ update_splits_negative:
   update_train_split_negative: /projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
   update_test_split_negative: null
 
+population:
+
