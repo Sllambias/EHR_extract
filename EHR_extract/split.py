@@ -22,7 +22,7 @@ def create_splits(
     rng = np.random.default_rng(seed=seed)
 
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
-    full_population = set(full_population[population_cfg.population_key])
+    full_population = sorted(set(full_population[population_cfg.population_key]))
 
     if update_train_split or update_test_split:
         prev_train_population = pl.read_csv(update_train_split)

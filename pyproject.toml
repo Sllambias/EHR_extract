@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "EHR_extract"
 dynamic = ["version"]
+version = "0.0.2"
 description = "A preprocessing pipeline for electronic health records."
 authors = [
     { name = "Sebastian Llambias", email = "snl@di.ku.dk" },

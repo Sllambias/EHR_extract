@@ -6,6 +6,7 @@ defaults:
 paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  input_dir_img_db: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots
   output_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits/${hydra:job.config_name}
 
 strict: True 
@@ -22,7 +23,7 @@ population:
     - table: ${paths.input_dir_SP}/Population.csv
       columns:
         CPR_MOR: MOR_CPR
-    - table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-05-29.csv
+    - table: ${paths.input_dir_img_db}/all_images_2026-06-23.csv
       columns:
         CPR_MOR: phair_hash
         
