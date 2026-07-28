@@ -77,7 +77,7 @@ def main(cfg: DictConfig) -> None:
         population_cfg=cfg.population,
         update_train_split=cfg.get("update_train_split", False),
         update_test_split=cfg.get("update_test_split", False),
-        update_splits_negative=cfg.get("update_train_split_negative", False),
+        update_splits_negative=cfg.get("update_splits_negative", False),
         holdout_frac=cfg.holdout_frac,
         seed=cfg.seed,
     )
