@@ -47,7 +47,10 @@ def create_splits(
                 )
             )
 
-        return prev_train_population, prev_test_population
+        train_df = pl.DataFrame({population_cfg.population_key: list(prev_train_population)})
+        test_df = pl.DataFrame({population_cfg.population_key: list(prev_test_population)})
+
+        return train_df, test_df
 
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
     full_population = set(full_population[population_cfg.population_key])
