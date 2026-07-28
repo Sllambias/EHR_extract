@@ -10,17 +10,9 @@ paths:
   split_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits
 
 
-update_train_split: ${paths.split_dir}/split_V4/train_split_0.15_2026-06-08.csv
-update_test_split: ${paths.split_dir}/split_V4/test_split_0.15_2026-06-08.csv
-
-population: 
-  population_key: CPR_MOR
-  tables: 
-    - table: /projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
-      columns:
-        CPR_MOR: cpr_hashed
-
-        
-holdout_frac: 0.15
-seed: 41290
+update_splits_negative:
+  train_split: ${paths.split_dir}/split_V4/train_split_0.15_2026-06-08.csv
+  test_split: ${paths.split_dir}/split_V4/test_split_0.15_2026-06-08.csv
+  update_train_split_negative: /projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
+  update_test_split_negative: null
 
