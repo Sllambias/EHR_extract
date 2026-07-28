@@ -22,7 +22,7 @@ def create_splits(
     rng = np.random.default_rng(seed=seed)
 
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
-    full_population = sorted(set(full_population[population_cfg.population_key]))
+    full_population = set(full_population[population_cfg.population_key])
 
     if update_train_split or update_test_split:
         prev_train_population = pl.read_csv(update_train_split)
@@ -36,7 +36,7 @@ def create_splits(
     n_unique_ids = len(full_population)
     holdout_size = int(n_unique_ids * holdout_frac)
 
-    test_population = set(rng.choice(list(full_population), size=holdout_size, replace=False))
+    test_population = set(rng.choice(sorted(full_population), size=holdout_size, replace=False))
     train_population = full_population
     train_population.difference_update(test_population)
 
