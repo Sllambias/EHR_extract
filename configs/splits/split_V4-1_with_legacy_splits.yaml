@@ -16,18 +16,7 @@ population:
     - table: /projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
       columns:
         CPR_MOR: cpr_hashed
-    - table: ${paths.input_dir_SDS}/mfr.csv
-      columns:
-        CPR_MOR: CPR_MODER
-    - table: ${paths.input_dir_SDS}/nyfoedte.csv
-      columns:
-        CPR_MOR: CPRnummer_Mor
-    - table: ${paths.input_dir_SP}/Population.csv
-      columns:
-        CPR_MOR: MOR_CPR
-    - table: /projects/users/people/seblla/repos/EHR_extract/all_images_2026-05-29.csv
-      columns:
-        CPR_MOR: phair_hash
+
         
 holdout_frac: 0.15
 seed: 41290
