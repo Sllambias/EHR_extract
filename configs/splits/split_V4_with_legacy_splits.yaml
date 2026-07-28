@@ -13,7 +13,7 @@ strict: True
 population: 
   population_key: CPR_MOR
   tables: 
-    - table: $/projects/users/data/UCPH/DeepFetal/projects/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
+    - table: $/projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
       columns:
         CPR_MOR: cpr_hashed
     - table: ${paths.input_dir_SDS}/mfr.csv
