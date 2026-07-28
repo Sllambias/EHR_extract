@@ -26,9 +26,6 @@ def create_splits(
     population = pl.DataFrame()
     rng = np.random.default_rng(seed=seed)
 
-    full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
-    full_population = set(full_population[population_cfg.population_key])
-
     if update_splits_negative:
         prev_train_population = set(pl.read_csv(update_splits_negative["train_split"]))
         prev_test_population = set(pl.read_csv(update_splits_negative["test_split"]))
@@ -37,6 +34,9 @@ def create_splits(
         if update_splits_negative["update_test_split_negative"]:
             prev_test_population.difference_update(set(pl.read_csv(update_splits_negative["update_test_split_negative"])))
         return prev_train_population, prev_test_population
+
+    full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
+    full_population = set(full_population[population_cfg.population_key])
 
     if update_train_split or update_test_split:
         prev_train_population = pl.read_csv(update_train_split)
