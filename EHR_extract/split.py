@@ -27,24 +27,26 @@ def create_splits(
     rng = np.random.default_rng(seed=seed)
 
     if update_splits_negative:
-        prev_train_population = set(pl.read_csv(update_splits_negative["train_split"][population_cfg.population_key]))
-        prev_test_population = set(pl.read_csv(update_splits_negative["test_split"][population_cfg.population_key]))
+        prev_train_population = set(pl.read_csv(update_splits_negative["train_split"])[population_cfg.population_key])
+        prev_test_population = set(pl.read_csv(update_splits_negative["test_split"])[population_cfg.population_key])
         if update_splits_negative["update_train_split_negative"]:
             prev_train_population.difference_update(
                 set(
-                    pl.read_csv(
-                        update_splits_negative.update_train_split_negative[update_splits_negative.negative_population_key]
-                    )
+                    pl.read_csv(update_splits_negative.update_train_split_negative)[
+                        update_splits_negative.negative_population_key
+                    ]
                 )
             )
+
         if update_splits_negative["update_test_split_negative"]:
             prev_test_population.difference_update(
                 set(
-                    pl.read_csv(
-                        update_splits_negative.update_test_split_negative[update_splits_negative.negative_population_key]
-                    )
+                    pl.read_csv(update_splits_negative.update_test_split_negative)[
+                        update_splits_negative.negative_population_key
+                    ]
                 )
             )
+
         return prev_train_population, prev_test_population
 
     full_population = merge_population_tables(population_cfg.tables, population=population, strict=False)
