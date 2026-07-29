@@ -144,3 +144,59 @@ class RecursiveSearchpathPlugin(SearchPathPlugin):
                 search_path.append(
                     provider="recursive-searchpath-plugin", path="file://" + os.path.join(get_config_path(), path)
                 )
+
+
+def get_physical_deltas_post_PN_processing(
+    image,
+    physical_delta_x,
+    physical_delta_y,
+    region_location_min_x0,
+    region_location_max_x1,
+    region_location_min_y0,
+    region_location_max_y1,
+):
+
+    x, y, c = image.shape
+    assert x == region_location_max_x1
+
+    resampled_x = 224
+    resampled_y = 224
+
+    resampling_ratio_x = x / resampled_x
+    resampled_physical_delta_x = physical_delta_x * resampling_ratio_x
+
+    y_crop = abs(region_location_min_y0 - region_location_max_y1)
+    y_cropped = y - y_crop
+
+    resampling_ratio_y = y_cropped / resampled_y
+    resampled_physical_delta_y = physical_delta_y * resampling_ratio_y
+
+    return resampled_physical_delta_x, resampled_physical_delta_y
+
+
+if __name__ == "__main__":
+    import argparse
+    import numpy as np
+    import os
+    from PIL import Image
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path", default="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv")
+    args = parser.parse_args()
+
+    for idx, row in enumerate(pl.read_csv(args.path).iter_rows(named=True)):
+        if idx > 10:
+            break
+        if not os.path.isfile(row["no_ocr_preprocessed_file_path"]):
+            continue
+
+        x, y = get_physical_deltas_post_PN_processing(
+            image=np.array(Image.open(row["no_ocr_preprocessed_file_path"])),
+            physical_delta_x=row["physical_delta_y"],
+            physical_delta_y=row["physical_delta_y"],
+            region_location_min_x0=row["region_location_min_x0"],
+            region_location_max_x1=row["region_location_max_x1"],
+            region_location_min_y0=row["region_location_min_y0"],
+            region_location_max_y1=row["region_location_max_y1"],
+        )
+        print(x, y)

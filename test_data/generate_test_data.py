@@ -1,6 +1,8 @@
 import polars
 import random
+import numpy as np
 from datetime import datetime, timedelta
+from PIL import Image
 
 
 def generate_test_csv(num_rows, output_path):
@@ -24,20 +26,21 @@ def generate_test_csv(num_rows, output_path):
 
     data = {
         "phair_hash": [random.choice(cpr_mor_values[:50]) for _ in range(num_rows)],
-        # "cpr_child": [random.choice(cpr_child_values[:50]) for _ in range(num_rows)],
         "file_path": [
-            f"/images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
+            f"images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
             for _ in range(num_rows)
         ],
         "study_date": [random_study_date() for _ in range(num_rows)],
         "physical_delta_x": [random.uniform(0.1, 1.0) for _ in range(num_rows)],
         "physical_delta_y": [random.uniform(0.1, 1.0) for _ in range(num_rows)],
+        "region_location_min_x0": 0,
+        "region_location_min_y0": 0,
+        "region_location_max_x1": [random.randint(50, 800) for _ in range(num_rows)],
+        "region_location_max_y1": 30,
         "no_ocr_preprocessed_file_path": [
-            f"/preprocessed_images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
+            f"preprocessed_images/study_{random.randint(1000, 9999)}_series_{random.randint(1, 10)}_image_{random.randint(1, 100)}.png"
             for _ in range(num_rows)
         ],
-        # "Birthdate": [random_birth_date() for _ in range(num_rows)],
-        # "GA_days": [random.randint(100, 300) for _ in range(num_rows)],
     }
 
     # Create DataFrame and save to CSV
@@ -80,6 +83,17 @@ def generate_holdout_csv(num_rows, output_path, sample_from):
     df.write_csv(output_path)
 
 
+def generate_test_images(n, path_table):
+    path_table = polars.read_csv(path_table)
+    for i in range(n):
+        x = path_table["region_location_max_x1"][i]
+        y = np.random.randint(0, 1200)
+        data = np.zeros((x, y))
+        data = Image.fromarray(data)
+        data = data.convert("RGB")
+        data.save(path_table["no_ocr_preprocessed_file_path"][i])
+
+
 if __name__ == "__main__":
     output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     generate_test_csv(1000, output_csv_path)
@@ -93,3 +107,5 @@ if __name__ == "__main__":
     generate_holdout_csv(
         50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     )
+
+    generate_test_images(50, output_csv_path)
