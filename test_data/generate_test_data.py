@@ -88,7 +88,7 @@ def generate_test_images(n, path_table):
     for i in range(n):
         x = path_table["region_location_max_x1"][i]
         y = np.random.randint(0, 1200)
-        data = np.zeros((x, y))
+        data = np.zeros((y, x))
         data = Image.fromarray(data)
         data = data.convert("RGB")
         data.save(path_table["no_ocr_preprocessed_file_path"][i])

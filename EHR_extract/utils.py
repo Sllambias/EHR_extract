@@ -155,8 +155,11 @@ def get_physical_deltas_post_PN_processing(
     region_location_min_y0,
     region_location_max_y1,
 ):
+    import numpy as np
 
-    x, y, c = image.shape
+    x, y = image.size
+    print(np.array(image).shape)
+    print(x, y)
     print(
         x,
         physical_delta_x,
@@ -186,7 +189,6 @@ def get_physical_deltas_post_PN_processing(
 
 if __name__ == "__main__":
     import argparse
-    import numpy as np
     import os
     from PIL import Image
 
@@ -201,7 +203,7 @@ if __name__ == "__main__":
             continue
 
         x, y = get_physical_deltas_post_PN_processing(
-            image=np.array(Image.open(row["no_ocr_preprocessed_file_path"])),
+            image=Image.open(row["no_ocr_preprocessed_file_path"]),
             physical_delta_x=row["physical_delta_y"],
             physical_delta_y=row["physical_delta_y"],
             region_location_min_x0=row["region_location_min_x0"],
