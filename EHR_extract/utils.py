@@ -198,7 +198,7 @@ if __name__ == "__main__":
                 region_location_min_y0=int(row["region_location_min_y0"]),
                 region_location_max_y1=int(row["region_location_max_y1"]),
             )
-        except ValueError as e:
+        except ValueError as e:  # Will skip when deltas or reg locs are lists
             print(f"skipping case. Due to error: {e}")
 
         print(x, y)
