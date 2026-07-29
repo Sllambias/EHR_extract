@@ -170,7 +170,7 @@ def get_physical_deltas_post_PN_processing(
         region_location_min_y0,
         region_location_max_y1,
     )
-    assert x == region_location_max_x1
+    assert x == region_location_max_x1, f"{x} != {region_location_max_x1}"
 
     resampled_x = 224
     resampled_y = 224
