@@ -170,7 +170,7 @@ def get_physical_deltas_post_PN_processing(
         region_location_min_y0,
         region_location_max_y1,
     )
-    assert int(x) == int(region_location_max_x1), f"{x} != {region_location_max_x1}"
+    assert x == region_location_max_x1, f"{x} != {region_location_max_x1}"
 
     resampled_x = 224
     resampled_y = 224
@@ -204,11 +204,11 @@ if __name__ == "__main__":
 
         x, y = get_physical_deltas_post_PN_processing(
             image=Image.open(row["no_ocr_preprocessed_file_path"]),
-            physical_delta_x=row["physical_delta_y"],
-            physical_delta_y=row["physical_delta_y"],
-            region_location_min_x0=row["region_location_min_x0"],
-            region_location_max_x1=row["region_location_max_x1"],
-            region_location_min_y0=row["region_location_min_y0"],
-            region_location_max_y1=row["region_location_max_y1"],
+            physical_delta_x=int(row["physical_delta_y"]),
+            physical_delta_y=int(row["physical_delta_y"]),
+            region_location_min_x0=int(row["region_location_min_x0"]),
+            region_location_max_x1=int(row["region_location_max_x1"]),
+            region_location_min_y0=int(row["region_location_min_y0"]),
+            region_location_max_y1=int(row["region_location_max_y1"]),
         )
         print(x, y)
