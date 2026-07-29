@@ -203,13 +203,16 @@ if __name__ == "__main__":
         if not os.path.isfile(row["no_ocr_preprocessed_file_path"]):
             continue
 
-        x, y = get_physical_deltas_post_PN_processing(
-            image=Image.open(row["no_ocr_preprocessed_file_path"]),
-            physical_delta_x=float(row["physical_delta_y"]),
-            physical_delta_y=float(row["physical_delta_y"]),
-            region_location_min_x0=int(row["region_location_min_x0"]),
-            region_location_max_x1=int(row["region_location_max_x1"]),
-            region_location_min_y0=int(row["region_location_min_y0"]),
-            region_location_max_y1=int(row["region_location_max_y1"]),
-        )
+        try:
+            x, y = get_physical_deltas_post_PN_processing(
+                image=Image.open(row["no_ocr_preprocessed_file_path"]),
+                physical_delta_x=float(row["physical_delta_y"]),
+                physical_delta_y=float(row["physical_delta_y"]),
+                region_location_min_x0=int(row["region_location_min_x0"]),
+                region_location_max_x1=int(row["region_location_max_x1"]),
+                region_location_min_y0=int(row["region_location_min_y0"]),
+                region_location_max_y1=int(row["region_location_max_y1"]),
+            )
+        except ValueError as e:
+            print(f"skipping case. Due to error: {e}")
         print(x, y)
