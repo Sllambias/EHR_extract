@@ -206,6 +206,11 @@ def main(cfg: DictConfig) -> None:
     if cfg.paths.holdout_csv is not None:
         train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key)
 
+        if cfg.paths.exclude_train_subjects_not_in_csv is not None:
+            _, train_pop = make_train_test_split(
+                cfg.paths.exclude_train_subjects_not_in_csv, population, cfg.population.split_key
+            )
+
         intersection = set(train_pop[cfg.population.population_key]).intersection(set(test_pop[cfg.population.population_key]))
         if len(intersection) > 0:
             logging.warning(
