@@ -155,28 +155,13 @@ def get_physical_deltas_post_PN_processing(
     region_location_min_y0,
     region_location_max_y1,
 ):
-    import numpy as np
-
     x, y = image.size
-    print(np.array(image).shape)
-    print(x, y)
-    print(
-        x,
-        physical_delta_x,
-        region_location_min_x0,
-        region_location_max_x1,
-        y,
-        physical_delta_y,
-        region_location_min_y0,
-        region_location_max_y1,
-    )
     assert x == region_location_max_x1, f"{x} != {region_location_max_x1}"
 
     resampled_x = 224
     resampled_y = 224
 
     resampling_ratio_x = x / resampled_x
-    print(type(physical_delta_x), type(resampling_ratio_x))
     resampled_physical_delta_x = physical_delta_x * resampling_ratio_x
 
     y_crop = abs(region_location_min_y0 - region_location_max_y1)
@@ -215,4 +200,5 @@ if __name__ == "__main__":
             )
         except ValueError as e:
             print(f"skipping case. Due to error: {e}")
+
         print(x, y)
