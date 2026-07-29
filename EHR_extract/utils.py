@@ -157,6 +157,16 @@ def get_physical_deltas_post_PN_processing(
 ):
 
     x, y, c = image.shape
+    print(
+        x,
+        physical_delta_x,
+        region_location_min_x0,
+        region_location_max_x1,
+        y,
+        physical_delta_y,
+        region_location_min_y0,
+        region_location_max_y1,
+    )
     assert x == region_location_max_x1
 
     resampled_x = 224
