@@ -176,6 +176,7 @@ def get_physical_deltas_post_PN_processing(
     resampled_y = 224
 
     resampling_ratio_x = x / resampled_x
+    print(physical_delta_x, resampling_ratio_x)
     resampled_physical_delta_x = physical_delta_x * resampling_ratio_x
 
     y_crop = abs(region_location_min_y0 - region_location_max_y1)
