@@ -190,6 +190,18 @@ def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
     )
     return table
 
+def find_GA_at_date(table, birth_date_col, GA_days_col, study_date_col, GA_at_date_col):
+    """GA in days at `study_date_col`, from GA at birth and birth date."""
+    birth_d = convert_to_date(birth_date_col)
+    study_d = convert_to_date(study_date_col)
+    days_to_birth = (birth_d - study_d).dt.total_days()
+    table = table.with_columns(
+        (
+            pl.col(GA_days_col).cast(pl.Int64, strict=False) - days_to_birth
+        ).alias(GA_at_date_col)
+    )
+    return table
+
 def find_maternal_age(table, m_table_path, maternal_birth_date_col: str, maternal_id_col: str, baby_birth_date_col: str, key_column: str, maternal_age_col: str):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])

@@ -19,9 +19,9 @@ base_table:
   population_column: b_cpr
   tables:
     - table: ../../data/img_data_link/ptb_population/preterm_P1_noMP_v4/preterm_P1_noMP_v4_population_train_and_test.csv
-      columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
-  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
+      columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days, STUDY_DATE: study_date}
+  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end, study_date]
+  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date, study_date: date}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
@@ -38,6 +38,14 @@ base_table:
         GA_number: 140
         date_col: GA_140_date
       dtype: date
+    - column: GA_study_date
+      function: find_GA_at_date
+      args:
+        birth_date_col: pregnancy_end
+        GA_days_col: GA_days
+        study_date_col: study_date
+        GA_at_date_col: GA_study_date
+      dtype: integer
     - column: maternal_age
       function: find_maternal_age
       args:
