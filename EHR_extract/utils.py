@@ -201,9 +201,9 @@ def downsample_segmentation_and_insert_black_bar(segmentation, y_downsample_rati
 if __name__ == "__main__":
     import argparse
     import os
-    from PIL import Image
-    import torchvision
     import torch
+    import torchvision
+    from PIL import Image
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", default="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv")
