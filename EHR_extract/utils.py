@@ -173,10 +173,37 @@ def get_physical_deltas_post_PN_processing(
     return resampled_physical_delta_x, resampled_physical_delta_y
 
 
+def calculate_region_y_ratio(image, region_location_max_y1):
+    _, y = image.size
+    return region_location_max_y1 / y
+
+
+def downsample_segmentation_and_insert_black_bar(segmentation, y_downsample_ratio):
+    x, y = segmentation.size
+    canvas = torch.zeros((3, x, y))
+
+    y_downsampled = int(y * (1 - y_downsample_ratio))
+
+    tf = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.PILToTensor(),
+            torchvision.transforms.Resize(
+                (x, y_downsampled), interpolation=torchvision.transforms.InterpolationMode.NEAREST_EXACT
+            ),
+        ]
+    )
+
+    resampled_seg = tf(segmentation)
+    canvas[:, :, y - y_downsampled :] = resampled_seg
+    return canvas
+
+
 if __name__ == "__main__":
     import argparse
     import os
     from PIL import Image
+    import torchvision
+    import torch
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", default="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv")
@@ -189,8 +216,9 @@ if __name__ == "__main__":
             continue
 
         try:
-            x, y = get_physical_deltas_post_PN_processing(
-                image=Image.open(row["no_ocr_preprocessed_file_path"]),
+            image = Image.open(row["no_ocr_preprocessed_file_path"])
+            resampled_physical_delta_x, resampled_physical_delta_y = get_physical_deltas_post_PN_processing(
+                image=image,
                 physical_delta_x=float(row["physical_delta_y"]),
                 physical_delta_y=float(row["physical_delta_y"]),
                 region_location_min_x0=int(row["region_location_min_x0"]),
@@ -198,7 +226,9 @@ if __name__ == "__main__":
                 region_location_min_y0=int(row["region_location_min_y0"]),
                 region_location_max_y1=int(row["region_location_max_y1"]),
             )
+            top_bar_ratio = calculate_region_y_ratio(image=image, region_location_max_y1=int(row["region_location_max_y1"]))
+            x = downsample_segmentation_and_insert_black_bar(image, top_bar_ratio)
         except ValueError as e:  # Will skip when deltas or reg locs are lists
             print(f"skipping case. Due to error: {e}")
 
-        print(x, y)
+        print(resampled_physical_delta_x, resampled_physical_delta_y)
