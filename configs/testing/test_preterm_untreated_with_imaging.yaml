@@ -1,6 +1,6 @@
 defaults:
   - default@
-  - preterm_noMP_img_v2@
+  - preterm_P1_noMP_untreated_34_img_v5@
   - _self_
 
 paths:
@@ -11,14 +11,19 @@ paths:
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv
-  
+
 strict: True 
 
 imaging_table:
-  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv
+  columns:
+    CPR_MOR: phair_hash
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+    PDX: physical_delta_x
+    PDY: physical_delta_y
+    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
 
-
-    
 imaging_matching_criteria:
   # Filter1: Scan-to-delivery interval
   # Filter2: GA at scan
@@ -28,10 +33,10 @@ imaging_matching_criteria:
       image_path_column: ${population.file_path_key}
       population_ga_in_days_at_delivery_column: GA
       population_delivery_date_column: BIRTHDAY
-      min_diff_days_scan_to_delivery: -99999 #0
-      max_diff_days_scan_to_delivery: 99999 #210
-      min_ga_in_days_at_scan: -99999 #196
-      max_ga_in_days_at_scan: 99999 #259
+      min_diff_days_scan_to_delivery: 0 #0
+      max_diff_days_scan_to_delivery: 210 #210
+      min_ga_in_days_at_scan: 196 #196
+      max_ga_in_days_at_scan: 259 #259
   # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
@@ -40,5 +45,3 @@ imaging_matching_criteria:
       image_path_column: filename
       class_column: pred
       population_image_path_column: ${population.file_path_key}
-    
-
