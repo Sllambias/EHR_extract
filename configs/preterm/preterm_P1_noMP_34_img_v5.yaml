@@ -58,13 +58,13 @@ conditional_criteria:
         column: GESTATIONSALDER_DAGE
         operator: "missing"
         value: 
-      - standard: 
+      - standard: and
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         column: Gestationsalder
         operator: "missing"
         value: 
-      - standard: 
+      - standard: and
         table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
         match_on: BABY_CPR
         column: Gestationsalder
