@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - /default@
-  - preterm_P1_noMP_untreated_img_V3@
+  - preterm_P1_noMP_34_img_V5@
   - _self_
 
 paths:
@@ -16,7 +16,7 @@ paths:
 strict: True 
 
 imaging_table:
-  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/test_table.csv
+  table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path

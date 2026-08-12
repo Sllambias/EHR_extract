@@ -302,13 +302,12 @@ def find_close_births(
     return siblings_to_exclude
 
 
-def find_duplicated_ids(table, match_on, id_column, population, population_key_column):
+def find_duplicated_ids(table, match_on, id_columns, population, population_key_column):
     population = set(population.get_column(population_key_column))
     table_path = table
     table = load_table(table)
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
-
-    duplicated_ids = table.filter(table[id_column].is_duplicated())
+    duplicated_ids = table.filter(table[id_columns].is_duplicated())
     duplicated_ids = duplicated_ids.filter(pl.col(match_on).is_in(population))
     logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} \
