@@ -253,12 +253,12 @@ def table_from_cfg(cfg):
         )
         print(summary_table)
 
-        ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) < 259)
+        ptb_table = main_table.filter(pl.col("GA").cast(pl.Int64, strict=False) < 259)
         sum_ptb = get_summary(ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
         # print("GA < 259 ")
         # print(sum_ptb)
 
-        non_ptb_table = main_table.filter(pl.col("GA_days").cast(pl.Int64, strict=False) >= 259)
+        non_ptb_table = main_table.filter(pl.col("GA").cast(pl.Int64, strict=False) >= 259)
         sum_non_ptb = get_summary(non_ptb_table, list(summary_cfg.ignore_columns), (summary_cfg.get("n_samples", None)))
         # print("GA > 259 ")
         # print(sum_non_ptb)
