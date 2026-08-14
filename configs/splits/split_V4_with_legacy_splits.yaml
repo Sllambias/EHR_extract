@@ -1,0 +1,26 @@
+# @package _global_
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits/${hydra:job.config_name}
+  split_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits
+
+
+update_splits_negative:
+  negative_population_key: cpr_hashed
+  train_split: ${paths.split_dir}/split_V4/train_split_0.15_2026-06-08.csv
+  test_split: ${paths.split_dir}/split_V4/test_split_0.15_2026-06-08.csv
+  update_train_split_negative: /projects/users/data/UCPH/DeepFetal/projects/common/splits/legacy/CPRS_T21_Growth_pseudonymized.csv
+  update_test_split_negative: null
+
+population: 
+  population_key: CPR_MOR
+
+holdout_frac: 0.15
+seed: 41290
+
+

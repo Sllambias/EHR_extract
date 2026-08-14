@@ -1,0 +1,59 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/splits/split_V3/test_split_0.05_2026-04-27.csv
+
+strict: True
+preterm_cutoff: 259
+
+population: 
+  population_key: CPR_BARN
+  split_key: CPR_MOR
+  file_path_key: FILE_PATH
+  composed_tables:
+    - merge_on: CPR_BARN
+      format_SP_GA: True
+      tables:
+        - table: ${paths.input_dir_SP}/Population.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            CPR_MOR: MOR_CPR
+            BIRTHDAY: Fødselstidspunkt
+        - table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            GA: Gestationsalder
+
+conditional_criteria:
+  - action: exclude
+    conditions: 
+      - standard: 
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: ">"
+        value: 224
+      - standard: or
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: "<"
+        value: 154
+  - action: include
+    conditions:
+      - custom:
+        function: match_years_with_child_cpr_on_birthdate
+        args:
+          date_start: "01012024"
+          date_end: "31122024"
+          value_table_path: ${paths.input_dir_SP}/Population.csv
+          value_time_column: Fødselstidspunkt
+          value_child_cpr_column: BABY_CPR

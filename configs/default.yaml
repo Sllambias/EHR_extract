@@ -3,4 +3,3 @@ hydra:
   run:
     dir: ${paths.output_dir}
 
-table: 
