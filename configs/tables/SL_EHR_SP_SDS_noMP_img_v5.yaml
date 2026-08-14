@@ -1,7 +1,7 @@
 paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
-  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_noMP_34_v5/preterm_noMP_34_v5_population_train_and_test.csv
+  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_noMP_34_img_v5/preterm_noMP_34_img_v5_population_train_and_test.csv
   output_dir: outputs/tables
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
@@ -18,9 +18,6 @@ summary_table:
 base_table: 
   population: ${paths.population}
   population_column: CPR_BARN
-  tables:
-    - table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_noMP_34_v5/preterm_noMP_34_v5_population_train_and_test.csv
-      columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA}
   key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA]
   dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date}
   add_columns:

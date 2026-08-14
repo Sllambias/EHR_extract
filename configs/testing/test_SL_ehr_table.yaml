@@ -1,17 +1,17 @@
 # @package _global_
 defaults:
   - /default@
-  - preterm_noMP_34_img_V5@
+  - SL_EHR_SP_SDS_noMP_img_V5@
   - _self_
 
 paths:
   input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
   input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  population: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/test_preterm/test_preterm_population_train_and_test.csv
   output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/${hydra:job.config_name}
-  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
-  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
-  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
-  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
+  summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
+  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
 
@@ -34,15 +34,15 @@ imaging_matching_criteria:
       image_path_column: ${population.file_path_key}
       population_ga_in_days_at_delivery_column: GA
       population_delivery_date_column: BIRTHDAY
-      min_diff_days_scan_to_delivery: -20000 #0
-      max_diff_days_scan_to_delivery: 200000 #210
-      min_ga_in_days_at_scan: 0 #196
-      max_ga_in_days_at_scan: 300000 #259
+      min_diff_days_scan_to_delivery: 0 #0
+      max_diff_days_scan_to_delivery: 210 #210
+      min_ga_in_days_at_scan: 196 #196
+      max_ga_in_days_at_scan: 259 #259
   # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
       table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
-      classes: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
+      classes: [14]
       image_path_column: filename
       class_column: pred
       population_image_path_column: ${population.file_path_key}

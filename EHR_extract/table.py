@@ -68,7 +68,7 @@ def make_main_table(cfg, strict):
 
     # Get the barebones main table
     main_table = pl.DataFrame()
-    for table in cfg.tables:
+    for table in cfg.get("tables", []):
         table_df = load_table(table.table, strict=strict)
         table_df = table_df.rename(table.columns)[cfg.key_columns]
         table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
