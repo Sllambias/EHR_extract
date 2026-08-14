@@ -27,14 +27,14 @@ base_table:
       function: find_pregnancy_start
       args:
         birth_date_col: BIRTHDAY
-        GA_col: GA
+        GA_days_col: GA
         pregnancy_start_col: pregnancy_start
       dtype: date
     - column: GA_140_date
       function: find_date_at_GA
       args:
         birth_date_col: BIRTHDAY
-        GA_col: GA
+        GA_days_col: GA
         GA_number: 140
         date_col: GA_140_date
       dtype: date
