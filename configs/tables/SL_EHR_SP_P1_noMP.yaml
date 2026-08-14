@@ -1,7 +1,7 @@
 paths:
   input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
   input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
-  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5.csv
+  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5_population_train_and_test.csv
   output_dir: outputs/tables
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
@@ -11,30 +11,30 @@ strict: True
 
 summary_table: 
   make_table: True
-  ignore_columns: [b_cpr, m_cpr, pregnancy_end, pregnancy_start]
+  ignore_columns: [CPR_BARN, CPR_MOR, BIRTHDAY, GA]
   n_samples: 100000
 
 base_table: 
   population: ${paths.population}
-  population_column: b_cpr
+  population_column: CPR_BARN
   tables:
     - table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5.csv
-      columns: {CPR_MOR: m_cpr, CPR_BARN: b_cpr, BIRTHDAY: pregnancy_end, GA: GA_days}
-  key_columns: [b_cpr, m_cpr, GA_days, pregnancy_end]
-  dtypes: {b_cpr: string, m_cpr: string, GA_days: integer, pregnancy_end: date}
+      columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA}
+  key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA]
+  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
       args:
-        birth_date_col: pregnancy_end
-        GA_days_col: GA_days
+        birth_date_col: BIRTHDAY
+        GA_col: GA
         pregnancy_start_col: pregnancy_start
       dtype: date
     - column: GA_140_date
       function: find_date_at_GA
       args:
-        birth_date_col: pregnancy_end
-        GA_days_col: GA_days
+        birth_date_col: BIRTHDAY
+        GA_col: GA
         GA_number: 140
         date_col: GA_140_date
       dtype: date
@@ -49,7 +49,7 @@ base_table:
         maternal_birth_date_col: Fødselsdato
         maternal_id_col: MOR_CPR
         baby_birth_date_col: pregnancy_start
-        key_column: b_cpr
+        key_column: CPR_BARN
         maternal_age_col: maternal_age
       dtype: integer
 
@@ -109,7 +109,7 @@ extract_criteria:
         date_col: "Dato for seneste opdatering"
     dtype: string
   - name: maternal_BMI
-    key_column: b_cpr
+    key_column: CPR_BARN
     sources:
       - table: 
           table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
@@ -125,7 +125,7 @@ extract_criteria:
 conditional_bool_criteria:
   ### Maternal characteristics
   - name: smoking_status
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -141,7 +141,7 @@ conditional_bool_criteria:
         value: ["BKUA32"]
         date_col: Noteret_dato
   - name: drug_use
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -157,7 +157,7 @@ conditional_bool_criteria:
         value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
         date_col: Noteret_dato
   - name: fertility_treatment
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: year_before_pregnancy_and_during_pregnancy
     conditions:
@@ -195,7 +195,7 @@ conditional_bool_criteria:
         value: ["DO003B", "DZ321H", "DZ358F"] # IVF pregnancy
         date_col: Noteret_dato
   - name: pcos
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -211,7 +211,7 @@ conditional_bool_criteria:
         value: ["DE282"]
         date_col: Noteret_dato
   - name: endometriose
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -227,7 +227,7 @@ conditional_bool_criteria:
         value: ["DN80"]
         date_col: Noteret_dato
   - name: sleep_disorder
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -243,7 +243,7 @@ conditional_bool_criteria:
         value: ["DG473", "DG4730", "DG4732", "DG4734"]
         date_col: Noteret_dato
   - name: previous_surgical_abortion
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -259,7 +259,7 @@ conditional_bool_criteria:
         value: ["KLCH00", "KLCH03"]
         date_col: ServiceDate
   - name: previous_spontaneous_abortion
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: six_months_before_pregnancy
     conditions:
@@ -286,7 +286,7 @@ conditional_bool_criteria:
         value: ["DO03"]
         date_col: Noteret_dato
   - name: bacterial_vaginosis
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -302,7 +302,7 @@ conditional_bool_criteria:
         value: ["DN768B", "DN768C"]
         date_col: Noteret_dato
   - name: chlamydia
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -318,7 +318,7 @@ conditional_bool_criteria:
         value: ["DA56", "DA560", "DA560A", "DA560C", "DA560D", "DA560E", "DA561", "DA562", "DA749", "DA744"]
         date_col: Noteret_dato
   - name: gonorrhea
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -334,7 +334,7 @@ conditional_bool_criteria:
         value: ["DA54", "DA540", "DA541", "DA542", "DA548", "DA549", "DO982"]
         date_col: Noteret_dato
   - name: syphilis
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -350,7 +350,7 @@ conditional_bool_criteria:
         value: ["DA51", "DA510", "DA519", "DA539", "DO981"]
         date_col: Noteret_dato
   - name: trichomoniasis
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -366,7 +366,7 @@ conditional_bool_criteria:
         value: ["DA59"]
         date_col: Noteret_dato
   - name: pyelonefritis
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_and_during_pregnancy
     conditions:
@@ -395,7 +395,7 @@ conditional_bool_criteria:
 
   ### Obstetric history
   - name: previous_ptb
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -434,7 +434,7 @@ conditional_bool_criteria:
         date_col: Dato
     # late miscarriage
   - name: previous_late_miscarriage
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -462,7 +462,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
     # pprom
   - name: previous_pprom        
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -480,7 +480,7 @@ conditional_bool_criteria:
     # short cervix
     #TODO add values from measurements
   - name: previous_short_cervix  
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -497,7 +497,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # c-section
   - name: previous_c_section
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -525,7 +525,7 @@ conditional_bool_criteria:
       #   date_col: Fødselstidspunkt
   # preclampsia
   - name: previous_preclampsia
-    key_column: b_cpr
+    key_column: CPR_BARN
     match_on: m_cpr
     time_window: before_pregnancy
     conditions:
@@ -544,8 +544,8 @@ conditional_bool_criteria:
 #   ### Current pregnancy (cervical)
   # cervical conization
   - name: current_cervical_conization
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -572,8 +572,8 @@ conditional_bool_criteria:
         date_col: ServiceDate
     # short cervix
   - name: current_short_cervix 
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -590,8 +590,8 @@ conditional_bool_criteria:
 #   ### Current pregnancy (mechanical)
   # multiple pregnancies
   - name: female_fetus
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -607,8 +607,8 @@ conditional_bool_criteria:
         date_col: Fødselstidspunkt
 
   - name: current_multiple_pregnancies
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -646,8 +646,8 @@ conditional_bool_criteria:
         date_col: "Kontakt dato"
   # uterine malformation
   - name: current_uterine_malformation
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -663,8 +663,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # fibroids 
   - name: current_fibroids
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition: 
@@ -680,8 +680,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # polyhydramnios
   - name: current_polyhydramnios
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -699,8 +699,8 @@ conditional_bool_criteria:
   ### Current pregnancy (medical)
   # preclampsia
   - name: current_preclampsia
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -716,8 +716,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # vaginal bleeding
   - name: current_vaginal_bleeding
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -733,8 +733,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # infection 
   - name: current_infection
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition: 
@@ -750,8 +750,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # pprom
   - name: current_pprom        
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -767,8 +767,8 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   # maternal comorbidity 
   - name: current_maternal_comorbidity
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -789,8 +789,8 @@ conditional_bool_criteria:
 #   ### Exclusion criteria
   # C-section
   - name: current_c_section
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -806,8 +806,8 @@ conditional_bool_criteria:
         date_col: ServiceDate
   # labor induction
   - name: current_induced_labor
-    key_column: b_cpr
-    match_on: b_cpr
+    key_column: CPR_BARN
+    match_on: CPR_BARN
     time_window: during_pregnancy
     conditions:
       - condition:
@@ -855,7 +855,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: "Alkohol - Antal ugentlige genstande"
       new_col_name: alcohol_consumption
@@ -870,7 +870,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: Rygestatus
       new_col_name: smoking_status
@@ -886,7 +886,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: Para
       new_col_name: current_parity
@@ -907,7 +907,7 @@ custom_extract_criteria:
           table2: ${paths.input_dir_SP}/Population.csv
           left_on: [MOR_CPR]
           right_on: [MOR_CPR]
-        left_on: b_cpr
+        left_on: CPR_BARN
         right_on: BABY_CPR
         target_col: Værdi 
         new_col_name: current_cervical_length
@@ -927,7 +927,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: Resultatværdi
       new_col_name: current_hcg
@@ -946,7 +946,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: Resultatværdi
       new_col_name: current_papp
@@ -965,7 +965,7 @@ custom_extract_criteria:
         table2: ${paths.input_dir_SP}/Population.csv
         left_on: [MOR_CPR]
         right_on: [MOR_CPR]
-      left_on: b_cpr
+      left_on: CPR_BARN
       right_on: BABY_CPR
       target_col: Værdi
       new_col_name: lab_bmi
@@ -986,8 +986,8 @@ custom_extract_criteria:
   #         table2: ${paths.input_dir_SP}/Population.csv
   #         left_on: [MOR_CPR]
   #         right_on: [MOR_CPR]
-  #       key_column: b_cpr
-  #       left_on: b_cpr
+  #       key_column: CPR_BARN
+  #       left_on: CPR_BARN
   #       right_on: BABY_CPR
   #       target_col: Værdi 
   #       new_col_name: current_short_cervix_test
@@ -1015,7 +1015,7 @@ custom_extract_criteria:
   #         table2: ${paths.input_dir_SP}/Population.csv
   #         left_on: [MOR_CPR]
   #         right_on: [MOR_CPR]
-  #       key_column: b_cpr
+  #       key_column: CPR_BARN
   #       left_on: m_cpr
   #       right_on: MOR_CPR
   #       target_col: Værdi 

@@ -59,8 +59,11 @@ def cast_types(table, dtype, column):
 
 def make_main_table(cfg, strict):
     all_discards = []
-    with open(cfg.population, "r") as fp:
-        population = json.load(fp)
+    if cfg.population.endswith(".json"):
+        with open(cfg.population, "r") as fp:
+            population = json.load(fp)
+    else:
+        population = pl.read_csv(cfg.population)[cfg.population_column].unique().to_list()
     print("Population size:", len(population))
 
     # Get the barebones main table
