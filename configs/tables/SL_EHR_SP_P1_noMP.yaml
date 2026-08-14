@@ -1,6 +1,6 @@
 paths:
-  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
-  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
   population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5_population_train_and_test.csv
   output_dir: outputs/tables
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
