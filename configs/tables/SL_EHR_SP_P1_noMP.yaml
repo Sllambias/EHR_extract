@@ -101,7 +101,7 @@ time_conditionals:
 extract_criteria:
   ### Maternal characteristics
   - name: ethnicity
-    key_column: m_cpr
+    key_column: CPR_MOR
     sources:
       - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
         match_on: MOR_CPR
@@ -126,7 +126,7 @@ conditional_bool_criteria:
   ### Maternal characteristics
   - name: smoking_status
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -142,7 +142,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: drug_use
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -158,7 +158,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: fertility_treatment
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: year_before_pregnancy_and_during_pregnancy
     conditions:
       - condition:
@@ -196,7 +196,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: pcos
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -212,7 +212,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: endometriose
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -228,7 +228,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: sleep_disorder
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -244,7 +244,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: previous_surgical_abortion
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -260,7 +260,7 @@ conditional_bool_criteria:
         date_col: ServiceDate
   - name: previous_spontaneous_abortion
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: six_months_before_pregnancy
     conditions:
       - condition:
@@ -287,7 +287,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: bacterial_vaginosis
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -303,7 +303,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: chlamydia
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -319,7 +319,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: gonorrhea
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -335,7 +335,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: syphilis
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -351,7 +351,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: trichomoniasis
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -367,7 +367,7 @@ conditional_bool_criteria:
         date_col: Noteret_dato
   - name: pyelonefritis
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_and_during_pregnancy
     conditions:
       - condition:
@@ -396,7 +396,7 @@ conditional_bool_criteria:
   ### Obstetric history
   - name: previous_ptb
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -435,7 +435,7 @@ conditional_bool_criteria:
     # late miscarriage
   - name: previous_late_miscarriage
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -463,7 +463,7 @@ conditional_bool_criteria:
     # pprom
   - name: previous_pprom        
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -481,7 +481,7 @@ conditional_bool_criteria:
     #TODO add values from measurements
   - name: previous_short_cervix  
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -498,7 +498,7 @@ conditional_bool_criteria:
   # c-section
   - name: previous_c_section
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -526,7 +526,7 @@ conditional_bool_criteria:
   # preclampsia
   - name: previous_preclampsia
     key_column: CPR_BARN
-    match_on: m_cpr
+    match_on: CPR_MOR
     time_window: before_pregnancy
     conditions:
       - condition:
@@ -1016,7 +1016,7 @@ custom_extract_criteria:
   #         left_on: [MOR_CPR]
   #         right_on: [MOR_CPR]
   #       key_column: CPR_BARN
-  #       left_on: m_cpr
+  #       left_on: CPR_MOR
   #       right_on: MOR_CPR
   #       target_col: Værdi 
   #       new_col_name: previous_short_cervix_test
