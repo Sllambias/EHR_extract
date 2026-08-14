@@ -39,14 +39,14 @@ base_table:
         GA_number: 140
         date_col: GA_140_date
       dtype: date
-    - column: GA_study_date
-      function: find_GA_at_date
-      args:
-        birth_date_col: BIRTHDAY
-        GA_days_col: GA
-        study_date_col: study_date
-        GA_at_date_col: GA_study_date
-      dtype: integer
+    #- column: GA_study_date
+    #  function: find_GA_at_date
+    #  args:
+    #    birth_date_col: BIRTHDAY
+    #    GA_days_col: GA
+    #    study_date_col: study_date
+    #    GA_at_date_col: GA_study_date
+    #  dtype: integer
     - column: maternal_age
       function: find_maternal_age
       args:
