@@ -47,7 +47,7 @@ def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values
         raise NotImplementedError(f"Unknown file type for path: {path}. Did you remember to add the file extension?")
 
 
-def expr_startswith(col: pl.Expr, val) -> pl.Expr:
+def expr_startswith_any(col: pl.Expr, val) -> pl.Expr:
     s = col.cast(pl.String)
     return pl.any_horizontal([s.str.starts_with(p) for p in val])
 
@@ -126,8 +126,8 @@ def get_python_operator(operator_str):
         return lambda col, val: col.cast(pl.Float64, strict=False).is_between(val[0], val[1], closed="both")
     elif operator_str == "not_null":
         return lambda col, val: col.is_not_null()
-    elif operator_str == "startswith":
-        return expr_startswith
+    elif operator_str == "startswith_any":
+        return expr_startswith_any
     elif operator_str == "is_true":
         return lambda col, val: col.cast(pl.Boolean, strict=False) == True
     elif operator_str == "is_false":
