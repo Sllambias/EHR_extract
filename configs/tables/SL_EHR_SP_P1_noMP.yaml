@@ -48,6 +48,7 @@ base_table:
           right_on: [MOR_CPR]
         maternal_birth_date_col: Fødselsdato
         maternal_id_col: MOR_CPR
+        population_maternal_id_col: CPR_MOR
         baby_birth_date_col: pregnancy_start
         key_column: CPR_BARN
         maternal_age_col: maternal_age
