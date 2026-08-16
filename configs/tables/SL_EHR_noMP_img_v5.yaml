@@ -8,6 +8,7 @@ paths:
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
+allow_duplicates: True
 
 summary_table: 
   make_table: True
