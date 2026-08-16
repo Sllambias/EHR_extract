@@ -73,7 +73,9 @@ def make_main_table(cfg, strict, allow_duplicates=False):
         main_table = main_table.vstack(table_df)
 
     # Check for duplicates
+    print("BEFORE DUP CHECK", len(main_table))
     main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
+    print("AFTER DUP CHECK", len(main_table))
 
     # Check population size
     if len(population) != len(main_table[cfg.population_column]):
