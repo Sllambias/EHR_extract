@@ -3,6 +3,7 @@ import random
 import numpy as np
 from datetime import datetime, timedelta
 from PIL import Image
+import os
 
 
 def generate_test_csv(num_rows, output_path):
@@ -25,7 +26,7 @@ def generate_test_csv(num_rows, output_path):
         return (start_date + timedelta(days=random_days)).strftime("%Y-%m-%d")
 
     data = {
-        "phair_hash": [random.choice(cpr_mor_values[:50]) for _ in range(num_rows)],
+        "phair_hash": [random.choice(cpr_mor_values) for _ in range(num_rows)],
         "file_path": [
             f"images/study_{random.randint(1000, 9999)}/series_{random.randint(1, 10)}/image_{random.randint(1, 100)}.dcm"
             for _ in range(num_rows)
@@ -38,7 +39,7 @@ def generate_test_csv(num_rows, output_path):
         "region_location_max_x1": [random.randint(50, 800) for _ in range(num_rows)],
         "region_location_max_y1": 30,
         "no_ocr_preprocessed_file_path": [
-            f"preprocessed_images/study_{random.randint(1000, 9999)}_series_{random.randint(1, 10)}_image_{random.randint(1, 100)}.png"
+            f"/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/preprocessed_images/study_{random.randint(1000, 9999)}_series_{random.randint(1, 10)}_image_{random.randint(1, 100)}.png"
             for _ in range(num_rows)
         ],
     }
@@ -85,9 +86,11 @@ def generate_holdout_csv(num_rows, output_path, sample_from):
 
 def generate_test_images(n, path_table):
     path_table = polars.read_csv(path_table)
+    dir = path_table["no_ocr_preprocessed_file_path"][0].rsplit("/", 1)[0]
+    os.makedirs(dir, exist_ok=True)
     for i in range(n):
         x = path_table["region_location_max_x1"][i]
-        y = np.random.randint(0, 1200)
+        y = np.random.randint(50, 1200)
         data = np.zeros((y, x))
         data = Image.fromarray(data)
         data = data.convert("RGB")
@@ -96,11 +99,11 @@ def generate_test_images(n, path_table):
 
 if __name__ == "__main__":
     output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
-    generate_test_csv(1000, output_csv_path)
+    generate_test_csv(5000, output_csv_path)
 
     img_type_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv"
     generate_img_type_csv(
-        1000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
+        5000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     )
 
     holdout_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv"
@@ -108,4 +111,4 @@ if __name__ == "__main__":
         50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
     )
 
-    generate_test_images(50, output_csv_path)
+    generate_test_images(5000, output_csv_path)

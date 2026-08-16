@@ -476,6 +476,7 @@ def extract_filtered_values(
     table=None,
     sources=None,
 ):
+
     specs = merge_source_specs(
         table=table,
         sources=sources,

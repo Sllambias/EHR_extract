@@ -46,8 +46,6 @@ custom_functions = {
     "extract_filtered_conditional_values": extract_filtered_conditional_values,
 }
 
-BOOL_ALLOW_DUPLICATE_BABY_ID = False
-
 
 def cast_types(table, dtype, column):
     if dtype == pl.Date:
@@ -57,7 +55,7 @@ def cast_types(table, dtype, column):
     return table.with_columns(pl.col(column).cast(dtype, strict=False))
 
 
-def make_main_table(cfg, strict):
+def make_main_table(cfg, strict, allow_duplicates=False):
     all_discards = []
     if cfg.population.endswith(".json"):
         with open(cfg.population, "r") as fp:
@@ -75,7 +73,7 @@ def make_main_table(cfg, strict):
         main_table = main_table.vstack(table_df)
 
     # Check for duplicates
-    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
+    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
 
     # Check population size
     if len(population) != len(main_table[cfg.population_column]):
@@ -131,7 +129,7 @@ def make_main_table(cfg, strict):
             ]
         )
         main_table = subset_table
-        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
+        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
     return main_table, all_discards
 
 
@@ -179,8 +177,10 @@ def get_custom_extract_criteria(cfg, main_table):
             main_table=main_table,
             min_date=min_date,
             max_date=max_date,
-            allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID,
+            allow_duplicates=cfg.allow_duplicates,
         )
+        main_table = check_duplicates(main_table, custom_extract_criterion.args.left_on, allow_duplicates=cfg.allow_duplicates)
+
     return main_table
 
 
@@ -239,6 +239,7 @@ def table_from_cfg(cfg):
     main_table, discards = make_main_table(
         cfg.base_table,
         strict=cfg.strict,
+        allow_duplicates=cfg.allow_duplicates,
     )
     main_table = get_extract_criteria(cfg, main_table)
     main_table = get_conditional_bool_criteria(cfg, main_table)
