@@ -276,21 +276,19 @@ def main(cfg: DictConfig) -> None:
 
     if extra_tables is not None:
         for key, value in extra_tables.items():
+            Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(parents=True, exist_ok=True)
             with open(cfg.paths.summary_save_path.replace("summary", f"{key}_summary"), "w") as fp:
-                Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(
-                    parents=True, exist_ok=True
-                )
                 safe_save_df(value).write_csv(fp)
 
+    Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)
     with open(cfg.paths.table_save_path, "w") as fp:
-        Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)
         table.write_csv(fp)
+    Path(cfg.paths.discards_save_path).parent.mkdir(parents=True, exist_ok=True)
     with open(cfg.paths.discards_save_path, "w") as fp:
-        Path(cfg.paths.discards_save_path).parent.mkdir(parents=True, exist_ok=True)
         json.dump(d, fp, indent=4)
     if sum_table is not None:
+        Path(cfg.paths.summary_save_path).parent.mkdir(parents=True, exist_ok=True)
         with open(cfg.paths.summary_save_path, "w") as fp:
-            Path(cfg.paths.summary_save_path).parent.mkdir(parents=True, exist_ok=True)
             safe_save_df(sum_table).write_csv(fp)
 
 
