@@ -441,7 +441,9 @@ def extract_filtered_values_from_source(
 
     tmp_table = take_latest_row(tmp_table, left_on, date_col)
     tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
-    return check_duplicates(tmp_table, left_on, allow_duplicates=allow_duplicates)
+    if not allow_duplicates:
+        return check_duplicates(tmp_table, left_on)
+    return tmp_table
 
 
 def merge_source_specs(table=None, sources=None, **shared):
@@ -515,7 +517,8 @@ def extract_filtered_values(
             main_table = main_table.with_columns(pl.coalesce([pl.col(new_col_name), pl.col(fb_col)]).alias(new_col_name)).drop(
                 fb_col
             )
-        main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
+        if not allow_duplicates:
+            main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
     return main_table
 
 

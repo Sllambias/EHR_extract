@@ -49,19 +49,15 @@ custom_functions = {
 
 def cast_types(table, dtype, column):
     if dtype == pl.Date:
-        return table.with_columns(convert_to_date(column).alias(column))
+        return table.with_columns(convert_to_date(column))
     if dtype == pl.Datetime:
-        return table.with_columns(convert_to_datetime(column).alias(column))
+        return table.with_columns(convert_to_datetime(column))
     return table.with_columns(pl.col(column).cast(dtype, strict=False))
 
 
 def make_main_table(cfg, strict, allow_duplicates=False):
     all_discards = []
-    if cfg.population.endswith(".json"):
-        with open(cfg.population, "r") as fp:
-            population = json.load(fp)
-    else:
-        population = pl.read_csv(cfg.population)[cfg.population_column].unique().to_list()
+    population = pl.read_csv(cfg.population)[cfg.population_column].unique().to_list()
     print("Population size:", len(population))
 
     # Get the barebones main table
@@ -71,67 +67,49 @@ def make_main_table(cfg, strict, allow_duplicates=False):
         table_df = table_df.rename(table.columns)[cfg.key_columns]
         table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
         main_table = main_table.vstack(table_df)
+    print("Main table size:", len(main_table))
 
-    # Check for duplicates
-    print("BEFORE DUP CHECK", len(main_table))
-    main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
-    print("AFTER DUP CHECK", len(main_table))
-
-    # Check population size
-    if len(population) != len(main_table[cfg.population_column]):
-        population_set = set(population)
-        print(
-            f"Population size mismatch. Population size: {len(population)}, Main table size: {len(main_table[cfg.population_column].unique())}"
-        )
-        all_discards.append(
-            [
-                cfg.population_column,
-                list(population_set.difference(set(main_table[cfg.population_column].unique()))),
-                len(population),
-                len(main_table[cfg.population_column]),
-            ]
-        )
+    if not allow_duplicates:
+        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
 
     # Dropping nulls
     for key in cfg.key_columns:
         if key == cfg.population_column:
             continue
+        population_before = set(main_table[cfg.population_column])
         dtype = dtype_from_cfg(cfg.dtypes[key])
-        subset_table = cast_types(main_table, dtype, key)
-        subset_table = subset_table.drop_nulls(key)
-        population = set(main_table[cfg.population_column])
-        subset_population = set(subset_table[cfg.population_column])
+        main_table = cast_types(main_table, dtype, key)
+        main_table = main_table.drop_nulls(key)
+        population_after = set(main_table[cfg.population_column])
         all_discards.append(
             [
                 key,
-                list(population.difference(subset_population)),
-                len(population),
-                len(subset_population),
+                list(population_before.difference(population_after)),
+                len(population_before),
+                len(population_after),
             ]
         )
-        main_table = subset_table
 
     # Add the customs columns
     for column in cfg.add_columns:
-        print
+        population_before = set(main_table[cfg.population_column])
         fn = custom_functions[column.function]
         args = column.args
         dtype = dtype_from_cfg(column.dtype)
-        subset_table = fn(**args, table=main_table)
-        subset_table = cast_types(subset_table, dtype, column.column)
-        subset_table = subset_table.drop_nulls(column.column)
-        population = set(main_table[cfg.population_column])
-        subset_population = set(subset_table[cfg.population_column])
+        main_table = fn(**args, table=main_table)
+        main_table = cast_types(main_table, dtype, column.column)
+        main_table = main_table.drop_nulls(column.column)
+        population_after = set(main_table[cfg.population_column])
         all_discards.append(
             [
                 column.column,
-                list(population.difference(subset_population)),
-                len(population),
-                len(subset_population),
+                list(population_before.difference(population_after)),
+                len(population_before),
+                len(population_after),
             ]
         )
-        main_table = subset_table
-        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
+        if not allow_duplicates:
+            main_table = check_duplicates(main_table, cfg.population_column)
     return main_table, all_discards
 
 
@@ -181,7 +159,8 @@ def get_custom_extract_criteria(cfg, main_table):
             max_date=max_date,
             allow_duplicates=cfg.allow_duplicates,
         )
-        main_table = check_duplicates(main_table, custom_extract_criterion.args.left_on, allow_duplicates=cfg.allow_duplicates)
+        if not cfg.allow_duplicates:
+            main_table = check_duplicates(main_table, custom_extract_criterion.args.left_on)
 
     return main_table
 

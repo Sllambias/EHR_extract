@@ -2,7 +2,7 @@ paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
   population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_noMP_34_img_v5/preterm_noMP_34_img_v5_population_train_and_test.csv
-  output_dir: outputs/tables
+  output_dir: outputs/tables/${hydra:job.config_name}
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
@@ -40,14 +40,6 @@ base_table:
         GA_number: 140
         date_col: GA_140_date
       dtype: date
-    #- column: GA_study_date
-    #  function: find_GA_at_date
-    #  args:
-    #    birth_date_col: BIRTHDAY
-    #    GA_days_col: GA
-    #    study_date_col: study_date
-    #    GA_at_date_col: GA_study_date
-    #  dtype: integer
     - column: maternal_age
       function: find_maternal_age
       args:

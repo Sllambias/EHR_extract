@@ -6,16 +6,10 @@ from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 
 
-def check_duplicates(table, population_column, allow_duplicates=False):
+def check_duplicates(table, population_column):
     duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
     if duplicates.height > 0:
-        if not allow_duplicates:
-            raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
-        else:
-            print("before", len(table))
-            table = table.group_by(population_column).agg(pl.col("*").first())
-            assert len(table[population_column].unique()) == len(table[population_column])
-            print("after", len(table))
+        raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
     return table
 
 
