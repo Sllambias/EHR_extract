@@ -22,7 +22,7 @@ base_table:
     - table: ${paths.population}
       columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA, NO_OCR_FILE_PATH: NO_OCR_PATH ,PDX: PDX, PDY: PDY}
   key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA, NO_OCR_PATH, PDX, PDY]
-  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date}
+  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date, NO_OCR_PATH: string, PDX: float, PDY: float}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
