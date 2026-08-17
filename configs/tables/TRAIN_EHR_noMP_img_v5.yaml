@@ -1,28 +1,28 @@
 paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
-  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5_population_train_and_test.csv
-  output_dir: outputs/tables
+  population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_noMP_34_img_v5/preterm_noMP_34_img_v5_population_train.csv
+  output_dir: outputs/tables/${hydra:job.config_name}
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True 
+allow_duplicates: True
 
 summary_table: 
   make_table: True
   ignore_columns: [CPR_BARN, CPR_MOR, BIRTHDAY, GA]
   n_samples: 100000
 
-
 base_table: 
   population: ${paths.population}
   population_column: CPR_BARN
   tables:
-    - table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5_population_train_and_test.csv
-      columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA}
-  key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA]
-  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date}
+    - table: ${paths.population}
+      columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA, NO_OCR_FILE_PATH: NO_OCR_PATH ,PDX: PDX, PDY: PDY}
+  key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA, NO_OCR_PATH, PDX, PDY]
+  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date, NO_OCR_PATH: string, PDX: float, PDY: float}
   add_columns:
     - column: pregnancy_start
       function: find_pregnancy_start
@@ -39,14 +39,6 @@ base_table:
         GA_number: 140
         date_col: GA_140_date
       dtype: date
-    #- column: GA_study_date
-    #  function: find_GA_at_date
-    #  args:
-    #    birth_date_col: BIRTHDAY
-    #    GA_days_col: GA
-    #    study_date_col: study_date
-    #    GA_at_date_col: GA_study_date
-    #  dtype: integer
     - column: maternal_age
       function: find_maternal_age
       args:
@@ -133,39 +125,6 @@ extract_criteria:
     # vægt fra vitale_parametre. 
 
 conditional_bool_criteria:
-  # ## Maternal characteristics
-  # - name: smoking_status
-  #   key_column: CPR_BARN
-  #   match_on: CPR_MOR
-  #   time_window: before_and_during_pregnancy
-  #   conditions:
-  #     - condition:
-  #       table:  
-  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: BABY_CPR
-  #       column: Diagnosekode
-  #       operator: "startswith_any"
-  #       value: ["BKUA32"]
-  #       date_col: Noteret_dato
-  # - name: drug_use
-  #   key_column: CPR_BARN
-  #   match_on: CPR_MOR
-  #   time_window: before_and_during_pregnancy
-  #   conditions:
-  #     - condition:
-  #       table:  
-  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: BABY_CPR
-  #       column: Diagnosekode
-  #       operator: "startswith_any"
-  #       value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
-  #       date_col: Noteret_dato
   - name: fertility_treatment
     key_column: CPR_BARN
     match_on: CPR_MOR
@@ -1065,17 +1024,6 @@ conditional_bool_criteria:
         operator: "startswith_any"
         value: ["KMCA"]
         date_col: FOEDSELSDATO
-      # - condition: or
-      #   table: 
-      #     table1: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-      #     table2: ${paths.input_dir_SP}/Population.csv
-      #     left_on: [BABY_Fødsel_ID]
-      #     right_on: [BABY_Fødsel_ID]
-      #   match_on: MOR_CPR
-      #   column: "Udslettet dato/tid"
-      #   operator: "not_null"
-      #   value: null
-      #   date_col: Fødselstidspunkt
       - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_MODER
@@ -1757,10 +1705,6 @@ conditional_bool_criteria:
                 "DE10", "DE11", "DE12", "DE14", "DI10", "DI11", "DI12", "DI13", 
                 "DI14", "DI15", "DJ4", "DN18", "DE0", "DM32", "DM0", "DG40", "DF", 
                 "DB20", "DB21", "DB23", "DB24", "DK50", "DK51", "DI2", "DI3", "DI4", "DI5"]
-        # value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
-        #                "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
-        #                "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
-        #                "DO268", "DO266"]
         date_col: Noteret_dato
       - condition: or
         table:
@@ -1776,10 +1720,6 @@ conditional_bool_criteria:
                 "DE10", "DE11", "DE12", "DE14", "DI10", "DI11", "DI12", "DI13", 
                 "DI14", "DI15", "DJ4", "DN18", "DE0", "DM32", "DM0", "DG40", "DF", 
                 "DB20", "DB21", "DB23", "DB24", "DK50", "DK51", "DI2", "DI3", "DI4", "DI5"]
-        # value: ["DO998", "DO101", "DZ038O", "DO103", "DO992", "DO993B", "DO994", 
-        #                "DO102", "DO993", "DO996A", "DO991", "DO995", "DO993A", "DO997", 
-        #                "DO996", "DO989", "DO988", "DO987", "DO983", "DO985", "DO269", 
-        #                "DO268", "DO266"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -2066,7 +2006,7 @@ custom_extract_criteria:
       dtype: float
       sources:
         - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_all.csv
             table2: ${paths.input_dir_SDS}/nyfoedte.csv
             left_on: [PATIENT_CPR]
             right_on: [CPRnummer_Mor]
@@ -2078,79 +2018,7 @@ custom_extract_criteria:
               operator: "startswith_any"
               value: ["NPU01580"]
         - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU01580"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_all.csv
             table2: ${paths.input_dir_SDS}/mfr.csv
             left_on: [PATIENT_CPR]
             right_on: [CPR_MODER]
@@ -2170,7 +2038,7 @@ custom_extract_criteria:
       dtype: float
       sources:
         - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_all.csv
             table2: ${paths.input_dir_SDS}/nyfoedte.csv
             left_on: [PATIENT_CPR]
             right_on: [CPRnummer_Mor]
@@ -2182,79 +2050,7 @@ custom_extract_criteria:
               operator: "startswith_any"
               value: ["NPU21725", "NPU27780", "NPU22157"]
         - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_1.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_2.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_3.csv
-            table2: ${paths.input_dir_SDS}/mfr.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPR_MODER]
-          right_on: CPR_BARN
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
-            table2: ${paths.input_dir_SDS}/nyfoedte.csv
-            left_on: [PATIENT_CPR]
-            right_on: [CPRnummer_Mor]
-          right_on: CPRnummer_Barn
-          target_col: VALUE
-          date_col: SAMPLINGDATE
-          filters:
-            - column: ANALYSISCODE
-              operator: "startswith_any"
-              value: ["NPU21725", "NPU27780", "NPU22157"]
-        - table:
-            table1: ${paths.input_dir_SDS}/lab_dm_forsker_4.csv
+            table1: ${paths.input_dir_SDS}/lab_dm_forsker_all.csv
             table2: ${paths.input_dir_SDS}/mfr.csv
             left_on: [PATIENT_CPR]
             right_on: [CPR_MODER]
