@@ -132,6 +132,7 @@ population:
         class_column: is_cervix
         population_image_path_column: ${population.file_path_key}
 
+holdout_frac: 0
 seed: 895302
 
 
