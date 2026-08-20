@@ -1,0 +1,233 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  img_sequence_predictions: /projects/users/data/UCPH/DeepFetal/projects/common/PN_plane_classification_april2026/Cervix_preds_v1/cervix_preds.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
+
+strict: True
+preterm_cutoff: 238
+
+population: 
+  population_key: CPR_BARN
+  split_key: CPR_MOR
+  file_path_key: FILE_PATH
+  deduplication_key: CPR_BARN
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
+  composed_tables:
+    - merge_on: CPR_BARN
+      format_SP_GA: True
+      tables:
+        - table: ${paths.input_dir_SP}/Population.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            CPR_MOR: MOR_CPR
+            BIRTHDAY: Fødselstidspunkt
+        - table: ${paths.input_dir_SP}/Barn - Fødselsinfo.csv
+          columns:
+            CPR_BARN: BABY_CPR
+            GA: Gestationsalder
+
+conditional_criteria:
+  # GA available at birth
+  - action: exclude
+    conditions: 
+      - standard: 
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: "missing"
+        value: 
+  # Only live birth (no SP)
+  - action: exclude
+    conditions:
+      - standard: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: LEVENDE_ELLER_DOEDFOEDT
+        operator: "!="
+        value: Levendefødt
+      - standard: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: LevendefoedtDoedfoedt
+        operator: "!="
+        value: "1"
+  # Remove close siblings (no SP)
+  - action: exclude
+    conditions:
+      - custom: 
+        function: find_close_births
+        args:
+          value: 280
+          operator: <
+          table: ${paths.input_dir_SDS}/nyfoedte.csv
+          match_on: CPRnummer_Barn
+          mom_column: CPRnummer_Mor
+          birth_id_column: DW_EK_Foedsel
+          delivery_date_column: FoedselsDato_Barn
+      - custom: or
+        function: find_close_births        
+        args:
+          value: 280
+          operator: <
+          table: ${paths.input_dir_SDS}/mfr.csv
+          match_on: CPR_BARN
+          mom_column: CPR_MODER
+          birth_id_column: FOEDSELSLOEBENUMMER
+          delivery_date_column: FOEDSELSDATO
+  # Only first pregnancy 
+  # Here we could potentially include null or "." as parity 1, but currently they are dropped.
+  # SDS: 1 = first pregnancy
+  # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
+  - action: exclude
+    conditions:
+      - standard: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: PARITET
+        operator: "!="
+        value: "1"
+      - standard: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Paritet
+        operator: "!="
+        value: "1"
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: [0.0, 1.0]
+          operator: not_in
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Para
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: and
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value:
+          operator: "not missing"
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Para
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: DZ348A #Flergangsfødende
+          operator: "=="
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          value_column: Diagnosekode
+          value_time_column: Noteret_dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+  # Remove multiple births (twins etc.)
+  - action: exclude
+    conditions:
+      - custom:
+        function: find_duplicated_ids
+        args: 
+          table: ${paths.input_dir_SDS}/nyfoedte.csv
+          match_on: CPRnummer_Barn
+          id_columns: 
+          - DW_EK_Foedsel
+          - CPRnummer_Mor
+      - custom: or
+        function: find_duplicated_ids
+        args: 
+          table: ${paths.input_dir_SDS}/mfr.csv
+          match_on: CPR_BARN
+          id_columns: 
+          - FOEDSELSLOEBENUMMER
+          - CPR_MODER
+      - custom: or 
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: ["Foster 2", "Foster 3", "Foster 4"]
+          operator: in
+          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          value_column: Foster nr.
+          value_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_path: ${paths.input_dir_SP}/Population.csv
+          mapping_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_child_cpr_column: BABY_CPR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: 1
+          operator: ">="
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Flerfold
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+
+
+
+imaging_table:
+  table: ${paths.imaging_table}
+  columns:
+    CPR_MOR: phair_hash
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+    PDX: physical_delta_x
+    PDY: physical_delta_y
+    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
+
+
+imaging_matching_criteria:
+  # Filter1: Scan-to-delivery interval
+  # Filter2: GA at scan
+  - function: find_images_within_time_windows
+    args:
+      scan_date_column: STUDY_DATE
+      image_path_column: ${population.file_path_key}
+      population_ga_in_days_at_delivery_column: GA
+      population_delivery_date_column: BIRTHDAY
+      min_diff_days_scan_to_delivery: 0
+      max_diff_days_scan_to_delivery: 210
+      min_ga_in_days_at_scan: 112
+      max_ga_in_days_at_scan: 168
+  # Only Cervix (14)
+  - function: find_images_with_predicted_classes
+    args:
+      table: ${paths.img_sequence_predictions}
+      classes: [14]
+      image_path_column: file_path
+      class_column: pred
+      population_image_path_column: ${population.file_path_key}
