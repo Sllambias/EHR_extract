@@ -18,7 +18,7 @@ base_table:
   population: ${paths.population}
   population_column: CPR_BARN
   tables:
-    - table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5_population_train_and_test.csv
+    - table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_v5/preterm_P1_noMP_34_v5.csv
       columns: {CPR_MOR: CPR_MOR, CPR_BARN: CPR_BARN, BIRTHDAY: BIRTHDAY, GA: GA}
   key_columns: [CPR_MOR, CPR_BARN, BIRTHDAY, GA]
   dtypes: {CPR_BARN: string, CPR_MOR: string, GA: integer, BIRTHDAY: date}
