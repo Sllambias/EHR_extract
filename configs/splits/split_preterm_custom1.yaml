@@ -51,19 +51,19 @@ population:
           table: ${paths.input_dir_SDS}/mfr.csv
           match_on: CPR_BARN
           column: PARITET
-          operator: "!="
+          operator: "=="
           value: "1"
         - standard: or
           table: ${paths.input_dir_SDS}/nyfoedte.csv
           match_on: CPRnummer_Barn
           column: Paritet
-          operator: "!="
+          operator: "=="
           value: "1"
         - custom: or
           function: match_value_with_child_cpr_on_birthdate
           args:
             value: [0.0, 1.0]
-            operator: not_in
+            operator: in
             value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
             value_column: Para
             value_time_column: Kontakt dato
@@ -88,7 +88,7 @@ population:
         - custom: or
           function: match_value_with_child_cpr_on_birthdate
           args:
-            value: DZ348A #Flergangsfødende
+            value: DZ340 #Førstegangsfødende
             operator: "=="
             value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
             value_column: Diagnosekode

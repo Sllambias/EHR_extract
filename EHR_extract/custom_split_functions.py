@@ -1,13 +1,15 @@
 import logging
+import os
 import polars as pl
-from EHR_extract.utils import merge_population_tables, merge_composed_population_tables
-from extract import handle_standard_condition
+from datetime import datetime
 from EHR_extract.custom_find_functions import (
     find_images_with_predicted_classes,
     find_images_within_time_windows,
     match_images_with_child,
     match_value_with_child_cpr_on_birthdate,
 )
+from EHR_extract.utils import merge_composed_population_tables, merge_population_tables
+from extract import handle_standard_condition
 
 custom_functions = {
     "find_images_within_time_windows": find_images_within_time_windows,
@@ -83,17 +85,37 @@ def preterm_custom1(cfg, population):
 
 
 def kfold(cfg, population):
+    timestamp = datetime.today().strftime("%Y-%m-%d")
+
     population = merge_population_tables(cfg.tables, population=population, strict=True)
 
     kf = KFold(n_splits=cfg.folds, shuffle=True)
-    set_of_hashes = set(population[cfg.population_key])
+    set_of_hashes = list(set(population[cfg.population_key]))
     print(len(set_of_hashes))
     test_ids = []
-    for i, (train_index, test_index) in enumerate(kf.split(list(set_of_hashes))):
+
+    for i, (train_index, test_index) in enumerate(kf.split(set_of_hashes)):
         print(f"Fold {i}:")
         print(f"  Train: index={len(train_index)}")
         print(f"  Test:  index={len(test_index)}")
-        print(test_index)
-        test_ids.append(list(test_index))
-    print(test_ids)
-    print(len(set(test_ids)))
+
+        train_df = pl.DataFrame({cfg.population_key: set_of_hashes[train_index]})
+        test_df = pl.DataFrame({cfg.population_key: set_of_hashes[test_index]})
+
+        train_output_path = os.path.join(cfg.paths.output_dir, f"train_split_fold{i}_{timestamp}.csv")
+        test_output_path = os.path.join(cfg.paths.output_dir, f"test_split_fold{i}_{timestamp}.csv")
+
+        if os.path.exists(train_output_path) or os.path.exists(test_output_path):
+            logging.warning(
+                "SPLITS WITH IDENTICAL NAMES ALREADY EXIST. WILL NOT SAVE THE CURRENTLY GENERATED SPLITS."
+                "If this is intended manually delete the old splits or change the name/version of the current."
+            )
+        else:
+            train_df.write_csv(train_output_path, separator=",")
+            test_df.write_csv(test_output_path, separator=",")
+
+        test_ids.append(test_index.tolist())
+
+    test_ids = [val for sublist in test_ids for val in sublist]
+    assert len(set(test_ids)) == len(set_of_hashes), "something funky happened here"
+    return
