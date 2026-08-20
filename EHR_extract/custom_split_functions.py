@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import os
 import polars as pl
 from datetime import datetime
@@ -10,6 +11,7 @@ from EHR_extract.custom_find_functions import (
 )
 from EHR_extract.utils import merge_composed_population_tables, merge_population_tables
 from extract import handle_standard_condition
+from sklearn.model_selection import KFold
 
 custom_functions = {
     "find_images_within_time_windows": find_images_within_time_windows,
@@ -17,7 +19,6 @@ custom_functions = {
     "match_images_with_child": match_images_with_child,
     "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
 }
-from sklearn.model_selection import KFold
 
 
 def preterm_custom1(cfg, population):
@@ -90,7 +91,7 @@ def kfold(cfg, population):
     population = merge_population_tables(cfg.tables, population=population, strict=True)
 
     kf = KFold(n_splits=cfg.folds, shuffle=True)
-    set_of_hashes = list(set(population[cfg.population_key]))
+    set_of_hashes = np.array(list(set(population[cfg.population_key])))
     print(len(set_of_hashes))
     test_ids = []
 
@@ -98,12 +99,12 @@ def kfold(cfg, population):
         print(f"Fold {i}:")
         print(f"  Train: index={len(train_index)}")
         print(f"  Test:  index={len(test_index)}")
-
+        print(train_index)
         train_df = pl.DataFrame({cfg.population_key: set_of_hashes[train_index]})
         test_df = pl.DataFrame({cfg.population_key: set_of_hashes[test_index]})
 
-        train_output_path = os.path.join(cfg.paths.output_dir, f"train_split_fold{i}_{timestamp}.csv")
-        test_output_path = os.path.join(cfg.paths.output_dir, f"test_split_fold{i}_{timestamp}.csv")
+        train_output_path = os.path.join(cfg.output_dir, f"train_split_fold{i}_{timestamp}.csv")
+        test_output_path = os.path.join(cfg.output_dir, f"test_split_fold{i}_{timestamp}.csv")
 
         if os.path.exists(train_output_path) or os.path.exists(test_output_path):
             logging.warning(
@@ -118,4 +119,3 @@ def kfold(cfg, population):
 
     test_ids = [val for sublist in test_ids for val in sublist]
     assert len(set(test_ids)) == len(set_of_hashes), "something funky happened here"
-    return

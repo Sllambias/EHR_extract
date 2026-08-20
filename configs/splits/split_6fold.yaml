@@ -14,6 +14,7 @@ custom_split_fn: kfold
 
 population: 
   folds: 6
+  output_dir: ${paths.output_dir}
   population_key: CPR_MOR
   tables: 
     - table: ${paths.input_dir_SDS}/mfr.csv
