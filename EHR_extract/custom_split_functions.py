@@ -72,7 +72,9 @@ def preterm_custom1(cfg, population):
     positives_img_criteria = set(cervix_images_within_timerange[cfg.population_key])
     positives_ehr_criteria = set(parity1_population[cfg.population_key])
     test_population = positives_img_criteria.intersection(positives_ehr_criteria)
-
+    print(
+        f"Positives from img criteria: {len(positives_img_criteria)}. Positives from EHR criteria: {len(positives_ehr_criteria)}. Intersection: {len(test_population)}"
+    )
     train_population = set(population[cfg.population_key])
     train_population.difference_update(test_population)
 
@@ -92,14 +94,13 @@ def kfold(cfg, population):
 
     kf = KFold(n_splits=cfg.folds, shuffle=True)
     set_of_hashes = np.array(list(set(population[cfg.population_key])))
-    print(len(set_of_hashes))
+    print("Population size: ", len(set_of_hashes))
     test_ids = []
 
     for i, (train_index, test_index) in enumerate(kf.split(set_of_hashes)):
         print(f"Fold {i}:")
         print(f"  Train: index={len(train_index)}")
         print(f"  Test:  index={len(test_index)}")
-        print(train_index)
         train_df = pl.DataFrame({cfg.population_key: set_of_hashes[train_index]})
         test_df = pl.DataFrame({cfg.population_key: set_of_hashes[test_index]})
 
