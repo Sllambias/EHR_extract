@@ -2,7 +2,7 @@ paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
   population: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/preterm_P1_noMP_34_img_v5/preterm_P1_noMP_34_img_v5_population_test.csv
-  output_dir: outputs/tables
+  output_dir: outputs/tables/${hydra:job.config_name}
   table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
   summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json

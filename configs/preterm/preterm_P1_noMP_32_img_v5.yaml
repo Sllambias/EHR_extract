@@ -10,6 +10,8 @@ paths:
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  img_sequence_predictions: /projects/users/data/UCPH/DeepFetal/projects/common/PN_plane_classification_april2026/Cervix_preds_v1/cervix_preds.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
 
 strict: True
 preterm_cutoff: 224

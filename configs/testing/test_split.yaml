@@ -1,0 +1,17 @@
+# @package _global_
+defaults:
+  - /default@
+  - split_preterm_custom1@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv
+  img_sequence_predictions: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv
+  imaging_table:  /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv
+
