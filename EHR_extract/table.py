@@ -1,38 +1,36 @@
+from pydoc import source_synopsis
 import hydra
 import json
 import polars as pl
+from pathlib import Path
 from dotenv import load_dotenv
 from EHR_extract.custom_find_functions import (
-    extract_filtered_conditional_values,
-    extract_filtered_values,
-    extract_latest_value,
-    find_date_at_GA,
-    find_GA_at_date,
+    find_pregnancy_start,
     find_GA_days,
     find_GA_weeks,
+    find_date_at_GA,
+    find_GA_at_date,
     find_maternal_age,
-    find_pregnancy_start,
+    extract_filtered_values,
+    extract_latest_value,
+    extract_filtered_conditional_values
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
 from EHR_extract.utils import (
-    RecursiveSearchpathPlugin,
-    check_duplicates,
-    convert_to_date,
-    convert_to_datetime,
-    date_bound_expr,
-    dtype_from_cfg,
     get_python_operator,
     load_table,
+    dtype_from_cfg,
+    convert_to_date,
+    date_bound_expr,
+    convert_to_datetime,
     safe_save_df,
+    check_duplicates,
     take_latest_row,
 )
-from hydra.core.plugins import Plugins
 from omegaconf import DictConfig
-from pathlib import Path
 
 load_dotenv()
-Plugins.instance().register(RecursiveSearchpathPlugin)
 
 custom_functions = {
     "find_pregnancy_start": find_pregnancy_start,
@@ -48,14 +46,12 @@ custom_functions = {
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = False
 
-
 def cast_types(table, dtype, column):
     if dtype == pl.Date:
         return table.with_columns(convert_to_date(column).alias(column))
     if dtype == pl.Datetime:
         return table.with_columns(convert_to_datetime(column).alias(column))
     return table.with_columns(pl.col(column).cast(dtype, strict=False))
-
 
 def make_main_table(cfg, strict):
     all_discards = []
@@ -74,23 +70,19 @@ def make_main_table(cfg, strict):
         table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
         main_table = main_table.vstack(table_df)
 
-    # Check for duplicates
+    # Check for duplicates    
     main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
-
+    
     # Check population size
     if len(population) != len(main_table[cfg.population_column]):
         population_set = set(population)
-        print(
-            f"Population size mismatch. Population size: {len(population)}, Main table size: {len(main_table[cfg.population_column].unique())}"
-        )
-        all_discards.append(
-            [
-                cfg.population_column,
-                list(population_set.difference(set(main_table[cfg.population_column].unique()))),
-                len(population),
-                len(main_table[cfg.population_column]),
-            ]
-        )
+        print(f"Population size mismatch. Population size: {len(population)}, Main table size: {len(main_table[cfg.population_column].unique())}")
+        all_discards.append([
+            cfg.population_column,
+            list(population_set.difference(set(main_table[cfg.population_column].unique()))),
+            len(population),
+            len(main_table[cfg.population_column]),
+        ])
 
     # Dropping nulls
     for key in cfg.key_columns:
@@ -101,16 +93,14 @@ def make_main_table(cfg, strict):
         subset_table = subset_table.drop_nulls(key)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
-        all_discards.append(
-            [
-                key,
-                list(population.difference(subset_population)),
-                len(population),
-                len(subset_population),
-            ]
-        )
+        all_discards.append([
+            key, 
+            list(population.difference(subset_population)),
+            len(population),
+            len(subset_population),
+        ])
         main_table = subset_table
-
+    
     # Add the customs columns
     for column in cfg.add_columns:
         print
@@ -122,18 +112,15 @@ def make_main_table(cfg, strict):
         subset_table = subset_table.drop_nulls(column.column)
         population = set(main_table[cfg.population_column])
         subset_population = set(subset_table[cfg.population_column])
-        all_discards.append(
-            [
-                column.column,
-                list(population.difference(subset_population)),
-                len(population),
-                len(subset_population),
-            ]
-        )
+        all_discards.append([
+            column.column,
+            list(population.difference(subset_population)),
+            len(population),
+            len(subset_population),
+        ])
         main_table = subset_table
         main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID)
     return main_table, all_discards
-
 
 def get_extract_criteria(cfg, main_table):
     for extract_criterion in cfg.extract_criteria:
@@ -146,26 +133,21 @@ def get_extract_criteria(cfg, main_table):
             table = load_table(source.table, strict=cfg.strict)
             right_on = source.match_on
 
-            tmp_table = (
-                main_table.join(
-                    table.select([right_on, source.column, source.date_col]),
-                    left_on=left_on,
-                    right_on=right_on,
-                    how="left",
-                )
-                .select([left_on, source.column, source.date_col])
-                .rename({source.column: extract_criterion.name})
-            )
-            tmp_table = tmp_table.with_columns(pl.col(extract_criterion.name).cast(dtype, strict=False)).drop_nulls(
-                extract_criterion.name
-            )
+            tmp_table = main_table.join(
+                table.select([right_on, source.column, source.date_col]),
+                left_on=left_on,
+                right_on=right_on,
+                how="left",
+            ).select([left_on, source.column, source.date_col]).rename({source.column: extract_criterion.name})
+            tmp_table = tmp_table.with_columns(
+                pl.col(extract_criterion.name).cast(dtype, strict=False)
+            ).drop_nulls(extract_criterion.name)
             tmp_table = take_latest_row(tmp_table, left_on, source.date_col)
             tmp_table = tmp_table.select([left_on, extract_criterion.name])
             extract_table = extract_table.vstack(tmp_table)
 
         main_table = main_table.join(extract_table, on=left_on, how="left")
     return main_table
-
 
 def get_custom_extract_criteria(cfg, main_table):
     for custom_extract_criterion in cfg.custom_extract_criteria:
@@ -174,15 +156,13 @@ def get_custom_extract_criteria(cfg, main_table):
         time_window = custom_extract_criterion.time_window
         min_date = cfg.time_conditionals[time_window].min_date
         max_date = cfg.time_conditionals[time_window].max_date
-        main_table = fn(
-            **custom_extract_criterion.args,
-            main_table=main_table,
-            min_date=min_date,
-            max_date=max_date,
-            allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID,
-        )
+        main_table = fn(**custom_extract_criterion.args, 
+                        main_table=main_table, 
+                        min_date=min_date,
+                        max_date=max_date,
+                        allow_duplicates=BOOL_ALLOW_DUPLICATE_BABY_ID,
+                        )
     return main_table
-
 
 def get_conditional_bool_criteria(cfg, main_table):
     for conditional_criterion in cfg.conditional_bool_criteria:
@@ -201,7 +181,9 @@ def get_conditional_bool_criteria(cfg, main_table):
 
             # Filter on operator
             py_operator = get_python_operator(condition.operator)
-            table = table.filter(py_operator(pl.col(condition.column), condition.value))
+            table = table.filter(
+                py_operator(pl.col(condition.column), condition.value)
+            )
             # Merge
             tmp_table = main_table.join(
                 table.select([right_on, condition.column, condition.date_col]),
@@ -209,7 +191,7 @@ def get_conditional_bool_criteria(cfg, main_table):
                 right_on=right_on,
                 how="left",
             )
-
+            
             # Filter on time
             event_d = convert_to_date(condition.date_col)
             lo = date_bound_expr(**min_date)
@@ -231,9 +213,10 @@ def get_conditional_bool_criteria(cfg, main_table):
                 print("wow, weird condition")
 
         condition_matches = condition_matches.union(last_condition)
-        main_table = main_table.with_columns(pl.col(key_col).is_in(list(condition_matches)).alias(condition_name))
-    return main_table
-
+        main_table = main_table.with_columns(
+            pl.col(key_col).is_in(list(condition_matches)).alias(condition_name)
+        )
+    return main_table 
 
 def table_from_cfg(cfg):
     main_table, discards = make_main_table(
@@ -267,7 +250,7 @@ def table_from_cfg(cfg):
             "ptb": sum_ptb,
             "non_ptb": sum_non_ptb,
         }
-
+        
     else:
         summary_table = None
         extra_tables = None
@@ -295,9 +278,7 @@ def main(cfg: DictConfig) -> None:
     if extra_tables is not None:
         for key, value in extra_tables.items():
             with open(cfg.paths.summary_save_path.replace("summary", f"{key}_summary"), "w") as fp:
-                Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(
-                    parents=True, exist_ok=True
-                )
+                Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(parents=True, exist_ok=True)
                 safe_save_df(value).write_csv(fp)
 
     with open(cfg.paths.table_save_path, "w") as fp:
@@ -310,7 +291,6 @@ def main(cfg: DictConfig) -> None:
         with open(cfg.paths.summary_save_path, "w") as fp:
             Path(cfg.paths.summary_save_path).parent.mkdir(parents=True, exist_ok=True)
             safe_save_df(sum_table).write_csv(fp)
-
 
 if __name__ == "__main__":
     main()
