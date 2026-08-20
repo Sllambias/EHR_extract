@@ -220,6 +220,16 @@ def main(cfg: DictConfig) -> None:
         train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
         test_pop.write_csv(cfg.paths.population_save_path + "_test.csv")
 
+        pid_key = cfg.population.population_key
+        train_pids = train_pop[pid_key].unique().to_list()
+        test_pids = test_pop[pid_key].unique().to_list()
+        train_pids_path = Path(cfg.paths.output_dir) / "full_train_pids.json"
+        test_pids_path = Path(cfg.paths.output_dir) / "full_test_pids.json"
+        train_pids_path.write_text(json.dumps(train_pids, indent=4))
+        test_pids_path.write_text(json.dumps(test_pids, indent=4))
+        logging.info(f"Wrote {len(train_pids)} train PIDs to {train_pids_path}")
+        logging.info(f"Wrote {len(test_pids)} test PIDs to {test_pids_path}")
+
 
 if __name__ == "__main__":
     main()
