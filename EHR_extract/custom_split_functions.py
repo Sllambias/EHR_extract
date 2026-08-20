@@ -15,12 +15,12 @@ custom_functions = {
     "match_images_with_child": match_images_with_child,
     "match_value_with_child_cpr_on_birthdate": match_value_with_child_cpr_on_birthdate,
 }
+from sklearn.model_selection import KFold
 
 
 def preterm_custom1(cfg, population):
     population = merge_population_tables(cfg.tables, population=population, strict=True)
     population = merge_composed_population_tables(population, cfg.population_key, cfg.composed_tables)
-    print("before", len(population))
     img_population = match_images_with_child(
         table_cfg=cfg.imaging_table,
         population=population,
@@ -80,3 +80,20 @@ def preterm_custom1(cfg, population):
     test_df = pl.DataFrame({cfg.population_key: list(test_population)})
 
     return train_df, test_df
+
+
+def kfold(cfg, population):
+    population = merge_population_tables(cfg.tables, population=population, strict=True)
+
+    kf = KFold(n_splits=cfg.folds, shuffle=True)
+    set_of_hashes = set(population[cfg.population_key])
+    print(len(set_of_hashes))
+    test_ids = []
+    for i, (train_index, test_index) in enumerate(kf.split(list(set_of_hashes))):
+        print(f"Fold {i}:")
+        print(f"  Train: index={len(train_index)}")
+        print(f"  Test:  index={len(test_index)}")
+        print(test_index)
+        test_ids.append(list(test_index))
+    print(test_ids)
+    print(len(set(test_ids)))
