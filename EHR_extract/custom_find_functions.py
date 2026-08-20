@@ -379,13 +379,12 @@ def find_maternal_age(
     baby_birth_date_col: str,
     key_column: str,
     maternal_age_col: str,
-    population_maternal_id_col: str = "m_cpr",
 ):
     base_cols = table.columns
     m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
     m_table = m_table.unique(subset=[maternal_id_col], keep="first")
 
-    merged = table.join(m_table, left_on=population_maternal_id_col, right_on=maternal_id_col, how="left")
+    merged = table.join(m_table, left_on="m_cpr", right_on=maternal_id_col, how="left")
 
     # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
     baby_d = convert_to_date(baby_birth_date_col)
