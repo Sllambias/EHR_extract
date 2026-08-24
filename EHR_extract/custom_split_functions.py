@@ -69,11 +69,11 @@ def preterm_custom1(cfg, population):
         parity1_child_ids = criterion_population.union(current_condition_population)
         parity1_population = population.filter(pl.col("CPR_BARN").is_in(parity1_child_ids))
 
-    positives_img_criteria = set(cervix_images_within_timerange[cfg.population_key])
-    positives_ehr_criteria = set(parity1_population[cfg.population_key])
-    test_population = positives_img_criteria.intersection(positives_ehr_criteria)
+    positives_intersection = parity1_population.join(cervix_images_within_timerange, on="CPR_BARN")
+    test_population = set(positives_intersection[cfg.population_key])
+
     print(
-        f"Positives from img criteria: {len(positives_img_criteria)}. Positives from EHR criteria: {len(positives_ehr_criteria)}. Intersection: {len(test_population)}"
+        f"Positives from img criteria: {len(set(cervix_images_within_timerange[cfg.population_key]))}. Positives from EHR criteria: {len(set(parity1_population[cfg.population_key]))}. Intersection: {len(test_population)}"
     )
     train_population = set(population[cfg.population_key])
     train_population.difference_update(test_population)

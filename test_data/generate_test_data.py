@@ -59,8 +59,9 @@ def generate_img_type_csv(num_rows, output_path, sample_from):
     file_paths = test_df["file_path"].to_list()
     # Create img_type data with random class from 1-30
     data = {
-        "filename": [random.choice(file_paths) for _ in range(num_rows)],
+        "file_path": [random.choice(file_paths) for _ in range(num_rows)],
         "pred": [random.randint(1, 30) for _ in range(num_rows)],
+        "is_cervix": [random.randint(0, 2) for _ in range(num_rows)],
     }
 
     # Create DataFrame and save to CSV
