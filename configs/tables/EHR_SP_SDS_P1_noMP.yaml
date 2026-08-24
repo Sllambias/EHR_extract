@@ -130,40 +130,20 @@ extract_criteria:
     dtype: float
     # vægt fra vitale_parametre. 
 
+  - name: maternal_age_SDS
+    key_column: b_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: ALDER_MODER
+        date_col: FOEDSELSDATO
+      - table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Alder_Mor
+        date_col: FoedselsDato_Barn
+    dtype: integer
+
 conditional_bool_criteria:
-  # ## Maternal characteristics
-  # - name: smoking_status
-  #   key_column: b_cpr
-  #   match_on: m_cpr
-  #   time_window: before_and_during_pregnancy
-  #   conditions:
-  #     - condition:
-  #       table:  
-  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: BABY_CPR
-  #       column: Diagnosekode
-  #       operator: "startswith"
-  #       value: ["BKUA32"]
-  #       date_col: Noteret_dato
-  # - name: drug_use
-  #   key_column: b_cpr
-  #   match_on: m_cpr
-  #   time_window: before_and_during_pregnancy
-  #   conditions:
-  #     - condition:
-  #       table:  
-  #         table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-  #         table2: ${paths.input_dir_SP}/Population.csv
-  #         left_on: [MOR_CPR]
-  #         right_on: [MOR_CPR]
-  #       match_on: BABY_CPR
-  #       column: Diagnosekode
-  #       operator: "startswith"
-  #       value: ["DZ358M1", "DZ358M2", "DZ358M3", "DZ3931", "DZ3932"]
-  #       date_col: Noteret_dato
   - name: fertility_treatment
     key_column: b_cpr
     match_on: m_cpr
@@ -1710,7 +1690,7 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "startswith"
-        value: ["DO422", "DO420", "DO424", "DO423"]
+        value: ["DO422", "DO420", "DO424"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -1725,7 +1705,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_DIAG
         operator: "startswith"
-        value: ["DO422", "DO420", "DO424", "DO423"]
+        value: ["DO422", "DO420", "DO424"]
         date_col: D_UDDTO
       - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
