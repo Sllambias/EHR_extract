@@ -69,7 +69,7 @@ def preterm_custom1(cfg, population):
         parity1_child_ids = criterion_population.union(current_condition_population)
         parity1_population = population.filter(pl.col("CPR_BARN").is_in(parity1_child_ids))
 
-    positives_intersection = parity1_population.join(cervix_images_within_timerange, on="CPR_BARN")
+    positives_intersection = parity1_population.join(cervix_images_within_timerange, on=["CPR_BARN", "CPR_MOR"])
     test_population = set(positives_intersection[cfg.population_key])
 
     print(
