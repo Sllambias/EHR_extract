@@ -49,7 +49,11 @@ def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values
 
 def expr_startswith(col: pl.Expr, val) -> pl.Expr:
     s = col.cast(pl.String)
-    return pl.any_horizontal([s.str.starts_with(p) for p in val])
+    if isinstance(val, str):
+        return s.str.starts_with(val)
+    # Hydra ListConfig / list of prefixes
+    prefixes = list(val)
+    return pl.any_horizontal([s.str.starts_with(p) for p in prefixes])
 
 
 def load_table(
@@ -100,11 +104,11 @@ def load_table(
 
 def get_python_operator(operator_str):
     if operator_str == "in":
-        return lambda col, val: col.is_in(val)
+        return lambda col, val: col.is_in(list(val) if not isinstance(val, str) else [val])
     elif operator_str == "not_in":
-        return lambda col, val: ~col.is_in(val)
+        return lambda col, val: ~col.is_in(list(val) if not isinstance(val, str) else [val])
     elif operator_str == "startswith":
-        return lambda col, val: col.str.starts_with(val)
+        return expr_startswith
     elif operator_str == "missing":
         return lambda col, val: col.is_null()
     elif operator_str == "not missing":
@@ -126,8 +130,6 @@ def get_python_operator(operator_str):
         return lambda col, val: col.cast(pl.Float64, strict=False).is_between(val[0], val[1], closed="both")
     elif operator_str == "not_null":
         return lambda col, val: col.is_not_null()
-    elif operator_str == "startswith":
-        return expr_startswith
     elif operator_str == "is_true":
         return lambda col, val: col.cast(pl.Boolean, strict=False) == True
     elif operator_str == "is_false":
