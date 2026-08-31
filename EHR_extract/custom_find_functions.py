@@ -1,6 +1,15 @@
 import logging
 import polars as pl
-from EHR_extract.utils import filter_numeric_rows, get_python_operator, load_table
+from EHR_extract.utils import (
+    filter_numeric_rows,
+    get_python_operator,
+    load_table,
+    convert_to_date,
+    date_bound_expr,
+    dtype_from_cfg,
+    check_duplicates,
+    take_latest_row,
+)
 
 
 def match_value_on_birthdate(population, value_time_column, population_birthdate_column, population_gestational_age_column):
@@ -315,3 +324,356 @@ def find_duplicated_ids(table, match_on, id_columns, population, population_key_
     )
     duplicated_ids = set(duplicated_ids[match_on])
     return duplicated_ids
+
+
+def find_pregnancy_start(table, birth_date_col, GA_days_col, pregnancy_start_col):
+    table = table.with_columns(
+        (
+            pl.col(birth_date_col).cast(pl.Date, strict=False)
+            - pl.duration(days=pl.col(GA_days_col).cast(pl.Int64, strict=False))
+        ).alias(pregnancy_start_col)
+    )
+    return table
+
+
+def find_GA_days(table, GA_weeks_col, GA_days_col):
+    weeks = pl.col(GA_weeks_col).cast(pl.String).str.extract(r"(?i)(\d+)\s*w", group_index=1).cast(pl.Int64, strict=False)
+    days = (
+        pl.col(GA_weeks_col)
+        .cast(pl.String)
+        .str.extract(r"(?i)w\s*(\d+)\s*d", group_index=1)
+        .cast(pl.Int64, strict=False)
+        .fill_null(0)
+    )
+    table = table.with_columns((weeks * 7 + days).alias(GA_days_col))
+    return table
+
+
+def find_GA_weeks(table, GA_days_col, GA_weeks_col):
+    table = table.with_columns((pl.col(GA_days_col).cast(pl.Int64, strict=False) / 7).alias(GA_weeks_col))
+    return table
+
+
+def find_date_at_GA(table, birth_date_col, GA_days_col, GA_number, date_col):
+    GA_difference = pl.col(GA_days_col).cast(pl.Int64, strict=False) - int(GA_number)
+    table = table.with_columns(
+        (pl.col(birth_date_col).cast(pl.Date, strict=False) - pl.duration(days=GA_difference)).alias(date_col)
+    )
+    return table
+
+
+def find_GA_at_date(table, birth_date_col, GA_days_col, study_date_col, GA_at_date_col):
+    """GA in days at `study_date_col`, from GA at birth and birth date."""
+    birth_d = convert_to_date(birth_date_col)
+    study_d = convert_to_date(study_date_col)
+    days_to_birth = (birth_d - study_d).dt.total_days()
+    table = table.with_columns((pl.col(GA_days_col).cast(pl.Int64, strict=False) - days_to_birth).alias(GA_at_date_col))
+    return table
+
+
+def find_maternal_age(
+    table,
+    m_table_path,
+    maternal_birth_date_col: str,
+    maternal_id_col: str,
+    baby_birth_date_col: str,
+    key_column: str,
+    maternal_age_col: str,
+    population_maternal_id_col: str = "m_cpr",
+):
+    base_cols = table.columns
+    m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
+    m_table = m_table.unique(subset=[maternal_id_col], keep="first")
+
+    merged = table.join(m_table, left_on=population_maternal_id_col, right_on=maternal_id_col, how="left")
+
+    # Normalize both to `Date` (accept "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"; drop time).
+    baby_d = convert_to_date(baby_birth_date_col)
+    mom_d = convert_to_date(maternal_birth_date_col)
+
+    years = baby_d.dt.year() - mom_d.dt.year()
+    had_birthday = (baby_d.dt.month() > mom_d.dt.month()) | (
+        (baby_d.dt.month() == mom_d.dt.month()) & (baby_d.dt.day() >= mom_d.dt.day())
+    )
+    merged = merged.with_columns((years - (~had_birthday).cast(pl.Int64)).cast(pl.Int64, strict=False).alias(maternal_age_col))
+    # Keep only original columns + the newly created age column.
+    return merged.select(base_cols + [maternal_age_col])
+
+
+def extract_filtered_values_from_source(
+    main_table,
+    *,
+    table,
+    left_on,
+    right_on,
+    target_col,
+    date_col,
+    min_date,
+    max_date,
+    filters,
+    new_col_name,
+    dtype,
+    allow_duplicates=False,
+):
+    table = load_table(table, strict=False)
+
+    for filter in filters or []:
+        py_operator = get_python_operator(filter.operator)
+        table = table.filter(py_operator(pl.col(filter.column), filter.value))
+
+    tmp_table = main_table.join(
+        table,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+    )
+
+    event_d = convert_to_date(date_col)
+    lo = date_bound_expr(**min_date)
+    if lo is not None:
+        tmp_table = tmp_table.filter(event_d >= lo)
+    hi = date_bound_expr(**max_date)
+    if hi is not None:
+        tmp_table = tmp_table.filter(event_d <= hi)
+
+    pl_dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
+
+    tmp_table = take_latest_row(tmp_table, left_on, date_col)
+    tmp_table = tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+    if not allow_duplicates:
+        return check_duplicates(tmp_table, left_on)
+    return tmp_table
+
+
+def merge_source_specs(table=None, sources=None, **shared):
+    """Build per-source arg dicts; `sources` overrides shared fields per entry."""
+    keys = ("table", "left_on", "right_on", "target_col", "date_col", "filters")
+    if sources is not None:
+        specs = []
+        for src in sources:
+            spec = {k: shared.get(k) for k in keys}
+            for k in keys:
+                if k in src and src[k] is not None:
+                    spec[k] = src[k]
+            specs.append(spec)
+        return specs
+    if table is None:
+        raise ValueError("extract_filtered_values requires `table` or `sources`")
+    return [{k: shared.get(k) for k in keys} | {"table": table}]
+
+
+def extract_filtered_values(
+    main_table,
+    left_on,
+    right_on=None,
+    target_col=None,
+    date_col=None,
+    min_date=None,
+    max_date=None,
+    filters=None,
+    new_col_name=None,
+    dtype=None,
+    allow_duplicates=False,
+    table=None,
+    sources=None,
+):
+
+    specs = merge_source_specs(
+        table=table,
+        sources=sources,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        filters=filters,
+    )
+    for i, spec in enumerate(specs):
+        chunk = extract_filtered_values_from_source(
+            main_table,
+            left_on=left_on,
+            right_on=spec["right_on"],
+            target_col=spec["target_col"],
+            date_col=spec["date_col"],
+            min_date=min_date,
+            max_date=max_date,
+            filters=spec["filters"],
+            new_col_name=new_col_name,
+            dtype=dtype,
+            allow_duplicates=allow_duplicates,
+            table=spec["table"],
+        )
+        fb_col = f"__{new_col_name}_fb"
+        if i == 0:
+            if new_col_name in main_table.columns:
+                main_table = main_table.drop(new_col_name)
+            main_table = main_table.join(chunk, on=left_on, how="left")
+        else:
+            main_table = main_table.join(
+                chunk.rename({new_col_name: fb_col}),
+                on=left_on,
+                how="left",
+            )
+            main_table = main_table.with_columns(pl.coalesce([pl.col(new_col_name), pl.col(fb_col)]).alias(new_col_name)).drop(
+                fb_col
+            )
+        if not allow_duplicates:
+            main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
+    return main_table
+
+
+def extract_filtered_conditional_values(
+    main_table,
+    left_on,
+    right_on,
+    key_column,
+    table,
+    target_col,
+    date_col,
+    min_date,
+    max_date,
+    filters,
+    new_col_name,
+    dtype,
+    conditions,
+    allow_duplicates=False,
+):
+    filtered_table = extract_filtered_values(
+        main_table=main_table,
+        table=table,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        min_date=min_date,
+        max_date=max_date,
+        filters=filters,
+        new_col_name="target_col",
+        dtype=dtype,
+        allow_duplicates=True,
+    )
+
+    # Convert that extracted value into a boolean using `condition`.
+    condition_matches = set()
+    for condition in conditions:
+        py_operator = get_python_operator(condition.operator)
+        tmp_table = filtered_table.filter(py_operator(pl.col(condition.column), condition.value))
+        print("After filter", len(tmp_table))
+        if condition.condition is None:
+            last_condition = set(tmp_table[key_column])
+        elif condition.condition == "and":
+            last_condition = last_condition.intersection(set(tmp_table[key_column]))
+        elif condition.condition == "or":
+            condition_matches = condition_matches.union(last_condition)
+            last_condition = set(tmp_table[key_column])
+        else:
+            print("wow, weird condition")
+    condition_matches = condition_matches.union(last_condition)
+    tmp_table = tmp_table.with_columns(pl.col(key_column).is_in(list(condition_matches)).alias(new_col_name))
+    main_table = main_table.join(
+        tmp_table.select([key_column, new_col_name]),
+        on=key_column,
+        how="left",
+    )  # .with_columns(
+    #     pl.coalesce([pl.col(f"{new_col_name}_new"), pl.col(new_col_name)])
+    #     .alias(new_col_name)
+    # ) #.drop(f"{new_col_name}_new")
+
+    # Check for duplicates
+    duplicates = main_table[key_column].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0 and not allow_duplicates:
+        raise ValueError(f"Duplicate entries for key column {key_column}. Examples: {duplicates.head(5)}")
+    else:
+        main_table = main_table.group_by(key_column).agg(pl.col("*").first())
+        assert len(main_table[key_column].unique()) == len(main_table[key_column])
+    return main_table
+
+
+def extract_latest_value_from_source(
+    main_table,
+    *,
+    table,
+    left_on,
+    right_on,
+    target_col,
+    new_col_name,
+    date_col,
+    min_date,
+    max_date,
+    dtype,
+):
+    table = load_table(table, strict=False)
+
+    tmp_table = main_table.join(
+        table,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+    )
+
+    event_d = convert_to_date(date_col)
+    lo = date_bound_expr(**min_date)
+    if lo is not None:
+        tmp_table = tmp_table.filter(event_d >= lo)
+    hi = date_bound_expr(**max_date)
+    if hi is not None:
+        tmp_table = tmp_table.filter(event_d <= hi)
+
+    pl_dtype = dtype_from_cfg(dtype)
+    tmp_table = tmp_table.filter(pl.col(target_col).cast(pl_dtype, strict=False).is_not_null())
+
+    tmp_table = take_latest_row(tmp_table, left_on, date_col)
+    return tmp_table.select([left_on, target_col]).rename({target_col: new_col_name})
+
+
+def extract_latest_value(
+    main_table,
+    left_on,
+    right_on=None,
+    target_col=None,
+    new_col_name=None,
+    date_col=None,
+    min_date=None,
+    max_date=None,
+    dtype=None,
+    allow_duplicates=False,
+    table=None,
+    sources=None,
+):
+    specs = merge_source_specs(
+        table=table,
+        sources=sources,
+        left_on=left_on,
+        right_on=right_on,
+        target_col=target_col,
+        date_col=date_col,
+        filters=[],
+    )
+    for i, spec in enumerate(specs):
+        chunk = extract_latest_value_from_source(
+            main_table,
+            table=spec["table"],
+            left_on=left_on,
+            right_on=spec["right_on"],
+            target_col=spec["target_col"],
+            new_col_name=new_col_name,
+            date_col=spec["date_col"],
+            min_date=min_date,
+            max_date=max_date,
+            dtype=dtype,
+        )
+        fb_col = f"__{new_col_name}_fb"
+        if i == 0:
+            if new_col_name in main_table.columns:
+                main_table = main_table.drop(new_col_name)
+            main_table = main_table.join(chunk, on=left_on, how="left")
+        else:
+            main_table = main_table.join(
+                chunk.rename({new_col_name: fb_col}),
+                on=left_on,
+                how="left",
+            )
+            main_table = main_table.with_columns(pl.coalesce([pl.col(new_col_name), pl.col(fb_col)]).alias(new_col_name)).drop(
+                fb_col
+            )
+    return main_table

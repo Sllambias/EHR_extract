@@ -2,7 +2,7 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import find_close_siblings, find_images_and_timedeltas, find_scantime_ga
+from EHR_extract.custom_find_functions import find_close_births
 from EHR_extract.paths import get_config_path
 from EHR_extract.utils import (
     load_table,
@@ -12,9 +12,7 @@ from omegaconf import DictConfig
 load_dotenv()
 
 custom_functions = {
-    "find_close_siblings": find_close_siblings,
-    "find_images_and_timedeltas": find_images_and_timedeltas,
-    "find_scantime_ga": find_scantime_ga,
+    "find_close_births": find_close_births,
 }
 
 
@@ -65,6 +63,66 @@ def summary_from_cfg(cfg):
                 )
 
     return all_dists
+
+def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
+    if n_samples is None:
+        n_samples = main_table.height
+    sampled_table = main_table.drop(ignore_columns)
+    req_n = int(n_samples)
+    avail = sampled_table.height
+    n_draw = min(req_n, avail)
+    if req_n > avail:
+        print(
+            f"WARNING: n_samples={req_n} is larger than the table ({avail} rows after ignore_columns). "
+            f"nan_pct uses the actual {n_draw} rows sampled, not {req_n} — so percentages are not out of n_samples."
+        )
+    print(f"Sampling {n_draw} rows from {avail} rows")
+    sampled_table = sampled_table.sample(n=n_draw, shuffle=True)
+    n_row = sampled_table.height
+    print(f"Number of rows: {n_row}")
+    rows = []
+    for col in sampled_table.columns:
+        series = sampled_table.get_column(col)
+        dtype = series.dtype
+        if dtype.is_float():
+            # Null and NaN are distinct for floats in Polars; count both as missing.
+            nan_count = int(series.null_count())
+            nan_count += int((series.is_not_null() & series.is_nan()).sum())
+            # Denominator is actual rows in this sample (`n_row`), not cfg n_samples.
+            nan_pct = float(nan_count / n_row * 100.0) if n_row > 0 else float("nan")
+        else:
+            nan_count = int(series.null_count())
+            nan_pct = float(nan_count / n_row * 100.0) if n_row > 0 else float("nan")
+
+        if dtype == pl.Boolean:
+            col_summary = float(series.sum() / n_row * 100.0)
+        elif dtype.is_numeric():
+            m = series.mean()
+            col_summary = float(m) if m is not None else float("nan")
+        else:
+            vc = series.value_counts(sort=True)
+            val_col, count_col = vc.columns[0], "count"
+            col_summary = {
+                str(row[val_col]): round(float(row[count_col]) / n_row * 100.0, 3)
+                for row in vc.iter_rows(named=True)
+            }
+        rows.append(
+            {
+                "column": col,
+                "nan_count": nan_count,
+                "nan_pct": nan_pct,
+                "summary": col_summary,
+            }
+        )
+    summary = pl.DataFrame(
+        {
+            "column": [r["column"] for r in rows],
+            "nan_count": [r["nan_count"] for r in rows],
+            "nan_pct": [r["nan_pct"] for r in rows],
+            "summary": pl.Series("summary", [r["summary"] for r in rows], dtype=pl.Object),
+        }
+    )
+    return summary
 
 
 @hydra.main(

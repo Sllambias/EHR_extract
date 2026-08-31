@@ -1,11 +1,25 @@
 import os
 import polars as pl
+import json
 from EHR_extract.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 
 
-def load_table(path, strict=True, n_rows=None, has_header=True):
+def check_duplicates(table, population_column):
+    duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0:
+        raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
+    return table
+
+
+def take_latest_row(table, key_column, date_col):
+    table = table.sort([key_column, date_col])
+    table = table.group_by(key_column).agg(pl.col("*").last())
+    return table
+
+
+def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None):
     if strict:
         ignore_errors = False
     else:
@@ -13,13 +27,71 @@ def load_table(path, strict=True, n_rows=None, has_header=True):
 
     if path.endswith(".csv"):
         try:
-            return pl.read_csv(path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header)
+            return pl.read_csv(
+                path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values
+            )
         except pl.exceptions.ComputeError:
             return pl.read_csv(
-                path, ignore_errors=ignore_errors, infer_schema_length=10000000, n_rows=n_rows, has_header=has_header
+                path,
+                ignore_errors=ignore_errors,
+                infer_schema_length=10000000,
+                n_rows=n_rows,
+                has_header=has_header,
+                null_values=null_values,
             )
     else:
         raise NotImplementedError(f"Unknown file type for path: {path}. Did you remember to add the file extension?")
+
+
+def expr_startswith_any(col: pl.Expr, val) -> pl.Expr:
+    s = col.cast(pl.String)
+    return pl.any_horizontal([s.str.starts_with(p) for p in val])
+
+
+def load_table(
+    table_cfg,
+    strict=True,
+    n_rows=None,
+    has_header=True,
+    null_values=None,
+    _join_depth: int = 0,
+):
+    if isinstance(table_cfg, str):
+        return load_table_path(
+            table_cfg,
+            strict=strict,
+            n_rows=n_rows,
+            has_header=has_header,
+            null_values=null_values,
+        )
+    table1 = load_table(
+        table_cfg["table1"],
+        strict=strict,
+        n_rows=n_rows,
+        has_header=has_header,
+        null_values=null_values,
+        _join_depth=_join_depth + 1,
+    )
+    table2 = load_table(
+        table_cfg["table2"],
+        strict=strict,
+        n_rows=n_rows,
+        has_header=has_header,
+        null_values=null_values,
+        _join_depth=_join_depth + 1,
+    )
+    left_on = table_cfg["left_on"]
+    right_on = table_cfg["right_on"]
+    # Use a unique suffix per nested join so `_right` from an inner join
+    # does not collide when an outer join also has overlapping columns.
+    suffix = f"_join{_join_depth}"
+    return table1.join(
+        table2,
+        left_on=left_on,
+        right_on=right_on,
+        how="left",
+        suffix=suffix,
+    )
 
 
 def get_python_operator(operator_str):
@@ -38,13 +110,24 @@ def get_python_operator(operator_str):
     elif operator_str == "!=":
         return lambda col, val: col.cast(pl.String) != val
     elif operator_str == ">":
-        return lambda col, val: col.cast(pl.Float64) > val
+        return lambda col, val: col.cast(pl.Float64, strict=False) > val
     elif operator_str == "<":
-        return lambda col, val: col.cast(pl.Float64) < val
+        return lambda col, val: col.cast(pl.Float64, strict=False) < val
     elif operator_str == ">=":
-        return lambda col, val: col.cast(pl.Float64) >= val
+        return lambda col, val: col.cast(pl.Float64, strict=False) >= val
     elif operator_str == "<=":
-        return lambda col, val: col.cast(pl.Float64) <= val
+        return lambda col, val: col.cast(pl.Float64, strict=False) <= val
+    elif operator_str == "between":
+        # Inclusive range: value is [low, high]
+        return lambda col, val: col.cast(pl.Float64, strict=False).is_between(val[0], val[1], closed="both")
+    elif operator_str == "not_null":
+        return lambda col, val: col.is_not_null()
+    elif operator_str == "startswith_any":
+        return expr_startswith_any
+    elif operator_str == "is_true":
+        return lambda col, val: col.cast(pl.Boolean, strict=False) == True
+    elif operator_str == "is_false":
+        return lambda col, val: col.cast(pl.Boolean, strict=False) == False
     else:
         raise NotImplementedError(f"Unknown operator: {operator_str}")
 
@@ -89,6 +172,80 @@ def merge_population_tables(table_cfgs: list, population, strict=True):
             tab = filter_numeric_rows(tab, "GA")
         population = population.vstack(tab)
     return population
+
+
+def dtype_from_cfg(dtype):
+    if dtype == "string":
+        return pl.String
+    elif dtype == "integer":
+        return pl.Int64
+    elif dtype == "float":
+        return pl.Float64
+    elif dtype == "boolean":
+        return pl.Boolean
+    elif dtype == "date":
+        return pl.Date
+    elif dtype == "datetime":
+        return pl.Datetime
+    else:
+        raise NotImplementedError(f"Unknown dtype: {dtype}")
+
+
+def convert_to_date(
+    name: str,
+    date_format: str = "%Y-%m-%d",
+    datetime_format: str | None = "%Y-%m-%d %H:%M:%S%.f",
+) -> pl.Expr:
+    """Force a column to `pl.Date` (optionally accepting datetimes and dropping time)."""
+    s = pl.col(name)
+    s_str = s.cast(pl.String)
+    typed = s.cast(pl.Date, strict=False)
+    parsed_date = s_str.str.strptime(pl.Date, date_format, strict=False)
+    if datetime_format is None:
+        return pl.coalesce([typed, parsed_date])
+    parsed_dt_as_date = s_str.str.strptime(pl.Datetime, datetime_format, strict=False).dt.date()
+    parsed_iso_dt = s_str.str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S", strict=False).dt.date()
+    parsed_iso_dt_frac = s_str.str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.f", strict=False).dt.date()
+    return pl.coalesce([typed, parsed_date, parsed_dt_as_date, parsed_iso_dt, parsed_iso_dt_frac])
+
+
+def convert_to_datetime(
+    name: str,
+    datetime_format: str = "%Y-%m-%d %H:%M:%S",
+) -> pl.Expr:
+    """Force a column to `pl.Datetime` using an explicit format."""
+    s = pl.col(name)
+    s_str = s.cast(pl.String)
+    typed = s.cast(pl.Datetime, strict=False)
+    parsed_dt = s_str.str.strptime(pl.Datetime, datetime_format, strict=False)
+    return pl.coalesce([typed, parsed_dt])
+
+
+def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:
+    """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date) (YAML: column + offset_days)."""
+    if date_col is None:
+        return None
+    off = int(offset_days) if offset_days is not None else 0
+    base = convert_to_date(date_col, date_format="%Y-%m-%d")
+    if off == 0:
+        return base
+    return base + pl.duration(days=off)
+
+
+def safe_save_df(df: pl.DataFrame) -> pl.DataFrame:
+    """Polars CSV writer rejects Object columns; serialize them as JSON strings."""
+    exprs = []
+    for name in df.columns:
+        if df.schema[name] == pl.Object:
+            exprs.append(
+                pl.col(name)
+                .map_elements(
+                    lambda x: json.dumps(x, default=str, ensure_ascii=False),
+                    return_dtype=pl.String,
+                )
+                .alias(name)
+            )
+    return df.with_columns(exprs) if exprs else df
 
 
 def merge_composed_population_tables(population, population_merge_on, composed_table_cfgs: list, format_SP_GA=False):

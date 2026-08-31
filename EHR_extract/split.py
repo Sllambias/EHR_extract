@@ -9,10 +9,13 @@ from EHR_extract.paths import get_config_path
 from EHR_extract.utils import RecursiveSearchpathPlugin, merge_population_tables
 from hydra.core.plugins import Plugins
 from omegaconf import DictConfig
+from custom_split_functions import preterm_custom1, kfold
 
 Plugins.instance().register(RecursiveSearchpathPlugin)
 
 load_dotenv()
+
+custom_split_functions = {"preterm_custom1": preterm_custom1, "kfold": kfold}
 
 
 def create_splits(
@@ -22,9 +25,13 @@ def create_splits(
     update_splits_negative: dict = False,
     holdout_frac=None,
     seed=None,
+    custom_split_fn: str = None,
 ):
     population = pl.DataFrame()
     rng = np.random.default_rng(seed=seed)
+
+    if custom_split_fn is not None:
+        return custom_split_functions[custom_split_fn](population_cfg, population=population)
 
     if update_splits_negative:
         prev_train_population = set(pl.read_csv(update_splits_negative["train_split"])[population_cfg.population_key])
@@ -97,6 +104,7 @@ def main(cfg: DictConfig) -> None:
         update_splits_negative=cfg.get("update_splits_negative", False),
         holdout_frac=cfg.holdout_frac,
         seed=cfg.seed,
+        custom_split_fn=cfg.get("custom_split_fn", None),
     )
 
     timestamp = datetime.today().strftime("%Y-%m-%d")

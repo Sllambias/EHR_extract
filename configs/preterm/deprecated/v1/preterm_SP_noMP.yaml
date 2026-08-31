@@ -52,63 +52,63 @@ conditional_criteria:
         column: Gestationsalder
         operator: ">"
         value: 0
-  # Only live birth
-  - action: include
-    conditions:
-      - condition: 
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: LEVENDE_ELLER_DOEDFOEDT
-        operator: "=="
-        value: Levendefødt
-      - condition: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: LevendefoedtDoedfoedt
-        operator: "=="
-        value: "1"
-  # Not C-section (kejsersnit)
-  - action: include
-    conditions:
-      - condition:
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Kejsersnit
-        operator: "=="
-        value: "-1"
-      - condition: or
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: MARKOER_KEJSERSNIT
-        operator: "!="
-        value: "1"
-  # Not induced
-  - action: exclude
-    conditions:
-      - condition:
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: MARKOER_IGANGSAETTELSE
-        operator: "=="
-        value: "1"
-      - condition: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_Ballonkateter
-        operator: "=="
-        value: "Ja"
-      - condition: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_Medicinsk
-        operator: "=="
-        value: "Ja"
-      - condition: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_HSP
-        operator: "=="
-        value: "Ja"
+  # # Only live birth
+  # - action: include
+  #   conditions:
+  #     - condition: 
+  #       table: ${paths.input_dir_SDS}/mfr.csv
+  #       match_on: CPR_BARN
+  #       column: LEVENDE_ELLER_DOEDFOEDT
+  #       operator: "=="
+  #       value: Levendefødt
+  #     - condition: or
+  #       table: ${paths.input_dir_SDS}/nyfoedte.csv
+  #       match_on: CPRnummer_Barn
+  #       column: LevendefoedtDoedfoedt
+  #       operator: "=="
+  #       value: "1"
+#   # Not C-section (kejsersnit)
+#   - action: include
+#     conditions:
+#       - condition:
+#         table: ${paths.input_dir_SDS}/nyfoedte.csv
+#         match_on: CPRnummer_Barn
+#         column: Kejsersnit
+#         operator: "=="
+#         value: "-1"
+#       - condition: or
+#         table: ${paths.input_dir_SDS}/mfr.csv
+#         match_on: CPR_BARN
+#         column: MARKOER_KEJSERSNIT
+#         operator: "!="
+#         value: "1"
+#   # Not induced
+#   - action: exclude
+#     conditions:
+#       - condition:
+#         table: ${paths.input_dir_SDS}/mfr.csv
+#         match_on: CPR_BARN
+#         column: MARKOER_IGANGSAETTELSE
+#         operator: "=="
+#         value: "1"
+#       - condition: or
+#         table: ${paths.input_dir_SDS}/nyfoedte.csv
+#         match_on: CPRnummer_Barn
+#         column: Igangsaettelse_Ballonkateter
+#         operator: "=="
+#         value: "Ja"
+#       - condition: or
+#         table: ${paths.input_dir_SDS}/nyfoedte.csv
+#         match_on: CPRnummer_Barn
+#         column: Igangsaettelse_Medicinsk
+#         operator: "=="
+#         value: "Ja"
+#       - condition: or
+#         table: ${paths.input_dir_SDS}/nyfoedte.csv
+#         match_on: CPRnummer_Barn
+#         column: Igangsaettelse_HSP
+#         operator: "=="
+#         value: "Ja"
 
 custom_criteria:
   # Remove multiple (twin etc.) births

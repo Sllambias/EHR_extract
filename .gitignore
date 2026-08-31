@@ -140,4 +140,6 @@ distribution_*
 *distribution*
 *population*
 *imaging_metadata*
+outputs/*
 test_data/preprocessed_images
+test_data/tables
