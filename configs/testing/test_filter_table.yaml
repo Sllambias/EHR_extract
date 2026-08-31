@@ -1,0 +1,14 @@
+# @package _global_
+defaults:
+  - /default@
+  - tables_filtered/example_filter_on_hashes@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_filtered/${hydra:job.config_name}
+  population_table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/populations/test_example_pop/test_example_pop_population_train.csv
+
+population_id_column: CPR_MOR
+max_ids: 30 

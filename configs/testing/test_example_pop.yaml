@@ -1,0 +1,41 @@
+# @package _global_
+defaults:
+  - /default@
+  - example_population@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/populations/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/holdout.csv
+  
+strict: True 
+
+conditional_criteria:
+  - action: exclude
+    conditions: 
+      - standard: 
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: ">"
+        value: 224
+      - standard: or
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: "<"
+        value: 154
+  - action: include
+    conditions:
+      - custom:
+        function: match_years_with_child_cpr_on_birthdate
+        args:
+          date_start: "01012000"
+          date_end: "31122024"
+          value_table_path: ${paths.input_dir_SP}/Population.csv
+          value_time_column: Fødselstidspunkt
+          value_child_cpr_column: BABY_CPR

@@ -2,7 +2,8 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import (
+from EHR_extract.summary import get_summary
+from EHR_extract.utils.custom_find_functions import (
     extract_filtered_conditional_values,
     extract_filtered_values,
     extract_latest_value,
@@ -13,9 +14,8 @@ from EHR_extract.custom_find_functions import (
     find_maternal_age,
     find_pregnancy_start,
 )
-from EHR_extract.paths import get_config_path
-from EHR_extract.summary import get_summary
-from EHR_extract.utils import (
+from EHR_extract.utils.paths import get_config_path
+from EHR_extract.utils.utils import (
     RecursiveSearchpathPlugin,
     check_duplicates,
     convert_to_date,
@@ -278,7 +278,7 @@ def main(cfg: DictConfig) -> None:
         for key, value in extra_tables.items():
             Path(cfg.paths.summary_save_path.replace("summary", f"{key}_summary")).parent.mkdir(parents=True, exist_ok=True)
             with open(cfg.paths.summary_save_path.replace("summary", f"{key}_summary"), "w") as fp:
-                safe_save_df(value).write_csv(fp)
+                safe_save_df(value, fp)
 
     Path(cfg.paths.table_save_path).parent.mkdir(parents=True, exist_ok=True)
     with open(cfg.paths.table_save_path, "w") as fp:
@@ -289,7 +289,7 @@ def main(cfg: DictConfig) -> None:
     if sum_table is not None:
         Path(cfg.paths.summary_save_path).parent.mkdir(parents=True, exist_ok=True)
         with open(cfg.paths.summary_save_path, "w") as fp:
-            safe_save_df(sum_table).write_csv(fp)
+            safe_save_df(sum_table, fp)
 
 
 if __name__ == "__main__":

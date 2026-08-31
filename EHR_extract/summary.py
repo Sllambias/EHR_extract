@@ -2,9 +2,9 @@ import hydra
 import json
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import find_close_births
-from EHR_extract.paths import get_config_path
-from EHR_extract.utils import (
+from EHR_extract.utils.custom_find_functions import find_close_births
+from EHR_extract.utils.paths import get_config_path
+from EHR_extract.utils.utils import (
     load_table,
 )
 from omegaconf import DictConfig
@@ -64,6 +64,7 @@ def summary_from_cfg(cfg):
 
     return all_dists
 
+
 def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
     if n_samples is None:
         n_samples = main_table.height
@@ -103,8 +104,7 @@ def get_summary(main_table: pl.DataFrame, ignore_columns, n_samples=None):
             vc = series.value_counts(sort=True)
             val_col, count_col = vc.columns[0], "count"
             col_summary = {
-                str(row[val_col]): round(float(row[count_col]) / n_row * 100.0, 3)
-                for row in vc.iter_rows(named=True)
+                str(row[val_col]): round(float(row[count_col]) / n_row * 100.0, 3) for row in vc.iter_rows(named=True)
             }
         rows.append(
             {
