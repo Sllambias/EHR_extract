@@ -99,17 +99,21 @@ def generate_test_images(n, path_table):
 
 
 if __name__ == "__main__":
-    output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
+    output_csv_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/all_images_X.csv"
     generate_test_csv(5000, output_csv_path)
 
-    img_type_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/img_type.csv"
+    img_type_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/img_type.csv"
     generate_img_type_csv(
-        5000, img_type_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
+        5000,
+        img_type_output_path,
+        sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/all_images_X.csv",
     )
 
-    holdout_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/holdout.csv"
+    holdout_output_path = "/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/holdout.csv"
     generate_holdout_csv(
-        50, holdout_output_path, sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/all_images_X.csv"
+        50,
+        holdout_output_path,
+        sample_from="/Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/all_images_X.csv",
     )
 
     generate_test_images(5000, output_csv_path)
