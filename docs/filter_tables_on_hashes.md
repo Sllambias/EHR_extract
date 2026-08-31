@@ -1,17 +1,12 @@
-## Using the SP-Query-Tool https://lab.compute.dtu.dk/sonai/sp-query-tool/
-
-
 ## (optional) Generate list of hahes using EHR_extract
 ```bash
-python EHR_extract/extract.py --config-name astridv1
+python EHR_extract/extract.py --config-name test_example_pop         
 ```
 
 ## Quick start
 
 ```bash
-python src/sp-query-tool \ 
-  --hashes /path/to/hashlist.csv \
-  --config /path/to/config.yaml
+python EHR_extract/filter_tables_on_hashes.py --config-name test_filter_table
 ```
 
 ## Config format

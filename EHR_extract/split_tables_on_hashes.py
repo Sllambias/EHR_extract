@@ -1,16 +1,13 @@
+import hydra
 import os
 import polars as pl
 import xlsxwriter
-import yaml
-from pathlib import Path
-import os
-import hydra
-from pathlib import Path
 from dotenv import load_dotenv
 from EHR_extract.utils.paths import get_config_path
-from EHR_extract.utils.utils import RecursiveSearchpathPlugin, load_table, safe_save_df
+from EHR_extract.utils.utils import RecursiveSearchpathPlugin, load_table
 from hydra.core.plugins import Plugins
 from omegaconf import DictConfig
+from pathlib import Path
 
 load_dotenv()
 Plugins.instance().register(RecursiveSearchpathPlugin)
