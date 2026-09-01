@@ -1,0 +1,20 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
+  
+population: 
+  population_key: CPR_MOR
+  split_key: CPR_MOR
+  deduplication_key: null
+  tables: 
+    - table: ${paths.imaging_table}
+      columns:
+        CPR_MOR: phair_hash
+        FILE_PATH: no_ocr_preprocessed_file_path
