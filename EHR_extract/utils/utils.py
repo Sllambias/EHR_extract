@@ -1,7 +1,7 @@
+import json
 import os
 import polars as pl
-import json
-from EHR_extract.paths import get_config_path
+from EHR_extract.utils.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 
@@ -232,7 +232,7 @@ def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:
     return base + pl.duration(days=off)
 
 
-def safe_save_df(df: pl.DataFrame) -> pl.DataFrame:
+def safe_save_df(df: pl.DataFrame, fp) -> pl.DataFrame:
     """Polars CSV writer rejects Object columns; serialize them as JSON strings."""
     exprs = []
     for name in df.columns:
@@ -245,7 +245,8 @@ def safe_save_df(df: pl.DataFrame) -> pl.DataFrame:
                 )
                 .alias(name)
             )
-    return df.with_columns(exprs) if exprs else df
+    df = df.with_columns(exprs) if exprs else df
+    df.write_csv(fp)
 
 
 def merge_composed_population_tables(population, population_merge_on, composed_table_cfgs: list, format_SP_GA=False):

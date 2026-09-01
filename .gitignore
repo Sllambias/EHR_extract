@@ -138,7 +138,6 @@ distribution_*
 *outputs*
 *discard*
 *distribution*
-*population*
 *imaging_metadata*
 outputs/*
 test_data/preprocessed_images

@@ -5,11 +5,11 @@ import os
 import polars as pl
 from datetime import datetime
 from dotenv import load_dotenv
-from EHR_extract.paths import get_config_path
-from EHR_extract.utils import RecursiveSearchpathPlugin, merge_population_tables
+from EHR_extract.utils.custom_split_functions import kfold, preterm_custom1
+from EHR_extract.utils.paths import get_config_path
+from EHR_extract.utils.utils import RecursiveSearchpathPlugin, merge_population_tables
 from hydra.core.plugins import Plugins
 from omegaconf import DictConfig
-from custom_split_functions import preterm_custom1, kfold
 
 Plugins.instance().register(RecursiveSearchpathPlugin)
 

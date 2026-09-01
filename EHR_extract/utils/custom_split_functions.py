@@ -3,13 +3,13 @@ import numpy as np
 import os
 import polars as pl
 from datetime import datetime
-from EHR_extract.custom_find_functions import (
+from EHR_extract.utils.custom_find_functions import (
     find_images_with_predicted_classes,
     find_images_within_time_windows,
     match_images_with_child,
     match_value_with_child_cpr_on_birthdate,
 )
-from EHR_extract.utils import merge_composed_population_tables, merge_population_tables
+from EHR_extract.utils.utils import merge_composed_population_tables, merge_population_tables
 from extract import handle_standard_condition
 from sklearn.model_selection import KFold
 

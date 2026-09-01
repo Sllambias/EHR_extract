@@ -1,10 +1,9 @@
 import hydra
 import json
 import logging
-import os
 import polars as pl
 from dotenv import load_dotenv
-from EHR_extract.custom_find_functions import (
+from EHR_extract.utils.custom_find_functions import (
     find_close_births,
     find_duplicated_ids,
     find_images_with_predicted_classes,
@@ -16,8 +15,8 @@ from EHR_extract.custom_find_functions import (
     match_years_with_child_cpr_on_birthdate,
     merge_population_on,
 )
-from EHR_extract.paths import get_config_path
-from EHR_extract.utils import (
+from EHR_extract.utils.paths import get_config_path
+from EHR_extract.utils.utils import (
     RecursiveSearchpathPlugin,
     deduplicate_on_key,
     filter_numeric_rows,

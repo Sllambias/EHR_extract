@@ -1,0 +1,65 @@
+# @package _global_
+defaults:
+  - /default@
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_filtered/${hydra:job.config_name}
+  population_table: 
+
+population_id_column: CPR_MOR
+max_ids: 30 
+
+tables:
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+    id_col: MOR_CPR
+    time_col: "Noteret_dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Patientinfo.csv
+    id_col: MOR_CPR
+    time_col: "Fødselsdato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+    id_col: MOR_CPR
+    time_col: "ServiceDatetime"
+    columns:
+      - ProcedureCode
+      - ProcedureName
+      - Beskrivelse
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Prøvesvar.csv
+    id_col: MOR_CPR
+    time_col: "Prøvetagningstidspunkt"
+    columns:
+      - BestOrd
+      - Resultatværdi
+      - Enhed
+      - Antibiotika
+      - Følsomhed
+      - Organisme
+
+
+    
+  - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+    id_col: MOR_CPR
+    time_col: "Kontakt dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+    id_col: MOR_CPR
+    time_col: "Dato for seneste opdatering"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+    id_col: MOR_CPR
+    time_col: "Registreringstidspunkt"
+    columns:

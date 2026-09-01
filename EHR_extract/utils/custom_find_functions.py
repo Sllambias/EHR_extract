@@ -1,13 +1,13 @@
 import logging
 import polars as pl
-from EHR_extract.utils import (
-    filter_numeric_rows,
-    get_python_operator,
-    load_table,
+from EHR_extract.utils.utils import (
+    check_duplicates,
     convert_to_date,
     date_bound_expr,
     dtype_from_cfg,
-    check_duplicates,
+    filter_numeric_rows,
+    get_python_operator,
+    load_table,
     take_latest_row,
 )
 

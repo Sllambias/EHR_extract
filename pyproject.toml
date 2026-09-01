@@ -22,6 +22,7 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "polars>=1.39.3",
     "numpy>=2.4.4",
+    "xlsxwriter>=3.2.9",
 ]
 
 [tool.setuptools.packages.find]
