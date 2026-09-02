@@ -83,25 +83,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     if operator[1] == "any":
         joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
     elif operator[1] == "all":
-        joined = joined.with_columns(pl.col("positive").all().over(population_child_cpr_column).alias("all_positive"))
-        for subject in set(joined[population_child_cpr_column].unique()):
-            subject_rows = joined.filter(pl.col(population_child_cpr_column) == subject)
-            if not subject_rows["all_positive"][0]:
-                print(
-                    joined.filter(pl.col(population_child_cpr_column) == subject).select(
-                        [
-                            population_child_cpr_column,
-                            "positive",
-                            "all_positive",
-                            value_column,
-                            value_time_column,
-                            mapping_table_mom_cpr_column,
-                            population_birth_column,
-                            population_gestational_age_column,
-                        ]
-                    )
-                )
-        # joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
+        joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
     print("1before filtering", len(population))
     population = population.filter(pl.col(population_key_column).is_in(set(joined[population_child_cpr_column])))
     matches = set(population[population_child_cpr_column].unique())
