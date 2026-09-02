@@ -33,12 +33,24 @@ population:
         GA: Gestationsalder
         BIRTHDAY: FoedselsDato_Barn
 
+conditional_criteria:
+  # GA available at birth
+  - action: exclude
+    conditions: 
+      - standard: 
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: "missing"
+        value: 
+
 imaging_table:
   table: ${paths.imaging_table}
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path
     STUDY_DATE: study_date
+    MANUFACTURER_MODEL_NAME: manufacturer_model_name
 
 imaging_matching_criteria:
   - function: find_images_within_time_windows
@@ -49,9 +61,13 @@ imaging_matching_criteria:
       population_delivery_date_column: BIRTHDAY
       min_diff_days_scan_to_delivery: 0
       max_diff_days_scan_to_delivery: 99999
-      min_ga_in_days_at_scan: 126
+      min_ga_in_days_at_scan: 125
       max_ga_in_days_at_scan: 155
   - function: find_images_on_or_after_date
     args:
       date_column: STUDY_DATE
       min_date: "2019-01-01"
+  - function: exclude_images_with_values
+    args:
+      column: MANUFACTURER_MODEL_NAME
+      values: ["Voluson Expert 22"]

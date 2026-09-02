@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from EHR_extract.utils.custom_find_functions import (
     find_close_births,
     find_duplicated_ids,
+    exclude_images_with_values,
     find_images_on_or_after_date,
     find_images_with_predicted_classes,
     find_images_within_time_windows,
@@ -38,6 +39,7 @@ Plugins.instance().register(RecursiveSearchpathPlugin)
 
 custom_functions = {
     "find_close_births": find_close_births,
+    "exclude_images_with_values": exclude_images_with_values,
     "find_images_within_time_windows": find_images_within_time_windows,
     "find_images_on_or_after_date": find_images_on_or_after_date,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
