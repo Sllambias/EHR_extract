@@ -51,7 +51,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     """
     value_table = load_table(value_table_path)
     py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path)
     joined = value_table.join(
@@ -60,7 +60,6 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         right_on=mapping_table_id_column,
         how="inner",
     )
-
     joined = joined.join(
         population,
         left_on=mapping_table_mom_cpr_column,
@@ -73,6 +72,8 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
     )
+    cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[population_child_cpr_column].unique())
+    joined = joined.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
     matches = set(joined[population_child_cpr_column].unique())
     return matches
 
@@ -92,7 +93,7 @@ def match_value_with_child_cpr_on_birth_id(
     value_table = load_table(value_table_path)
 
     py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path)
     mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
@@ -105,6 +106,8 @@ def match_value_with_child_cpr_on_birth_id(
     )
     joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
 
+    cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[mapping_table_child_cpr_column].unique())
+    joined = joined.filter(~pl.col(mapping_table_child_cpr_column).is_in(cpr_with_any_negative))
     matches = set(joined[mapping_table_child_cpr_column].unique())
     return matches
 
@@ -127,7 +130,7 @@ def match_value_with_child_cpr_on_birthdate(
 
     # Filter based on operator and value
     py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
     # Join on mother's CPR
     joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
 
@@ -139,7 +142,10 @@ def match_value_with_child_cpr_on_birthdate(
     )
 
     # Get the unique child CPRs
+    cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[population_child_cpr_column].unique())
+    joined = joined.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
     matches = set(joined[population_child_cpr_column].unique())
+
     return matches
 
 
