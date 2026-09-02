@@ -297,14 +297,10 @@ def format_criterion(criterion):
 
 class RecursiveSearchpathPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
-        config_path = get_config_path()
-        search_path.append(provider="recursive-searchpath-plugin", path="file://" + config_path)
-
-        for root, directories, _ in os.walk(config_path):
-            for directory in directories:
-                print(root,directory)
+        for path in os.listdir(get_config_path()):
+            if os.path.isdir(os.path.join(get_config_path(), path)):
                 search_path.append(
-                    provider="recursive-searchpath-plugin", path="file://" + os.path.join(root, directory)
+                    provider="recursive-searchpath-plugin", path="file://" + os.path.join(get_config_path(), path)
                 )
 
 
