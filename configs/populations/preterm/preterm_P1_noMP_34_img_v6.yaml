@@ -88,12 +88,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -182,17 +176,6 @@ conditional_criteria:
         operator: not_in
         value: [DO420, DO422, DO424]
       - custom: and 
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: [DO420, DO422, DO424, DO601]
-          operator: [not_in, all]
-          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
-          value_column: DiagnoseKode
-          value_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
-          mapping_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_child_cpr_column: CPRnummer_Barn
-      - custom: and 
         function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
         args: 
           value: [DO420, DO422, DO424, DO601]
@@ -269,12 +252,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -366,17 +343,6 @@ conditional_criteria:
         operator: not_in
         value: [DO420, DO422, DO424]
       - custom: and 
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: [DO420, DO422, DO424]
-          operator: [not_in, all]
-          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
-          value_column: DiagnoseKode
-          value_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
-          mapping_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_child_cpr_column: CPRnummer_Barn
-      - custom: and 
         function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
         args: 
           value: [DO420, DO422, DO424]
@@ -417,12 +383,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -475,12 +435,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -533,12 +487,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -598,12 +546,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -663,12 +605,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -728,12 +664,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -791,12 +721,6 @@ conditional_criteria:
         column: GA
         operator: <
         value: ${preterm_cutoff}
-      - standard: and
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: not_in
-        value: [DO420, DO422, DO424]
       - custom: and 
         function: match_value_with_child_cpr_on_birth_id
         args:
