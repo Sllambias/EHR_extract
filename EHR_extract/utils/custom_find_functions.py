@@ -241,6 +241,19 @@ def find_images_within_time_windows(
     return population, discard_stats
 
 
+def find_images_on_or_after_date(population, date_column, min_date):
+    discard_stats = {"n_population_before_discard": len(population)}
+    population = population.filter(convert_to_date(date_column) >= pl.lit(min_date).str.to_date("%Y-%m-%d"))
+    discard_stats.update(
+        {
+            "criteria": "find_images_on_or_after_date",
+            "discards": "N/A",
+            "n_discards": discard_stats["n_population_before_discard"] - len(population),
+        }
+    )
+    return population, discard_stats
+
+
 def find_images_with_predicted_classes(
     table,
     classes,
