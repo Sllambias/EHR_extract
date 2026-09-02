@@ -297,11 +297,9 @@ def format_criterion(criterion):
 
 class RecursiveSearchpathPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
-        for path in os.listdir(get_config_path()):
-            if os.path.isdir(os.path.join(get_config_path(), path)):
-                search_path.append(
-                    provider="recursive-searchpath-plugin", path="file://" + os.path.join(get_config_path(), path)
-                )
+        for root, dirs, files in os.walk(get_config_path()):
+            for path in dirs:
+                search_path.append(provider="recursive-searchpath-plugin", path="file://" + os.path.join(root, path))
 
 
 def get_physical_deltas_post_PN_processing(
