@@ -302,6 +302,7 @@ class RecursiveSearchpathPlugin(SearchPathPlugin):
 
         for root, directories, _ in os.walk(config_path):
             for directory in directories:
+                print(root,directory)
                 search_path.append(
                     provider="recursive-searchpath-plugin", path="file://" + os.path.join(root, directory)
                 )
