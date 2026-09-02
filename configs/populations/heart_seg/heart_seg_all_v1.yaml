@@ -18,6 +18,7 @@ population:
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
+  deduplication_key: CPR_BARN
   tables:
     - table: ${paths.input_dir_SDS}/mfr.csv
       columns:
