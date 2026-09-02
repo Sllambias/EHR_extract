@@ -60,14 +60,14 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         right_on=mapping_table_id_column,
         how="inner",
     )
-    print(1, len(joined))
+    # print(1, len(joined))
     joined = joined.join(
         population,
         left_on=mapping_table_mom_cpr_column,
         right_on=population_mom_cpr_column,
         how="inner",
     )
-    print(2, len(joined))
+    # print(2, len(joined))
 
     joined = match_value_on_birthdate(
         population=joined,
@@ -75,14 +75,14 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
     )
-    print(3, len(joined))
+    # print(3, len(joined))
 
     cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[population_child_cpr_column].unique())
-    print(joined.columns)
-    print("1before filtering", len(joined))
-    joined = joined.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
-    print("after filtering", len(joined))
-    matches = set(joined[population_child_cpr_column].unique())
+    print("1positives", len(cpr_with_any_negative))
+    print("1before filtering", len(population))
+    population = population.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
+    print("after filtering", len(population))
+    matches = set(population[population_child_cpr_column].unique())
 
     return matches
 
@@ -116,10 +116,11 @@ def match_value_with_child_cpr_on_birth_id(
     joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
 
     cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[mapping_table_child_cpr_column].unique())
-    print("2before filtering", len(joined))
-    joined = joined.filter(~pl.col(mapping_table_child_cpr_column).is_in(cpr_with_any_negative))
-    print("after filtering", len(joined))
-    matches = set(joined[mapping_table_child_cpr_column].unique())
+    print("2positives", len(cpr_with_any_negative))
+    print("2before filtering", len(population))
+    population = population.filter(~pl.col(population_key_column).is_in(cpr_with_any_negative))
+    print("2after filtering", len(population))
+    matches = set(population[population_key_column].unique())
 
     return matches
 
@@ -155,10 +156,11 @@ def match_value_with_child_cpr_on_birthdate(
 
     # Get the unique child CPRs
     cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[population_child_cpr_column].unique())
+    print("3positives", len(cpr_with_any_negative))
     print("3before filtering", len(joined))
-    joined = joined.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
-    print("after filtering", len(joined))
-    matches = set(joined[population_child_cpr_column].unique())
+    population = joined.filter(~pl.col(population_child_cpr_column).is_in(cpr_with_any_negative))
+    print("3after filtering", len(population))
+    matches = set(population[population_child_cpr_column].unique())
     return matches
 
 
