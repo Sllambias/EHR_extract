@@ -14,7 +14,7 @@ paths:
   imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-08-24.csv
 
 strict: True
-preterm_cutoff: 238
+preterm_cutoff: 259
 
 population: 
   population_key: CPR_BARN
