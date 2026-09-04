@@ -107,7 +107,6 @@ def extract_from_cfg(cfg, population):
                 current_condition_population = matched_ids
             else:
                 logging.warn("wow, weird condition")
-
         criterion_population = criterion_population.union(current_condition_population)
         population, discards, n_discards, n_population_before_discard = update_population(
             population=population,

@@ -1,5 +1,6 @@
+# @package _global_
 defaults:
-  - default@
+  - /default@
   - _self_
 
 paths:
@@ -12,7 +13,7 @@ paths:
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
 
 strict: True
-preterm_cutoff: 224
+preterm_cutoff: 238
 
 population: 
   population_key: CPR_BARN
@@ -365,5 +366,3 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
-
-

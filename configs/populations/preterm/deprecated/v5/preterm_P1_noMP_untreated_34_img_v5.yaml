@@ -1,5 +1,6 @@
+# @package _global_
 defaults:
-  - default@
+  - /default@
   - _self_
 
 paths:
@@ -14,7 +15,7 @@ paths:
   imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-06-23.csv
 
 strict: True
-preterm_cutoff: 259
+preterm_cutoff: 238
 
 population: 
   population_key: CPR_BARN
@@ -367,7 +368,198 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
-
+  # No cerclage insertion
+  - action: exclude
+    conditions:
+      - custom:
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: "DO343C"
+          operator: "=="
+          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          value_column: DiagnoseKode
+          value_time_column: StartDato_Kontakt
+          value_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_id_column: DW_EK_Foedsel
+          mapping_table_mom_cpr_column: CPRnummer_Mor
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: "DO343C"
+          operator: "=="
+          value_table_path: ${paths.input_dir_SDS}/t_diag.csv
+          value_column: C_DIAG
+          value_time_column: D_UDDTO
+          value_id_column: V_RECNUM
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: ["KLDD10A", "KLDD10B", "KMAB00", "KMAB01"]
+          operator: in
+          value_table_path: ${paths.input_dir_SDS}/mor_procedurer.csv
+          value_column: ProcedureKode
+          value_time_column: StartDato_Procedure
+          value_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_id_column: DW_EK_Foedsel
+          mapping_table_mom_cpr_column: CPRnummer_Mor
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: ["KLDD10A", "KLDD10B", "KMAB00", "KMAB01"]
+          operator: in
+          value_table_path: ${paths.input_dir_SDS}/t_afl.csv
+          value_column: C_TILOPR
+          value_time_column: D_ODTO
+          value_id_column: V_RECNUM
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: ["KLDD10A", "KLDD10B", "KMAB00", "KMAB01"]
+          operator: in
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_OPR
+          value_time_column: D_ODTO
+          value_id_column: V_RECNUM
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+  # No cerclage removal
+  - action: exclude
+    conditions:
+      - custom:
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: ["KLDD20", "KMAB03"]
+          operator: in
+          value_table_path: ${paths.input_dir_SDS}/mor_procedurer.csv
+          value_column: ProcedureKode
+          value_time_column: StartDato_Procedure
+          value_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_id_column: DW_EK_Foedsel
+          mapping_table_mom_cpr_column: CPRnummer_Mor
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: ["KLDD20", "KMAB03"]
+          operator: in
+          value_table_path: ${paths.input_dir_SDS}/t_afl.csv
+          value_column: C_TILOPR
+          value_time_column: D_ODTO
+          value_id_column: V_RECNUM
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+  # No progesterone treatment
+  - action: exclude
+    conditions:
+      - custom:
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: "G03DA04"
+          operator: startswith
+          value_table_path: ${paths.input_dir_SDS}/epikur_1.csv
+          value_column: atc
+          value_time_column: eksd
+          value_mother_cpr_column: cpr
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: "G03DA04"
+          operator: startswith
+          value_table_path: ${paths.input_dir_SDS}/epikur_2.csv
+          value_column: atc
+          value_time_column: eksd
+          value_mother_cpr_column: cpr
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: "G03DA04"
+          operator: startswith
+          value_table_path: ${paths.input_dir_SDS}/epikur_3.csv
+          value_column: atc
+          value_time_column: eksd
+          value_mother_cpr_column: cpr
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: BKHA1
+          operator: ==
+          value_table_path: ${paths.input_dir_SDS}/t_sksube.csv
+          value_column: C_TILOPR
+          value_time_column: D_ODTO
+          value_id_column: V_RECNUM
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: or
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args:
+          value: BKHA1
+          operator: "=="
+          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          value_column: DiagnoseKode
+          value_time_column: StartDato_Kontakt
+          value_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_id_column: DW_EK_Foedsel
+          mapping_table_mom_cpr_column: CPRnummer_Mor
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
 
 
 imaging_table:

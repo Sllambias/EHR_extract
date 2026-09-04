@@ -50,8 +50,8 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     and finally filtering the child_CPR if the value_timestamps fall within their pregnancy
     """
     value_table = load_table(value_table_path)
-    py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    py_operator = get_python_operator(operator[0])
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path)
     joined = value_table.join(
@@ -60,20 +60,27 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         right_on=mapping_table_id_column,
         how="inner",
     )
-
     joined = joined.join(
         population,
         left_on=mapping_table_mom_cpr_column,
         right_on=population_mom_cpr_column,
         how="inner",
     )
+
     joined = match_value_on_birthdate(
         population=joined,
         value_time_column=value_time_column,
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
     )
-    matches = set(joined[population_child_cpr_column].unique())
+
+    # Get the unique child CPRs
+    if operator[1] == "any":
+        joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
+    elif operator[1] == "all":
+        joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
+    population = population.filter(pl.col(population_key_column).is_in(set(joined[population_child_cpr_column])))
+    matches = set(population[population_child_cpr_column].unique())
     return matches
 
 
@@ -91,8 +98,8 @@ def match_value_with_child_cpr_on_birth_id(
 ):
     value_table = load_table(value_table_path)
 
-    py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    py_operator = get_python_operator(operator[0])
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path)
     mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
@@ -105,7 +112,14 @@ def match_value_with_child_cpr_on_birth_id(
     )
     joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
 
-    matches = set(joined[mapping_table_child_cpr_column].unique())
+    # Get the unique child CPRs
+    if operator[1] == "any":
+        joined = joined.filter(pl.col("positive").any().over(mapping_table_child_cpr_column))
+    elif operator[1] == "all":
+        joined = joined.filter(pl.col("positive").all().over(mapping_table_child_cpr_column))
+    population = population.filter(pl.col(population_key_column).is_in(set(joined[mapping_table_child_cpr_column])))
+    matches = set(population[population_key_column].unique())
+
     return matches
 
 
@@ -126,8 +140,9 @@ def match_value_with_child_cpr_on_birthdate(
     value_table = load_table(value_table_path)
 
     # Filter based on operator and value
-    py_operator = get_python_operator(operator)
-    value_table = value_table.filter(py_operator(pl.col(value_column), value))
+    py_operator = get_python_operator(operator[0])
+    value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
+
     # Join on mother's CPR
     joined = value_table.join(population, left_on=value_mother_cpr_column, right_on=population_mother_cpr_column, how="inner")
 
@@ -139,7 +154,14 @@ def match_value_with_child_cpr_on_birthdate(
     )
 
     # Get the unique child CPRs
-    matches = set(joined[population_child_cpr_column].unique())
+    if operator[1] == "any":
+        joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
+    elif operator[1] == "all":
+        joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
+
+    population = population.filter(pl.col(population_child_cpr_column).is_in(set(joined[population_child_cpr_column])))
+    matches = set(population[population_child_cpr_column].unique())
+
     return matches
 
 
