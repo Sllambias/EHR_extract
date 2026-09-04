@@ -268,7 +268,7 @@ conditional_bool_criteria:
   - name: pcos
     key_column: b_cpr
     match_on: m_cpr
-    time_window: before_and_during_pregnancy
+    time_window: before_and_during_pregnancy_to_cutoff
     conditions:
       - condition: 
         table: 
@@ -311,7 +311,7 @@ conditional_bool_criteria:
   - name: endometriose
     key_column: b_cpr
     match_on: m_cpr
-    time_window: before_and_during_pregnancy
+    time_window: before_and_during_pregnancy_to_cutoff
     conditions:
       - condition: 
         table: 
@@ -837,7 +837,7 @@ conditional_bool_criteria:
   - name: current_maternal_comorbidity
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy #during_pregnancy
+    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
