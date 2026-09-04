@@ -60,14 +60,12 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         right_on=mapping_table_id_column,
         how="inner",
     )
-    # print(1, len(joined))
     joined = joined.join(
         population,
         left_on=mapping_table_mom_cpr_column,
         right_on=population_mom_cpr_column,
         how="inner",
     )
-    # print(2, len(joined))
 
     joined = match_value_on_birthdate(
         population=joined,
@@ -75,19 +73,14 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
     )
-    # print(3, len(joined))
 
-    # cpr_with_any_negative = set(joined.filter(~pl.col("positive"))[population_child_cpr_column].unique())
-    # print("1positives", len(cpr_with_any_negative))
     # Get the unique child CPRs
     if operator[1] == "any":
         joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
-    print("1before filtering", len(population))
     population = population.filter(pl.col(population_key_column).is_in(set(joined[population_child_cpr_column])))
     matches = set(population[population_child_cpr_column].unique())
-    print("matches", len(matches))
     return matches
 
 
@@ -118,15 +111,14 @@ def match_value_with_child_cpr_on_birth_id(
         how="inner",
     )
     joined = joined.join(population, left_on=mapping_table_child_cpr_column, right_on=population_key_column, how="inner")
+
     # Get the unique child CPRs
     if operator[1] == "any":
         joined = joined.filter(pl.col("positive").any().over(mapping_table_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(mapping_table_child_cpr_column))
-    print("2before filtering", len(population))
     population = population.filter(pl.col(population_key_column).is_in(set(joined[mapping_table_child_cpr_column])))
     matches = set(population[population_key_column].unique())
-    print("matches", len(matches))
 
     return matches
 
@@ -166,11 +158,9 @@ def match_value_with_child_cpr_on_birthdate(
         joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
-    print("3before filtering", len(joined))
 
     population = population.filter(pl.col(population_child_cpr_column).is_in(set(joined[population_child_cpr_column])))
     matches = set(population[population_child_cpr_column].unique())
-    print("matches", len(matches))
 
     return matches
 
