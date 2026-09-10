@@ -218,6 +218,23 @@ def get_conditional_bool_criteria(cfg, main_table):
         )
     return main_table 
 
+def get_composite_criteria(cfg, main_table):
+    for composite in cfg.get("composite_criteria") or []:
+        print("Compositing:", composite.name)
+        expr = None
+        for condition in composite.conditions:
+            col = pl.col(condition.column).fill_null(False).cast(pl.Boolean, strict=False)
+            if condition.condition is None or expr is None:
+                expr = col
+            elif condition.condition == "or":
+                expr = expr | col
+            elif condition.condition == "and":
+                expr = expr & col
+            else:
+                raise ValueError(f"Unknown composite condition: {condition.condition}")
+        main_table = main_table.with_columns(expr.alias(composite.name))
+    return main_table
+
 def table_from_cfg(cfg):
     main_table, discards = make_main_table(
         cfg.base_table,
@@ -226,6 +243,7 @@ def table_from_cfg(cfg):
     main_table = get_extract_criteria(cfg, main_table)
     main_table = get_conditional_bool_criteria(cfg, main_table)
     main_table = get_custom_extract_criteria(cfg, main_table)
+    main_table = get_composite_criteria(cfg, main_table)
 
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
