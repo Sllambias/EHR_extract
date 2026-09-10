@@ -563,7 +563,7 @@ conditional_bool_criteria:
           left_on: [MOR_CPR]
           right_on: [MOR_CPR]
         match_on: MOR_CPR
-        column: "Antal tidligere spontante aborter"
+        column: "Antal tidligere spontane aborter"
         operator: ">="
         value: 1
         date_col: "Kontakt dato"
