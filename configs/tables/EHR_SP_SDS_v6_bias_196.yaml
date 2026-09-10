@@ -96,6 +96,13 @@ time_conditionals:
     max_date:
       date_col: pregnancy_start
       offset_days: 0
+  five_years_prior_to_pregnancy_to_cutoff:
+    min_date:
+      date_col: pregnancy_start
+      offset_days: -1825
+    max_date:
+      date_col: GA_196_date
+      offset_days: 0
 
 
 extract_criteria:
@@ -1209,7 +1216,7 @@ conditional_bool_criteria:
   - name: pre_existing_diabetes
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1255,7 +1262,7 @@ conditional_bool_criteria:
   - name: chronic_hypertension
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1298,7 +1305,7 @@ conditional_bool_criteria:
   - name: cardiac_disease
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1350,7 +1357,7 @@ conditional_bool_criteria:
   - name: chronic_respiratory
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1393,7 +1400,7 @@ conditional_bool_criteria:
   - name: chronic_renal
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1436,7 +1443,7 @@ conditional_bool_criteria:
   - name: autuimmune
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1485,7 +1492,7 @@ conditional_bool_criteria:
   - name: chronic_gastrointestinal
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1534,7 +1541,7 @@ conditional_bool_criteria:
   - name: thyroid
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1577,7 +1584,7 @@ conditional_bool_criteria:
   - name: neurological
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1620,7 +1627,7 @@ conditional_bool_criteria:
   - name: psychiatric
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1663,7 +1670,7 @@ conditional_bool_criteria:
   - name: significant_blook_immune_disease
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  
@@ -1761,7 +1768,7 @@ conditional_bool_criteria:
   - name: malignancy
     key_column: b_cpr
     match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff #during_pregnancy
+    time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
     conditions:
       - condition: 
         table:  

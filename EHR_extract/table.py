@@ -44,7 +44,7 @@ custom_functions = {
     "extract_filtered_conditional_values": extract_filtered_conditional_values,
 }
 
-BOOL_ALLOW_DUPLICATE_BABY_ID = False
+BOOL_ALLOW_DUPLICATE_BABY_ID = True
 
 def cast_types(table, dtype, column):
     if dtype == pl.Date:
