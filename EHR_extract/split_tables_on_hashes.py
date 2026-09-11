@@ -34,7 +34,7 @@ def collect_hash_matches(cfg, population):
                 table_path = table_cfg.table
                 table_name = Path(table_cfg.table).name
                 print("processing table: ", table_name)
-                df = pl.read_csv(table_path)
+                df = pl.read_csv(table_path, infer_schema_length=100000000)
 
                 df = df.with_columns(pl.col(table_cfg["id_col"]).str.strip_chars())
                 df = df.filter(pl.col(table_cfg["id_col"]) == patient)
