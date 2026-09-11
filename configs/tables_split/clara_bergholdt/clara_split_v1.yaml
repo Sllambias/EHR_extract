@@ -7,7 +7,7 @@ paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
   output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_filtered/${hydra:job.config_name}
-  population_table: 
+  population_table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/clarav1/clarav1_population_train.csv
 
 population_id_column: CPR_MOR
 max_ids: 30 
