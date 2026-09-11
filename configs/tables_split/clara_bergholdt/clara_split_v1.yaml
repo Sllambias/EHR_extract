@@ -34,6 +34,11 @@ tables:
       - Speciale
       - Note
 
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Medicin.csv
+    id_col: MOR_CPR
+    time_col: "Bestillingsdato"
+    columns:
+
   - table: ${paths.input_dir_SP}/Mor - CPMI - Patientinfo.csv
     id_col: MOR_CPR
     time_col: "Fødselsdato"
@@ -63,6 +68,32 @@ tables:
     time_col: "Registreringstidspunkt"
     columns:
 
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 1.csv
+    id_col: MOR_CPR
+    time_col: "Placenta dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 2.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Histologi og Cytologi.csv
+    id_col: MOR_CPR
+    time_col: "Bestillingstidspunkt"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Obstetriske kommentarer.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Ordinationer.csv
+    id_col: MOR_CPR
+    time_col: "Ordinationstidspunkt"
+    columns:
+
+
   - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
     id_col: MOR_CPR
     time_col: "Kontakt dato"
@@ -85,41 +116,11 @@ tables:
     time_col: "Dato"
     columns:
 
-  - table: ${paths.input_dir_SP}/Mor - Histologi og Cytologi.csv
-    id_col: MOR_CPR
-    time_col: "Bestillingstidspunkt"
-    columns:
-
-  - table: ${paths.input_dir_SP}/Mor - Obstetriske kommentarer.csv
-    id_col: MOR_CPR
-    time_col: "Dato"
-    columns:
-
-  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 1.csv
-    id_col: MOR_CPR
-    time_col: "Placenta dato"
-    columns:
-
-  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 2.csv
-    id_col: MOR_CPR
-    time_col: "Dato"
-    columns:
-
   - table: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
     id_col: MOR_CPR
     time_col: "Registreringstidspunkt"
     columns:
 
-  - table: ${paths.input_dir_SP}/Mor - CPMI - Medicin.csv
-    id_col: MOR_CPR
-    time_col: "Bestillingsdato"
-    columns:
-
-
-  - table: ${paths.input_dir_SP}/Mor - Ordinationer.csv
-    id_col: MOR_CPR
-    time_col: "Ordinationstidspunkt"
-    columns:
 
   - table: ${paths.input_dir_SP}/Mor - Udleveret medicin.csv
     id_col: MOR_CPR
