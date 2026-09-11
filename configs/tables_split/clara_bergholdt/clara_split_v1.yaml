@@ -68,12 +68,12 @@ tables:
     time_col: "Registreringstidspunkt"
     columns:
 
-  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 1.csv
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
     id_col: MOR_CPR
     time_col: "Placenta dato"
     columns:
 
-  - table: ${paths.input_dir_SP}/Mor - Fødselsresume Del 2.csv
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 2.csv
     id_col: MOR_CPR
     time_col: "Dato"
     columns:
