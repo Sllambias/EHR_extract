@@ -30,7 +30,6 @@ tables:
     id_col: MOR_CPR
     time_col: "Oprettelsestidspunkt"
     columns:
-      - Oprettelsestidspunkt
       - Notetype
       - Speciale
       - Note
