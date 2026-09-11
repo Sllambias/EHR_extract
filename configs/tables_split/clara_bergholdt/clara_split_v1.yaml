@@ -85,14 +85,10 @@ tables:
     time_col: "Dato"
     columns:
 
-  - table: ${paths.input_dir_SP}/Mor - Histologi- og Cytologi.csv
+  - table: ${paths.input_dir_SP}/Mor - Histologi og Cytologi.csv
     id_col: MOR_CPR
     time_col: "Bestillingstidspunkt"
     columns:
-
-
-
-
 
   - table: ${paths.input_dir_SP}/Mor - Obstetriske kommentarer.csv
     id_col: MOR_CPR
