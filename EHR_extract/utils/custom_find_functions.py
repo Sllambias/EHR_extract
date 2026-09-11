@@ -12,7 +12,9 @@ from EHR_extract.utils.utils import (
 )
 
 
-def match_value_on_birthdate(population, value_time_column, population_birthdate_column, population_gestational_age_column):
+def match_value_on_birthdate(
+    population, value_time_column, population_birthdate_column, population_gestational_age_column, include_days_after_birth=0
+):
     population = filter_numeric_rows(population, population_gestational_age_column)
     population = population.with_columns(
         conception_date=pl.col(population_birthdate_column).str.to_datetime()
@@ -20,7 +22,10 @@ def match_value_on_birthdate(population, value_time_column, population_birthdate
     )
     population = population.filter(
         (pl.col(value_time_column).str.to_datetime() >= pl.col("conception_date"))
-        & (pl.col(value_time_column).str.to_datetime() <= pl.col(population_birthdate_column).str.to_datetime())
+        & (
+            pl.col(value_time_column).str.to_datetime()
+            <= pl.col(population_birthdate_column).str.to_datetime().dt.offset_by(f"{include_days_after_birth}d")
+        )
     )
     return population
 
@@ -41,6 +46,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     population_birth_column,
     population_gestational_age_column,
     population_key_column,
+    include_days_after_birth=0,
 ):
     """
     This function takes tables A, B and C and matches a Value in Table A with a child CPR in Table C by:
@@ -72,6 +78,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         value_time_column=value_time_column,
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
+        include_days_after_birth=include_days_after_birth,
     )
 
     # Get the unique child CPRs
@@ -136,6 +143,7 @@ def match_value_with_child_cpr_on_birthdate(
     population_birth_column,
     population_gestational_age_column,
     population_key_column,
+    include_days_after_birth=0,
 ):
     value_table = load_table(value_table_path)
 
@@ -151,6 +159,7 @@ def match_value_with_child_cpr_on_birthdate(
         value_time_column=value_time_column,
         population_birthdate_column=population_birth_column,
         population_gestational_age_column=population_gestational_age_column,
+        include_days_after_birth=include_days_after_birth,
     )
 
     # Get the unique child CPRs

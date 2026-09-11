@@ -73,6 +73,17 @@ conditional_criteria:
         column: LevendefoedtDoedfoedt
         operator: "!="
         value: "1"
+      - custom: or
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: Levende
+          operator: ["!=", all]
+          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          value_column: "Foetus mortuus "
+          value_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_path: ${paths.input_dir_SP}/Population.csv
+          mapping_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_child_cpr_column: BABY_CPR
   # No C-section/kejsersnit unless PPROM or Contractions or C-section during birth
   - action: exclude
     conditions:
@@ -135,6 +146,38 @@ conditional_criteria:
           value_column: C_TILDIAG
           value_id_column: V_RECNUM
           value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_OPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
           mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
           mapping_table_id_column: K_RECNUM
           mapping_table_mom_cpr_column: V_CPR
@@ -244,6 +287,140 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
+      - custom: or 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: "KMCA"
+          operator: [startswith, any]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_OPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - standard: and
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: <
+        value: ${preterm_cutoff}
+      - custom: and 
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: [DO420, DO422, DO424, DO601, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          value_column: DiagnoseKode
+          value_table_birth_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_birth_id_column: DW_EK_Foedsel
+          mapping_table_child_cpr_column: CPRnummer_Barn
+      - custom: and 
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: [DO420, DO422, DO424, DO601, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/mor_procedurer.csv
+          value_column: ProcedureKode
+          value_table_birth_id_column: DW_EK_Foedsel
+          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
+          mapping_table_birth_id_column: DW_EK_Foedsel
+          mapping_table_child_cpr_column: CPRnummer_Barn
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424, DO601, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_diag.csv
+          value_column: C_DIAG
+          value_id_column: V_RECNUM
+          value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424, DO601, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_diag.csv
+          value_column: C_TILDIAG
+          value_id_column: V_RECNUM
+          value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_OPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: [DO420, DO422, DO424, DO601]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          value_column: Diagnosekode
+          value_time_column: Noteret_dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+      - custom: and
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: [KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          value_column: ProcedureCode
+          value_time_column: ServiceDatetime
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
       - custom: or
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -310,6 +487,38 @@ conditional_criteria:
           value_column: C_TILDIAG
           value_id_column: V_RECNUM
           value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_OPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424, KMCA10D, KMCA10E]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
           mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
           mapping_table_id_column: K_RECNUM
           mapping_table_mom_cpr_column: V_CPR
@@ -475,6 +684,22 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -554,6 +779,22 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -626,6 +867,22 @@ conditional_criteria:
           value_column: C_TILDIAG
           value_id_column: V_RECNUM
           value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
           mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
           mapping_table_id_column: K_RECNUM
           mapping_table_mom_cpr_column: V_CPR
@@ -719,6 +976,22 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -798,6 +1071,22 @@ conditional_criteria:
           value_column: C_TILDIAG
           value_id_column: V_RECNUM
           value_time_column: D_INDDTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
           mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
           mapping_table_id_column: K_RECNUM
           mapping_table_mom_cpr_column: V_CPR
@@ -891,6 +1180,22 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -975,6 +1280,22 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
+      - custom: and 
+        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
+        args: 
+          value: [DO420, DO422, DO424]
+          operator: [not_in, all]
+          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
+          value_column: C_TILOPR
+          value_id_column: V_RECNUM
+          value_time_column: D_ODTO
+          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
+          mapping_table_id_column: K_RECNUM
+          mapping_table_mom_cpr_column: V_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mom_cpr_column: CPR_MOR
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -1042,6 +1363,7 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
+          include_days_after_birth: 7
       - custom: and
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -1055,6 +1377,7 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
+          include_days_after_birth: 7
       - custom: or
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -1111,7 +1434,6 @@ conditional_criteria:
           population_gestational_age_column: GA
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
-
 
 
 imaging_table:
