@@ -192,28 +192,28 @@ conditional_bool_criteria:
         operator: "startswith"
         value: ["DZ318"]
         date_col: Noteret_dato
-      # - condition: or
-      #   table: 
-      #     table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
-      #     table2: ${paths.input_dir_SDS}/nyfoedte.csv
-      #     left_on: CPRnummer
-      #     right_on: CPRnummer_Mor
-      #   match_on: CPRnummer
-      #   column: Graviditet
-      #   operator: "=="
-      #   value: "Ja"
-      #   date_col: Transferering_dato
-      # - condition: or
-      #   table: 
-      #     table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
-      #     table2: ${paths.input_dir_SDS}/mfr.csv
-      #     left_on: CPRnummer
-      #     right_on: CPR_MODER
-      #   match_on: CPRnummer
-      #   column: Graviditet
-      #   operator: "=="
-      #   value: "Ja"
-      #   date_col: Transferering_dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: CPRnummer
+          right_on: CPRnummer_Mor
+        match_on: CPRnummer
+        column: Graviditet
+        operator: "=="
+        value: "Ja"
+        date_col: Transferering_dato
+      - condition: or
+        table: 
+          table1: ${paths.input_dir_SDS}/ivf_behandlingsforloeb.csv
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: CPRnummer
+          right_on: CPR_MODER
+        match_on: CPRnummer
+        column: Graviditet
+        operator: "=="
+        value: "Ja"
+        date_col: Transferering_dato
       - condition: or
         table:
           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
@@ -567,8 +567,8 @@ conditional_bool_criteria:
         operator: ">="
         value: 1
         date_col: "Kontakt dato"
-
-  - name: previous_late_miscarriage
+  
+  - name: previous_late_miscarriage_on_GA
     key_column: b_cpr
     match_on: m_cpr
     time_window: before_and_during_pregnancy_to_cutoff #before_pregnancy
@@ -585,17 +585,6 @@ conditional_bool_criteria:
         value: ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"]
         date_col: Dato
       - condition: or
-        table: 
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: MOR_CPR
-        column: Diagnosekode
-        operator: "in"
-        value: ["DZ351A"]
-        date_col: Noteret_dato
-      - condition: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_MODER
         column: GESTATIONSALDER_DAGE
@@ -609,6 +598,66 @@ conditional_bool_criteria:
         operator: "between"
         value: [84, 153]
         date_col: FoedselsDato_Barn
+
+  - name: previous_late_miscarriage_ON_DO_codes
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_and_during_pregnancy_to_cutoff #before_pregnancy
+    conditions:
+      - condition: 
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "startswith"
+        value: ["DO021", "DO03"]
+        date_col: Noteret_dato
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Mor
+        column: DiagnoseKode
+        operator: "startswith"
+        value: ["DO021", "DO03"]
+        date_col: StartDato_Kontakt
+      - condition: or
+        table:
+          table1: 
+            table1: ${paths.input_dir_SDS}/t_diag.csv
+            table2: ${paths.input_dir_SDS}/t_adm.csv
+            left_on: V_RECNUM
+            right_on: K_RECNUM
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: V_CPR
+          right_on: CPR_MODER
+        match_on: V_CPR
+        column: C_DIAG
+        operator: "startswith"
+        value: ["DO021", "DO03"]
+        date_col: D_UDDTO
+
+  - name: previous_late_miscarriage_ON_DZ_code
+    key_column: b_cpr
+    match_on: m_cpr
+    time_window: before_and_during_pregnancy_to_cutoff #before_pregnancy
+    conditions:
+      - condition: 
+        table: 
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: MOR_CPR
+        column: Diagnosekode
+        operator: "in"
+        value: ["DZ351A"]
+        date_col: Noteret_dato
       - condition: or
         table:
           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
@@ -2104,3 +2153,11 @@ composite_criteria:
         column: significant_blook_immune_disease
       - condition: or
         column: malignancy
+  - name: previous_late_miscarriage
+    conditions:
+      - condition: 
+        column: previous_late_miscarriage_ON_DO_codes
+      - condition: and
+        column: previous_late_miscarriage_on_GA
+      - condition: or
+        column: previous_late_miscarriage_ON_DZ_code
