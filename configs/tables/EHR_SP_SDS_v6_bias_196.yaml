@@ -686,6 +686,51 @@ conditional_bool_criteria:
         date_col: D_UDDTO
 
   # cervical conization
+  - name: cervical_conization_KLD00
+    key_column: b_cpr
+    match_on: b_cpr
+    time_window: before_and_during_pregnancy_to_cutoff
+    conditions:
+      - condition: 
+        table:
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: BABY_CPR
+        column: ProcedureCode
+        operator: "startswith"
+        value: ["KLDC00"]
+        date_col: ServiceDate
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Barn
+        column: ProcedureKode
+        operator: "startswith"
+        value: ["KLDC00"]
+        date_col: FoedselsDato_Barn
+      - condition: or
+        table:
+          table1: 
+            table1: ${paths.input_dir_SDS}/t_sksopr.csv
+            table2: ${paths.input_dir_SDS}/t_adm.csv
+            left_on: V_RECNUM
+            right_on: K_RECNUM
+          table2: ${paths.input_dir_SDS}/mfr.csv
+          left_on: V_CPR
+          right_on: CPR_MODER
+        match_on: CPR_BARN
+        column: C_OPR
+        operator: "startswith"
+        value: ["KLDC00"]
+        date_col: D_ODTO
+
+
+  # cervical conization
   - name: cervical_conization
     key_column: b_cpr
     match_on: b_cpr
