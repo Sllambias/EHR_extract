@@ -686,7 +686,7 @@ conditional_bool_criteria:
         date_col: D_UDDTO
 
   # cervical conization
-  - name: cervical_conization_DZ928C
+  - name: cervical_conization
     key_column: b_cpr
     match_on: b_cpr
     time_window: before_and_during_pregnancy_to_cutoff
@@ -700,8 +700,19 @@ conditional_bool_criteria:
         match_on: BABY_CPR
         column: Diagnosekode
         operator: "in"
-        value: ["DZ928C"]
+        value: ["DZ928C", "DO344B"]
         date_col: Noteret_dato
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+          table2: ${paths.input_dir_SP}/Population.csv
+          left_on: [MOR_CPR]
+          right_on: [MOR_CPR]
+        match_on: BABY_CPR
+        column: ProcedureCode
+        operator: "startswith"
+        value: ["KLDC00", "KLDC03"]
+        date_col: ServiceDate
       - condition: or
         table:
           table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
@@ -711,7 +722,18 @@ conditional_bool_criteria:
         match_on: CPRnummer_Barn
         column: DiagnoseKode
         operator: "in"
-        value: ["DZ928C"]
+        value: ["DZ928C", "DO344B"]
+        date_col: FoedselsDato_Barn
+      - condition: or
+        table:
+          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Foedsel
+          right_on: DW_EK_Foedsel
+        match_on: CPRnummer_Barn
+        column: ProcedureKode
+        operator: "startswith"
+        value: ["KLDC00", "KLDC03"]
         date_col: FoedselsDato_Barn
       - condition: or
         table:
@@ -726,79 +748,8 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_DIAG
         operator: "in"
-        value: ["DZ928C"]
+        value: ["DZ928C", "DO344B"]
         date_col: D_UDDTO
-
-  - name: cervical_conization_DO344B
-    key_column: b_cpr
-    match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff
-    conditions:
-      - condition: 
-        table:
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: Diagnosekode
-        operator: "in"
-        value: ["DO344B"]
-        date_col: Noteret_dato
-      - condition: or
-        table:
-          table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
-          table2: ${paths.input_dir_SDS}/nyfoedte.csv
-          left_on: DW_EK_Foedsel
-          right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Barn
-        column: DiagnoseKode
-        operator: "in"
-        value: ["DO344B"]
-        date_col: FoedselsDato_Barn
-      - condition: or
-        table:
-          table1: 
-            table1: ${paths.input_dir_SDS}/t_diag.csv
-            table2: ${paths.input_dir_SDS}/t_adm.csv
-            left_on: V_RECNUM
-            right_on: K_RECNUM
-          table2: ${paths.input_dir_SDS}/mfr.csv
-          left_on: V_CPR
-          right_on: CPR_MODER
-        match_on: CPR_BARN
-        column: C_DIAG
-        operator: "in"
-        value: ["DO344B"]
-        date_col: D_UDDTO
-
-  - name: cervical_conization_KLDC00
-    key_column: b_cpr
-    match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff
-    conditions:
-      - condition: 
-        table:
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: ProcedureCode
-        operator: "startswith"
-        value: ["KLDC00"]
-        date_col: ServiceDate
-      - condition: or
-        table:
-          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
-          table2: ${paths.input_dir_SDS}/nyfoedte.csv
-          left_on: DW_EK_Foedsel
-          right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Barn
-        column: ProcedureKode
-        operator: "startswith"
-        value: ["KLDC00"]
-        date_col: FoedselsDato_Barn
       - condition: or
         table:
           table1: 
@@ -812,50 +763,7 @@ conditional_bool_criteria:
         match_on: CPR_BARN
         column: C_OPR
         operator: "startswith"
-        value: ["KLDC00"]
-        date_col: D_ODTO
-
-  - name: cervical_conization_KLDC03
-    key_column: b_cpr
-    match_on: b_cpr
-    time_window: before_and_during_pregnancy_to_cutoff
-    conditions:
-      - condition: 
-        table:
-          table1: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
-          table2: ${paths.input_dir_SP}/Population.csv
-          left_on: [MOR_CPR]
-          right_on: [MOR_CPR]
-        match_on: BABY_CPR
-        column: ProcedureCode
-        operator: "startswith"
-        value: ["KLDC03"]
-        date_col: ServiceDate
-      - condition: or
-        table:
-          table1: ${paths.input_dir_SDS}/mor_procedurer.csv
-          table2: ${paths.input_dir_SDS}/nyfoedte.csv
-          left_on: DW_EK_Foedsel
-          right_on: DW_EK_Foedsel
-        match_on: CPRnummer_Barn
-        column: ProcedureKode
-        operator: "startswith"
-        value: ["KLDC03"]
-        date_col: FoedselsDato_Barn
-      - condition: or
-        table:
-          table1: 
-            table1: ${paths.input_dir_SDS}/t_sksopr.csv
-            table2: ${paths.input_dir_SDS}/t_adm.csv
-            left_on: V_RECNUM
-            right_on: K_RECNUM
-          table2: ${paths.input_dir_SDS}/mfr.csv
-          left_on: V_CPR
-          right_on: CPR_MODER
-        match_on: CPR_BARN
-        column: C_OPR
-        operator: "startswith"
-        value: ["KLDC03"]
+        value: ["KLDC00", "KLDC03"]
         date_col: D_ODTO
 
 
@@ -2216,7 +2124,72 @@ custom_extract_criteria:
             - column: ANALYSISCODE
               operator: "startswith"
               value: ["NPU21725", "NPU27780", "NPU22157"]
-  
+  - name: previous_late_miscarriage_ON_DO_codes_and_GA
+    time_window: before_and_during_pregnancy_to_cutoff
+    function: events_within_window
+    args:
+      left_on: m_cpr
+      key_column: b_cpr
+      new_col_name: previous_late_miscarriage_ON_DO_codes_and_GA
+      window_days: 30
+      anchor:
+        - table:
+            table1: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+            table2: ${paths.input_dir_SP}/Population.csv
+            left_on: [MOR_CPR]
+            right_on: [MOR_CPR]
+          match_on: MOR_CPR
+          column: Gestationsalder
+          operator: "startswith"
+          value: ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"]
+          date_col: Dato
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          match_on: CPR_MODER
+          column: GESTATIONSALDER_DAGE
+          operator: "between"
+          value: [84, 153]
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          match_on: CPRnummer_Mor
+          column: Gestationsalder
+          operator: "between"
+          value: [84, 153]
+          date_col: FoedselsDato_Barn
+      events:
+        - table:
+            table1: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+            table2: ${paths.input_dir_SP}/Population.csv
+            left_on: [MOR_CPR]
+            right_on: [MOR_CPR]
+          match_on: MOR_CPR
+          column: Diagnosekode
+          operator: "startswith"
+          value: ["DO021", "DO03"]
+          date_col: Noteret_dato
+        - table:
+            table1: ${paths.input_dir_SDS}/mor_diagnoser.csv
+            table2: ${paths.input_dir_SDS}/nyfoedte.csv
+            left_on: DW_EK_Foedsel
+            right_on: DW_EK_Foedsel
+          match_on: CPRnummer_Mor
+          column: DiagnoseKode
+          operator: "startswith"
+          value: ["DO021", "DO03"]
+          date_col: StartDato_Kontakt
+        - table:
+            table1:
+              table1: ${paths.input_dir_SDS}/t_diag.csv
+              table2: ${paths.input_dir_SDS}/t_adm.csv
+              left_on: V_RECNUM
+              right_on: K_RECNUM
+            table2: ${paths.input_dir_SDS}/mfr.csv
+            left_on: V_CPR
+            right_on: CPR_MODER
+          match_on: V_CPR
+          column: C_DIAG
+          operator: "startswith"
+          value: ["DO021", "DO03"]
+          date_col: D_UDDTO
 
 composite_criteria:
   - name: maternal_comobidity
@@ -2248,19 +2221,6 @@ composite_criteria:
   - name: previous_late_miscarriage
     conditions:
       - condition: 
-        column: previous_late_miscarriage_ON_DO_codes
-      - condition: and
-        column: previous_late_miscarriage_on_GA
+        column: previous_late_miscarriage_ON_DO_codes_and_GA
       - condition: or
         column: previous_late_miscarriage_ON_DZ_code
-
-  - name: cervical_conization
-    conditions:
-      - condition:
-        column: cervical_conization_DZ928C
-      - condition: or
-        column: cervical_conization_DO344B
-      - condition: or
-        column: cervical_conization_KLDC00
-      - condition: or
-        column: cervical_conization_KLDC03

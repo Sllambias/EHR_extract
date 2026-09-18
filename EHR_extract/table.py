@@ -13,7 +13,8 @@ from EHR_extract.custom_find_functions import (
     find_maternal_age,
     extract_filtered_values,
     extract_latest_value,
-    extract_filtered_conditional_values
+    extract_filtered_conditional_values,
+    events_within_window,
 )
 from EHR_extract.paths import get_config_path
 from EHR_extract.summary import get_summary
@@ -42,6 +43,7 @@ custom_functions = {
     "extract_filtered_values": extract_filtered_values,
     "extract_latest_value": extract_latest_value,
     "extract_filtered_conditional_values": extract_filtered_conditional_values,
+    "events_within_window": events_within_window,
 }
 
 BOOL_ALLOW_DUPLICATE_BABY_ID = True

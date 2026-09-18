@@ -672,3 +672,70 @@ def extract_latest_value(
                 fb_col
             )
     return main_table
+
+
+def collect_event_dates(main_table, conditions, left_on, min_date, max_date, date_alias):
+    """Load/filter condition tables and return (left_on, date_alias) event rows."""
+    chunks = []
+    for condition in conditions:
+        table = load_table(condition.table, strict=False)
+        py_operator = get_python_operator(condition.operator)
+        table = table.filter(py_operator(pl.col(condition.column), condition.value))
+        right_on = condition.match_on
+        select_cols = [right_on, condition.date_col]
+        if condition.column not in select_cols:
+            select_cols.append(condition.column)
+        tmp_table = main_table.join(
+            table.select(select_cols),
+            left_on=left_on,
+            right_on=right_on,
+            how="inner",
+        )
+        event_d = convert_to_date(condition.date_col)
+        lo = date_bound_expr(**min_date) if min_date is not None else None
+        if lo is not None:
+            tmp_table = tmp_table.filter(event_d >= lo)
+        hi = date_bound_expr(**max_date) if max_date is not None else None
+        if hi is not None:
+            tmp_table = tmp_table.filter(event_d <= hi)
+        chunk = tmp_table.select([pl.col(left_on), event_d.alias(date_alias)]).drop_nulls(subset=[date_alias])
+        if chunk.height > 0:
+            chunks.append(chunk)
+    if not chunks:
+        return pl.DataFrame(schema={left_on: main_table.schema[left_on], date_alias: pl.Date})
+    return pl.concat(chunks, how="diagonal_relaxed")
+
+
+def events_within_window(
+    main_table,
+    left_on,
+    key_column,
+    new_col_name,
+    anchor,
+    events,
+    min_date=None,
+    max_date=None,
+    window_days=30,
+    allow_duplicates=False,
+):
+    """Flag rows where an anchor event and an events event occur within ±window_days."""
+    anchor_dates = collect_event_dates(
+        main_table, anchor, left_on, min_date, max_date, "anchor_date"
+    )
+    event_dates = collect_event_dates(
+        main_table, events, left_on, min_date, max_date, "event_date"
+    )
+    if anchor_dates.height == 0 or event_dates.height == 0:
+        return main_table.with_columns(pl.lit(False).alias(new_col_name))
+
+    paired = anchor_dates.join(event_dates, on=left_on, how="inner")
+    paired = paired.filter(
+        (pl.col("event_date") - pl.col("anchor_date")).dt.total_days().abs() <= int(window_days)
+    )
+    matching_ids = set(paired[left_on].unique().to_list())
+    matching_keys = set(
+        main_table.filter(pl.col(left_on).is_in(list(matching_ids)))[key_column].to_list()
+    )
+    return main_table.with_columns(
+        pl.col(key_column).is_in(list(matching_keys)).alias(new_col_name)
+    )
