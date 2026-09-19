@@ -107,13 +107,21 @@ time_conditionals:
 
 extract_criteria:
   ### Maternal characteristics
-  - name: ethnicity
+  - name: ethnicity_SP
     key_column: m_cpr
     sources:
       - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
         match_on: MOR_CPR
         column: Etnicitet
         date_col: "Dato for seneste opdatering"
+    dtype: string
+  - name: ethnicity_SDS
+    key_column: m_cpr
+    sources:
+      - table: ${paths.input_dir_SDS}/indvandrer_efterkommer.csv
+        match_on: V_PNR
+        column: oprindelses_land_tekst
+        date_col: gen # just to make it work
     dtype: string
   - name: maternal_BMI
     key_column: b_cpr
@@ -1263,7 +1271,7 @@ conditional_bool_criteria:
 
 
   # maternal comorbidity 
-  - name: pre_existing_diabetes
+  - name: maternal_comorbidity_pre_existing_diabetes
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1309,7 +1317,7 @@ conditional_bool_criteria:
                 "DO243"]
         date_col: D_UDDTO
 
-  - name: chronic_hypertension
+  - name: maternal_comorbidity_chronic_hypertension
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1352,7 +1360,7 @@ conditional_bool_criteria:
         value: ["DI10", "DI11", "DI12", "DI13", "DI15", "DO10", "DO11"]
         date_col: D_UDDTO
   
-  - name: cardiac_disease
+  - name: maternal_comorbidity_cardiac_disease
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1404,7 +1412,7 @@ conditional_bool_criteria:
                 "DQ25", "DQ26"]
         date_col: D_UDDTO
   
-  - name: chronic_respiratory
+  - name: maternal_comorbidity_chronic_respiratory
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1447,7 +1455,7 @@ conditional_bool_criteria:
         value: ["DO995A", "DJ41", "DJ42", "DJ43", "DJ44", "DJ45", "DJ46", "DJ47"]
         date_col: D_UDDTO
   
-  - name: chronic_renal
+  - name: maternal_comorbidity_chronic_renal
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1490,7 +1498,7 @@ conditional_bool_criteria:
         value: ["DN18"]
         date_col: D_UDDTO
   
-  - name: autuimmune
+  - name: maternal_comorbidity_autuimmune
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1539,7 +1547,7 @@ conditional_bool_criteria:
                 "DM461", "DM468", "DM469"]
         date_col: D_UDDTO
   
-  - name: chronic_gastrointestinal
+  - name: maternal_comorbidity_chronic_gastrointestinal
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1588,7 +1596,7 @@ conditional_bool_criteria:
                 "DO996B"]
         date_col: D_UDDTO
   
-  - name: thyroid
+  - name: maternal_comorbidity_thyroid
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1631,7 +1639,7 @@ conditional_bool_criteria:
         value: ["DE0", "DE890", "DO992B", "DO992C"]
         date_col: D_UDDTO
   
-  - name: neurological
+  - name: maternal_comorbidity_neurological
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1674,7 +1682,7 @@ conditional_bool_criteria:
         value: ["DG35", "DG40", "DG70", "DG71", "DG72", "DG73", "DO993A1", "DO993A3"]
         date_col: D_UDDTO
   
-  - name: psychiatric
+  - name: maternal_comorbidity_psychiatric
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1717,7 +1725,7 @@ conditional_bool_criteria:
         value: ["DF2", "DF3", "DO993B1", "DO993B2"]
         date_col: D_UDDTO
 
-  - name: significant_blook_immune_disease
+  - name: maternal_comorbidity_significant_blook_immune_disease
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -1815,7 +1823,7 @@ conditional_bool_criteria:
                 "DD898B", "DD899A"]
         date_col: D_UDDTO
   
-  - name: malignancy
+  - name: maternal_comorbidity_malignancy
     key_column: b_cpr
     match_on: b_cpr
     time_window: five_years_prior_to_pregnancy_to_cutoff #during_pregnancy
@@ -2127,32 +2135,32 @@ custom_extract_criteria:
               value: ["NPU21725", "NPU27780", "NPU22157"]
 
 composite_criteria:
-  - name: maternal_comobidity
+  - name: maternal_comorbidity
     conditions:
       - condition: or 
-        column: pre_existing_diabetes
+        column: maternal_comorbidity_pre_existing_diabetes
       - condition: or
-        column: chronic_hypertension
+        column: maternal_comorbidity_chronic_hypertension
       - condition: or
-        column: cardiac_disease
+        column: maternal_comorbidity_cardiac_disease
       - condition: or
-        column: chronic_respiratory
+        column: maternal_comorbidity_chronic_respiratory
       - condition: or
-        column: chronic_renal
+        column: maternal_comorbidity_chronic_renal
       - condition: or
-        column: autuimmune
+        column: maternal_comorbidity_autuimmune
       - condition: or
-        column: chronic_gastrointestinal
+        column: maternal_comorbidity_chronic_gastrointestinal
       - condition: or
-        column: thyroid
+        column: maternal_comorbidity_thyroid
       - condition: or
-        column: neurological
+        column: maternal_comorbidity_neurological
       - condition: or
-        column: psychiatric
+        column: maternal_comorbidity_psychiatric
       - condition: or
-        column: significant_blook_immune_disease
+        column: maternal_comorbidity_significant_blook_immune_disease
       - condition: or
-        column: malignancy
+        column: maternal_comorbidity_malignancy
   - name: previous_late_miscarriage
     conditions:
       - condition: 
