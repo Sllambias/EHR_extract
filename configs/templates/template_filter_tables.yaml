@@ -1,0 +1,23 @@
+# @package _global_
+# Minimal filter_tables_on_hashes.py config: subset raw tables to a population's IDs.
+#   python EHR_extract/filter_tables_on_hashes.py --config-name template_filter_tables
+# Writes one CSV per input table, named after the input. See docs/filter_tables.md
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_filtered/${hydra:job.config_name}
+  # Any CSV with an ID column, e.g. the _train.csv written by extract.py.
+  population_table: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/template_population/template_population_population_train_and_test.csv
+
+population_id_column: CPR_MOR  # the ID column in population_table
+max_ids: 30                    # sample this many IDs (seed 4215); null = all
+
+# Only `table` and `id_col` are read. Every column of the input is written out.
+tables:
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+    id_col: MOR_CPR
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+    id_col: MOR_CPR

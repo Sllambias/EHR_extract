@@ -1,0 +1,30 @@
+# @package _global_
+# Minimal split_tables_on_hashes.py config: one .xlsx per patient for chart review.
+#   python EHR_extract/split_tables_on_hashes.py --config-name template_split_tables
+# Writes <patient_id>.xlsx with one worksheet per table. See docs/filter_tables.md
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SP: ${oc.env:EHR_EXTRACT_DATA}/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_split/${hydra:job.config_name}
+  population_table: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/template_population/template_population_population_train_and_test.csv
+
+population_id_column: CPR_MOR
+max_ids: 30  # currently has no effect, see README "Known limitations"
+
+# Unlike filter_tables_on_hashes.py, this script does read `time_col` and `columns`.
+tables:
+  # columns omitted (null) = keep every column
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+    id_col: MOR_CPR
+    time_col: Noteret_dato  # rows are sorted by this, newest first
+    columns:
+  # columns listed = keep only these, plus id_col and time_col
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+    id_col: MOR_CPR
+    time_col: ServiceDatetime
+    columns:
+      - ProcedureCode
+      - ProcedureName

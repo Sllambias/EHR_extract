@@ -1,0 +1,48 @@
+# @package _global_
+# Minimal extract.py config: build a population and apply one criterion.
+#   python EHR_extract/extract.py --config-name template_population
+# See docs/extract.md
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  # Set to a test_split_*.csv to also write _train.csv / _test.csv. null = only _train_and_test.csv.
+  holdout_csv: null
+
+strict: True  # False sets ignore_errors=True on the CSV reader
+
+population:
+  population_key: CPR_BARN     # one row per child
+  split_key: CPR_MOR           # only read when holdout_csv is set
+  deduplication_key: CPR_BARN  # one row per key; null = no dedup. See README "Known limitations".
+  # Each table is reduced to `columns` (NEW_NAME: OLD_NAME), then stacked on the others.
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
+
+# Applied in order. Each criterion keeps (include) or drops (exclude) the IDs it matches.
+conditional_criteria:
+  # Keep births between 154 and 258 days of gestation.
+  - action: include
+    conditions:
+      - standard:            # `standard: null` = first condition of the group
+        table: population    # "population" = the table built above; otherwise a path
+        match_on: CPR_BARN
+        column: GA
+        operator: between    # inclusive; casts the column to float
+        value: [154, 258]

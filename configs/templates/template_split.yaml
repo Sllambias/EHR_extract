@@ -1,0 +1,25 @@
+# @package _global_
+# Minimal split.py config: a fresh random train/test holdout.
+#   python EHR_extract/split.py --config-name template_split
+# Writes train_split_0.05_<date>.csv and test_split_0.05_<date>.csv. See docs/split.md
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SDS: ${oc.env:EHR_EXTRACT_DATA}/SDS/registers_pseudonymized
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/splits/${hydra:job.config_name}
+
+population:
+  population_key: CPR_MOR  # split on the mother, so siblings never straddle the split
+  # Every source is reduced to the population_key and stacked; the union is the split population.
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_MOR: CPR_MODER
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_MOR: CPRnummer_Mor
+
+holdout_frac: 0.05
+seed: 42
