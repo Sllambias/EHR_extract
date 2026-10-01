@@ -216,16 +216,17 @@ def filter_numeric_rows(table, column):
 
 def update_population(population, key, subset, action):
     pre_discard_population = len(population)
-    population_set = set(population[key])
+    keys = population.get_column(key).rechunk()
     if action == "exclude":
         discards = subset
-        population_set.difference_update(subset)
+        population = population.filter(~keys.is_in(subset))
     elif action == "include":
-        discards = population_set.difference(subset)
-        population_set = population_set.intersection(subset)
+        # nulls_equal: a null key counts as discarded unless the subset holds None, as with set.difference
+        in_subset = keys.is_in(subset, nulls_equal=True)
+        discards = set(keys.filter(~in_subset).unique())
+        population = population.filter(in_subset & keys.is_not_null())
     else:
         raise NotImplementedError(f"unexpected action: {action}")
-    population = population.filter(pl.col(key).rechunk().is_in(population_set))
     return population, discards, len(discards), pre_discard_population
 
 
