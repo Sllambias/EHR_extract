@@ -16,7 +16,7 @@ paths:
   discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
 
 strict: True
-# Required key. True is the only value that currently runs; see README "Known limitations".
+# Optional; defaults to False, which raises if the key column has duplicate entries.
 allow_duplicates: True
 
 summary_table:

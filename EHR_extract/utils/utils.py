@@ -157,7 +157,7 @@ def update_population(population, key, subset, action):
 def deduplicate_on_key(population, population_key):
     missing_count = pl.concat_list([pl.col(column).is_null().cast(pl.UInt32) for column in population.columns]).list.sum()
     population = population.with_columns(_missing_count=missing_count)
-    population = population.sort([population_key, "_missing_count"], descending=[False, True])
+    population = population.sort([population_key, "_missing_count"], descending=[False, False])
     population = population.unique(subset=[population_key], keep="first").drop("_missing_count")
     return population
 

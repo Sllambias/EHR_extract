@@ -10,8 +10,9 @@ criterion, each drawn from source tables within a named time window.
 Template: [`configs/templates/template_table.yaml`](../configs/templates/template_table.yaml).
 Production configs: [`configs/tables_merged/`](../configs/tables_merged/).
 
-> `allow_duplicates: True` is required at the top level. See the README's Known limitations — no
-> `configs/tables_merged/*` config sets it, and `False` currently raises.
+`allow_duplicates` is optional at the top level and defaults to `False`, which raises a
+`ValueError` if the population key column ends up with duplicate entries. No
+`configs/tables_merged/*` config sets it, so they all run under that check.
 
 ## Order of operations
 

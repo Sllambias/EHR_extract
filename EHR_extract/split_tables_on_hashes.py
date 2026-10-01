@@ -19,10 +19,14 @@ def sheet_name(table_name):
 
 def collect_hash_matches(cfg, population):
     """Collect configured columns for rows matching hashes from hashes.csv."""
-    patients = population[cfg["population_id_column"]].str.strip_chars().drop_nulls().to_list()
+    # maintain_order keeps the seeded sample below reproducible across runs.
+    patients = population[cfg["population_id_column"]].str.strip_chars().drop_nulls().unique(maintain_order=True)
 
-    if cfg.max_ids is not None:
-        population = population.sample(n=cfg.max_ids, shuffle=True, seed=4215)
+    max_ids = cfg.get("max_ids", None)
+    if max_ids is not None:
+        patients = patients.sample(n=min(max_ids, patients.len()), shuffle=True, seed=4215)
+
+    patients = patients.to_list()
 
     output_dir = Path(cfg.paths.output_dir)
 

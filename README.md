@@ -101,33 +101,21 @@ input paths at local fixtures).
 
 ## Known limitations
 
-Found while writing these docs; none are fixed here.
+Found while writing these docs. Four more have since been fixed; these remain.
 
-1. **`table.py` cannot run any `configs/tables_merged/*` config.** It reads `cfg.allow_duplicates`
-   by attribute ([table.py:224](EHR_extract/table.py#L224)) and none of those nine configs define it.
-   With `allow_duplicates: False` it also calls `check_duplicates()` with a kwarg that function does
-   not accept ([table.py:73](EHR_extract/table.py#L73) vs
-   [utils.py:9](EHR_extract/utils/utils.py#L9)). Only `allow_duplicates: True` runs.
-2. **`deduplicate_on_key` keeps the least complete row.** It counts nulls per row, then sorts
-   `descending=[False, True]` and takes the first, so the row with the **most** nulls wins
-   ([utils.py:157-162](EHR_extract/utils/utils.py#L157-L162)). Computing a null count only makes
-   sense as a completeness tiebreak, so the intent was presumably the opposite; the fix is
-   `descending=[False, False]`. Affects every config that sets `population.deduplication_key`.
-3. **`summary.py`'s CLI is unusable as shipped.** `summary_from_cfg` requires a `base_population`
+1. **`summary.py`'s CLI is unusable as shipped.** `summary_from_cfg` requires a `base_population`
    block ([summary.py:36](EHR_extract/summary.py#L36)) that no config in the repo defines. Its
    working role is supplying `get_summary()` to `table.py`.
-4. **`filter_tables_on_hashes.py` ignores `time_col` and `columns`** and writes every column of each
-   table ([filter_tables_on_hashes.py:23-28](EHR_extract/filter_tables_on_hashes.py#L23-L28)).
-5. **`split_tables_on_hashes.py`'s `max_ids` has no effect** — the sample is drawn after the patient
-   list is built ([split_tables_on_hashes.py:22-25](EHR_extract/split_tables_on_hashes.py#L22-L25)).
-6. **`custom_split_fn: kfold` writes its fold CSVs, then crashes.** `kfold` has no `return`, so
+2. **`filter_tables_on_hashes.py` ignores `time_col` and `columns`** and writes every column of each
+   table ([filter_tables_on_hashes.py:24-29](EHR_extract/filter_tables_on_hashes.py#L24-L29)).
+3. **`custom_split_fn: kfold` writes its fold CSVs, then crashes.** `kfold` has no `return`, so
    unpacking its result at [split.py:100](EHR_extract/split.py#L100) raises on `None`. The files are
    already on disk by then.
-7. **`utils/custom_split_functions.py:13` imports `from extract import ...`** rather than
-   `from EHR_extract.extract import ...`; it only resolves because running a script by path puts
-   `EHR_extract/` on `sys.path`.
-8. **`configs/testing/test_SL_ehr_table.yaml` inherits `SL_EHR_noMP_img_V5@`, which does not exist.**
-9. Many configs hardcode machine-specific absolute paths (`/Users/zcr545/...`,
+4. **`configs/testing/test_SL_ehr_table.yaml` inherits `SL_EHR_noMP_img_V5@`, which does not exist.**
+5. **`configs/tables_merged/EHR_SP.yaml` is not valid YAML.** The `table:` block under the second
+   `conditional_bool_criteria` condition is indented one level too deep, so the file fails to parse
+   (`line 1233, column 16`). The other eight `configs/tables_merged/*` configs compose cleanly.
+6. Many configs hardcode machine-specific absolute paths (`/Users/zcr545/...`,
    `/projects/users/data/UCPH/...`, `/storage/archive/...`).
 
 ## License

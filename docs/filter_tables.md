@@ -45,7 +45,7 @@ making the run directory that `configs/default.yaml` points there.
 | `table`, `id_col` | yes | yes |
 | `time_col` | **ignored** | sorts rows, newest first |
 | `columns` | **ignored** | selects columns (plus `id_col` and `time_col`) |
-| `max_ids` | yes | **no effect** (see README Known limitations) |
+| `max_ids` | yes (samples rows) | yes (samples distinct IDs) |
 
 `filter_tables_on_hashes.py` writes every column of each table regardless of what `columns` says.
 The template omits both fields to avoid implying otherwise.
@@ -70,5 +70,5 @@ sources whose names collide after truncation will collide as sheet names.
 
 Use it for manual chart review — one file per patient, their whole record in tabs.
 
-Note this writes one file per patient in the population, and `max_ids` does not currently limit that.
-Point `population_table` at a small CSV when testing.
+Note this writes one file per distinct patient in the population. Set `max_ids` to cap that — it
+samples that many IDs with seed 4215, and is capped at the number available.

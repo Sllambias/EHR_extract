@@ -12,7 +12,7 @@ paths:
   population_table: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/template_population/template_population_population_train_and_test.csv
 
 population_id_column: CPR_MOR
-max_ids: 30  # currently has no effect, see README "Known limitations"
+max_ids: 30  # export this many patients (seed 4215); null = all
 
 # Unlike filter_tables_on_hashes.py, this script does read `time_col` and `columns`.
 tables:

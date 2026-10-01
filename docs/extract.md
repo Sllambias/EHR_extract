@@ -89,11 +89,9 @@ Both blocks may be used together; `tables` is stacked first.
 
 ### `deduplication_key`
 
-Collapses stacked sources to one row per key.
+Collapses stacked sources to one row per key, keeping the row with the **fewest** nulls
+([utils.py:157-162](../EHR_extract/utils/utils.py#L157-L162)).
 
-> Be careful here: it keeps the row with the **most** nulls, not the fewest. The intent was evidently
-> the opposite — see the README's Known limitations before relying on this
-> ([utils.py:157-162](../EHR_extract/utils/utils.py#L157-L162)).
 
 ## conditional_criteria
 

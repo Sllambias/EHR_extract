@@ -18,8 +18,9 @@ Plugins.instance().register(RecursiveSearchpathPlugin)
 )
 def main(cfg: DictConfig) -> None:
     population = load_table(cfg.paths.population_table)
-    if cfg.max_ids is not None:
-        population = population.sample(n=cfg.max_ids, shuffle=True, seed=4215)
+    max_ids = cfg.get("max_ids", None)
+    if max_ids is not None:
+        population = population.sample(n=min(max_ids, population.height), shuffle=True, seed=4215)
     for table_cfg in cfg.tables:
         table = load_table(table_cfg.table)
         table = table.join(population, left_on=table_cfg.id_col, right_on=cfg.population_id_column)
