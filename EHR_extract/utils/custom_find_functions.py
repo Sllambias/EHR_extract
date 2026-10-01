@@ -8,6 +8,7 @@ from EHR_extract.utils.utils import (
     filter_numeric_rows,
     get_python_operator,
     load_table,
+    select_present,
     take_latest_row,
 )
 
@@ -491,13 +492,14 @@ def extract_filtered_values_from_source(
 ):
     date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
     filter_cols = [f.column for f in filters or []]
-    table = load_table(table, strict=False, columns=[left_on, right_on, target_col, date_col, *date_cols, *filter_cols])
+    used = [left_on, right_on, target_col, date_col, *date_cols, *filter_cols]
+    table = load_table(table, strict=False, columns=used)
 
     for filter in filters or []:
         py_operator = get_python_operator(filter.operator)
         table = table.filter(py_operator(pl.col(filter.column), filter.value))
 
-    tmp_table = main_table.join(
+    tmp_table = select_present(main_table, used).join(
         table,
         left_on=left_on,
         right_on=right_on,
@@ -679,9 +681,10 @@ def extract_latest_value_from_source(
     dtype,
 ):
     date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
-    table = load_table(table, strict=False, columns=[left_on, right_on, target_col, date_col, *date_cols])
+    used = [left_on, right_on, target_col, date_col, *date_cols]
+    table = load_table(table, strict=False, columns=used)
 
-    tmp_table = main_table.join(
+    tmp_table = select_present(main_table, used).join(
         table,
         left_on=left_on,
         right_on=right_on,

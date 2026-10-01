@@ -25,6 +25,7 @@ from EHR_extract.utils.utils import (
     get_python_operator,
     load_table,
     safe_save_df,
+    select_present,
     take_latest_row,
 )
 from hydra.core.plugins import Plugins
@@ -124,8 +125,10 @@ def get_extract_criteria(cfg, main_table):
             table = load_table(source.table, strict=cfg.strict, columns=[source.match_on, source.column, source.date_col])
             right_on = source.match_on
 
+            used = [left_on, right_on, source.column, source.date_col]
             tmp_table = (
-                main_table.join(
+                select_present(main_table, used)
+                .join(
                     table.select([right_on, source.column, source.date_col]),
                     left_on=left_on,
                     right_on=right_on,
@@ -186,7 +189,16 @@ def get_conditional_bool_criteria(cfg, main_table):
             py_operator = get_python_operator(condition.operator)
             table = table.filter(py_operator(pl.col(condition.column), condition.value))
             # Merge
-            tmp_table = main_table.join(
+            used = [
+                left_on,
+                key_col,
+                right_on,
+                condition.column,
+                condition.date_col,
+                min_date.get("date_col"),
+                max_date.get("date_col"),
+            ]
+            tmp_table = select_present(main_table, used).join(
                 table.select([right_on, condition.column, condition.date_col]),
                 left_on=left_on,
                 right_on=right_on,

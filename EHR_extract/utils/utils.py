@@ -95,6 +95,16 @@ def _column_names(columns):
     return names
 
 
+def select_present(table, columns):
+    """`table` narrowed to those of `columns` (names, lists of names, Nones) it has, in its own order.
+
+    For joining a wide frame on a few of its columns, which would otherwise copy all of them. Pass every
+    name used after the join: keeping a same-named column decides which side that name refers to.
+    """
+    keep = _column_names(columns)
+    return table.select([c for c in table.columns if c in keep])
+
+
 def load_table(
     table_cfg,
     strict=True,
