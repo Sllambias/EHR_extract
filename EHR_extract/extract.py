@@ -53,7 +53,7 @@ def handle_standard_condition(condition, population, population_key_column, popu
     if condition.table == "population":
         table = population.clone()
     else:
-        table = load_table(condition.table, strict=strict)
+        table = load_table(condition.table, strict=strict, columns=[condition.match_on, condition.get("column")])
     logging.debug(
         f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
             for table: {condition.table}"

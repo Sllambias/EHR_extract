@@ -1,9 +1,14 @@
 import json
 import os
 import polars as pl
+import re
 from EHR_extract.utils.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
+
+# `x_right` / `x_join0`: names that only exist after joining two tables that both have `x`.
+_JOIN_SUFFIX = re.compile(r"_(right|join\d+)$")
+_full_read_fails_cache = {}
 
 
 def check_duplicates(table, population_column):
@@ -19,13 +24,44 @@ def take_latest_row(table, key_column, date_col):
     return table
 
 
-def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None):
+def _full_read_fails(path, ignore_errors, n_rows, has_header, null_values):
+    """Whether reading every column of `path` raises, sending load_table_path to its retry.
+
+    A read of fewer columns can succeed where the full read fails, skipping the retry's 10M-row schema
+    inference, so a kept column could be typed from 100 rows instead and come out differently. A
+    projected read therefore uses whichever inference the full read ends up with. Found by parsing every
+    value once (streamed, so in bounded memory) and cached, since tables are reloaded many times per run.
+    """
+    key = (path, ignore_errors, n_rows, has_header, repr(null_values))
+    if key not in _full_read_fails_cache:
+        lazy = pl.scan_csv(path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values)
+        try:
+            lazy.select(pl.all().max()).collect(engine="streaming")
+            _full_read_fails_cache[key] = False
+        except pl.exceptions.ComputeError:
+            _full_read_fails_cache[key] = True
+    return _full_read_fails_cache[key]
+
+
+def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None, columns=None):
     if strict:
         ignore_errors = False
     else:
         ignore_errors = True
 
     if path.endswith(".csv"):
+        if columns is not None:
+            header = pl.scan_csv(path, has_header=has_header).collect_schema().names()
+            fails = _full_read_fails(path, ignore_errors, n_rows, has_header, null_values)
+            return pl.read_csv(
+                path,
+                columns=[c for c in header if c in columns] or None,
+                ignore_errors=ignore_errors,
+                infer_schema_length=10000000 if fails else 100,
+                n_rows=n_rows,
+                has_header=has_header,
+                null_values=null_values,
+            )
         try:
             return pl.read_csv(
                 path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values
@@ -48,14 +84,38 @@ def expr_startswith_any(col: pl.Expr, val) -> pl.Expr:
     return pl.any_horizontal([s.str.starts_with(p) for p in val])
 
 
+def _column_names(columns):
+    """A set of column names from names, lists of names (a `left_on` may be either) and Nones."""
+    names = set()
+    for c in columns:
+        if isinstance(c, str):
+            names.add(c)
+        elif c is not None:
+            names |= _column_names(c)
+    return names
+
+
 def load_table(
     table_cfg,
     strict=True,
     n_rows=None,
     has_header=True,
     null_values=None,
+    columns=None,
     _join_depth: int = 0,
 ):
+    """Load a CSV path, or a nested left-join spec of them.
+
+    columns: every column name the caller goes on to use (None = all). Only those, plus the spec's join
+    keys, are read from disk, which is what bounds memory. Names a table lacks are skipped, so callers
+    also list names meant for frames this table is joined with: a same-named column here shadows theirs
+    after the join, and must keep doing so. Columns come back in file order, not `columns` order.
+    """
+    if columns is not None:
+        columns = _column_names(columns)
+        if any(_JOIN_SUFFIX.search(c) for c in columns):
+            # Which `x` a suffixed name needs depends on the joins; read everything rather than work it out.
+            columns = None
     if isinstance(table_cfg, str):
         return load_table_path(
             table_cfg,
@@ -63,13 +123,19 @@ def load_table(
             n_rows=n_rows,
             has_header=has_header,
             null_values=null_values,
+            columns=columns,
         )
+    left_on = table_cfg["left_on"]
+    right_on = table_cfg["right_on"]
+    if columns is not None:
+        columns = columns | _column_names([left_on, right_on])
     table1 = load_table(
         table_cfg["table1"],
         strict=strict,
         n_rows=n_rows,
         has_header=has_header,
         null_values=null_values,
+        columns=columns,
         _join_depth=_join_depth + 1,
     )
     table2 = load_table(
@@ -78,10 +144,9 @@ def load_table(
         n_rows=n_rows,
         has_header=has_header,
         null_values=null_values,
+        columns=columns,
         _join_depth=_join_depth + 1,
     )
-    left_on = table_cfg["left_on"]
-    right_on = table_cfg["right_on"]
     # Use a unique suffix per nested join so `_right` from an inner join
     # does not collide when an outer join also has overlapping columns.
     suffix = f"_join{_join_depth}"
@@ -164,7 +229,7 @@ def deduplicate_on_key(population, population_key):
 
 def merge_population_tables(table_cfgs: list, population, strict=True):
     for table_cfg in table_cfgs:
-        tab = load_table(table_cfg.table, strict=strict)
+        tab = load_table(table_cfg.table, strict=strict, columns=list(table_cfg.columns.values()))
         tab = tab.select(list(table_cfg.columns.values()))
         tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
         tab = tab.select(sorted(tab.columns))
@@ -251,10 +316,11 @@ def safe_save_df(df: pl.DataFrame, fp) -> pl.DataFrame:
 
 def merge_composed_population_tables(population, population_merge_on, composed_table_cfgs: list, format_SP_GA=False):
     for composition_cfg in composed_table_cfgs:
-        tables = [load_table(table_cfg.table) for table_cfg in composition_cfg.tables]
         tables = [
-            tab.select(list(table_cfg.columns.values())).rename({v: k for k, v in table_cfg.columns.items()})
-            for tab, table_cfg in zip(tables, composition_cfg.tables)
+            load_table(table_cfg.table, columns=list(table_cfg.columns.values()))
+            .select(list(table_cfg.columns.values()))
+            .rename({v: k for k, v in table_cfg.columns.items()})
+            for table_cfg in composition_cfg.tables
         ]
         merged_table = tables[0]
         for tab in tables[1:]:

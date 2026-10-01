@@ -55,11 +55,25 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     Then matching the mom_CPR to child_CPR in Table C
     and finally filtering the child_CPR if the value_timestamps fall within their pregnancy
     """
-    value_table = load_table(value_table_path)
+    # Every column name used below, including population's: a same-named column in these tables
+    # shadows population's after the joins, and must keep doing so.
+    columns = [
+        value_column,
+        value_time_column,
+        value_id_column,
+        mapping_table_id_column,
+        mapping_table_mom_cpr_column,
+        population_mom_cpr_column,
+        population_child_cpr_column,
+        population_birth_column,
+        population_gestational_age_column,
+        population_key_column,
+    ]
+    value_table = load_table(value_table_path, columns=columns)
     py_operator = get_python_operator(operator[0])
     value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
-    mapping_table = load_table(mapping_table_path)
+    mapping_table = load_table(mapping_table_path, columns=columns)
     joined = value_table.join(
         mapping_table,
         left_on=value_id_column,
@@ -103,12 +117,21 @@ def match_value_with_child_cpr_on_birth_id(
     population,
     population_key_column,
 ):
-    value_table = load_table(value_table_path)
+    # Every column name used below, including population's: a same-named column in these tables
+    # shadows population's after the joins, and must keep doing so.
+    columns = [
+        value_column,
+        value_table_birth_id_column,
+        mapping_table_birth_id_column,
+        mapping_table_child_cpr_column,
+        population_key_column,
+    ]
+    value_table = load_table(value_table_path, columns=columns)
 
     py_operator = get_python_operator(operator[0])
     value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
-    mapping_table = load_table(mapping_table_path)
+    mapping_table = load_table(mapping_table_path, columns=columns)
     mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
 
     joined = value_table.join(
@@ -145,7 +168,19 @@ def match_value_with_child_cpr_on_birthdate(
     population_key_column,
     include_days_after_birth=0,
 ):
-    value_table = load_table(value_table_path)
+    # Every column name used below, including population's: a same-named column in this table
+    # shadows population's after the joins, and must keep doing so.
+    columns = [
+        value_column,
+        value_time_column,
+        value_mother_cpr_column,
+        population_mother_cpr_column,
+        population_child_cpr_column,
+        population_birth_column,
+        population_gestational_age_column,
+        population_key_column,
+    ]
+    value_table = load_table(value_table_path, columns=columns)
 
     # Filter based on operator and value
     py_operator = get_python_operator(operator[0])
@@ -183,7 +218,7 @@ def match_years_with_child_cpr_on_birthdate(
     population,
     population_key_column,
 ):
-    value_table = load_table(value_table_path)
+    value_table = load_table(value_table_path, columns=[value_time_column, value_child_cpr_column, population_key_column])
 
     start = pl.lit(date_start).str.to_date("%d%m%Y")
     end = pl.lit(date_end).str.to_date("%d%m%Y")
@@ -201,7 +236,7 @@ def match_images_with_child(
     Barn CPR periode fra  fødselsdato - GA i dage til fødselsdato og så er alle billeder fra mor i den periode tilskrevet
     barns CPR. Så kan tvillinger også få tildelt samme billeder.
     """
-    table = load_table(table_cfg.table, strict=False)
+    table = load_table(table_cfg.table, strict=False, columns=list(table_cfg.columns.values()))
     table = table.select(list(table_cfg.columns.values()))
     table = table.rename({v: k for k, v in table_cfg.columns.items()})
     table = table.join(population, left_on=mom_key, right_on=mom_key)
@@ -284,7 +319,7 @@ def find_images_with_predicted_classes(
     discard_stats = {"n_population_before_discard": len(population)}
 
     table_path = table
-    table = load_table(table)
+    table = load_table(table, columns=[class_column, image_path_column])
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
 
     matched_paths = table.filter(pl.col(class_column).is_in(classes))[image_path_column]
@@ -318,7 +353,7 @@ def find_close_births(
     population = set(population.get_column(population_key_column))
     py_operator = get_python_operator(operator)
     table_path = table
-    table = load_table(table)
+    table = load_table(table, columns=[match_on, mom_column, birth_id_column, delivery_date_column])
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
 
     table = table.with_columns(pl.col(delivery_date_column).str.to_date())
@@ -345,7 +380,7 @@ def find_close_births(
 def find_duplicated_ids(table, match_on, id_columns, population, population_key_column):
     population = set(population.get_column(population_key_column))
     table_path = table
-    table = load_table(table)
+    table = load_table(table, columns=[match_on, id_columns])
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
     duplicated_ids = table.filter(table[id_columns].is_duplicated())
     duplicated_ids = duplicated_ids.filter(pl.col(match_on).is_in(population))
@@ -413,7 +448,9 @@ def find_maternal_age(
     population_maternal_id_col: str = "m_cpr",
 ):
     base_cols = table.columns
-    m_table = load_table(m_table_path).select([maternal_id_col, maternal_birth_date_col])
+    m_table = load_table(m_table_path, columns=[maternal_id_col, maternal_birth_date_col]).select(
+        [maternal_id_col, maternal_birth_date_col]
+    )
     m_table = m_table.unique(subset=[maternal_id_col], keep="first")
 
     merged = table.join(m_table, left_on=population_maternal_id_col, right_on=maternal_id_col, how="left")
@@ -446,7 +483,9 @@ def extract_filtered_values_from_source(
     dtype,
     allow_duplicates=False,
 ):
-    table = load_table(table, strict=False)
+    date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
+    filter_cols = [f.column for f in filters or []]
+    table = load_table(table, strict=False, columns=[left_on, right_on, target_col, date_col, *date_cols, *filter_cols])
 
     for filter in filters or []:
         py_operator = get_python_operator(filter.operator)
@@ -633,7 +672,8 @@ def extract_latest_value_from_source(
     max_date,
     dtype,
 ):
-    table = load_table(table, strict=False)
+    date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
+    table = load_table(table, strict=False, columns=[left_on, right_on, target_col, date_col, *date_cols])
 
     tmp_table = main_table.join(
         table,

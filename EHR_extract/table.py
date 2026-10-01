@@ -57,15 +57,15 @@ def cast_types(table, dtype, column):
 
 def make_main_table(cfg, strict, allow_duplicates=False):
     all_discards = []
-    population = pl.read_csv(cfg.population)[cfg.population_column].unique().to_list()
+    population = pl.read_csv(cfg.population, columns=[cfg.population_column])[cfg.population_column].unique()
     print("Population size:", len(population))
 
     # Get the barebones main table
     main_table = pl.DataFrame()
     for table in cfg.get("tables", []):
-        table_df = load_table(table.table, strict=strict)
+        table_df = load_table(table.table, strict=strict, columns=[*table.columns.keys(), *cfg.key_columns])
         table_df = table_df.rename(table.columns)[cfg.key_columns]
-        table_df = table_df.filter(pl.col(cfg.population_column).is_in(population))
+        table_df = table_df.filter(pl.col(cfg.population_column).is_in(population.implode()))
         main_table = main_table.vstack(table_df)
     print("Main table size:", len(main_table))
 
@@ -121,7 +121,7 @@ def get_extract_criteria(cfg, main_table):
         for source in extract_criterion.sources:
             print("Extract criterion:", extract_criterion.name)
             print("\tTable:", source.table)
-            table = load_table(source.table, strict=cfg.strict)
+            table = load_table(source.table, strict=cfg.strict, columns=[source.match_on, source.column, source.date_col])
             right_on = source.match_on
 
             tmp_table = (
@@ -177,7 +177,9 @@ def get_conditional_bool_criteria(cfg, main_table):
         for condition in conditional_criterion.conditions:
             print("Extracting:", conditional_criterion.name)
             print("\tTable:", condition.table)
-            table = load_table(condition.table, strict=cfg.strict)
+            table = load_table(
+                condition.table, strict=cfg.strict, columns=[condition.match_on, condition.column, condition.date_col]
+            )
             right_on = condition.match_on
 
             # Filter on operator
