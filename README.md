@@ -57,7 +57,7 @@ it, and each run writes `<output_dir>/log/{config,hydra,overrides}.yaml` alongsi
 | [`filter_tables_on_hashes.py`](EHR_extract/filter_tables_on_hashes.py) | Subset raw tables to a population's IDs | [docs/filter_tables.md](docs/filter_tables.md) |
 | [`split_tables_on_hashes.py`](EHR_extract/split_tables_on_hashes.py) | One `.xlsx` per patient for chart review | [docs/filter_tables.md](docs/filter_tables.md) |
 | [`get_imgs_from_db.py`](EHR_extract/get_imgs_from_db.py) | Snapshot the ultrasound SQLite DB to `all_images_<date>.csv` | below |
-| [`summary.py`](EHR_extract/summary.py) | Per-column distributions | see Known limitations |
+| [`summary.py`](EHR_extract/summary.py) | Per-column distributions | [docs/known_limitations.md](docs/known_limitations.md) |
 
 The usual order:
 
@@ -69,6 +69,8 @@ get_imgs_from_db.py ──> images ──┘                                    
 ```
 
 Operators and the custom-function registry are listed in [docs/reference.md](docs/reference.md).
+Open bugs, and the behaviour changes from recently fixed ones, are in
+[docs/known_limitations.md](docs/known_limitations.md) — worth a look before trusting output.
 
 ## Templates
 
@@ -98,25 +100,6 @@ input paths at local fixtures).
 `physical_delta_x/y`, `region_location_{min_x0,min_y0,max_x1,max_y1}`.
 
 `phair_hash` is the join key to the mother — see [docs/extract.md](docs/extract.md#matching-images).
-
-## Known limitations
-
-Found while writing these docs. Four more have since been fixed; these remain.
-
-1. **`summary.py`'s CLI is unusable as shipped.** `summary_from_cfg` requires a `base_population`
-   block ([summary.py:36](EHR_extract/summary.py#L36)) that no config in the repo defines. Its
-   working role is supplying `get_summary()` to `table.py`.
-2. **`filter_tables_on_hashes.py` ignores `time_col` and `columns`** and writes every column of each
-   table ([filter_tables_on_hashes.py:24-29](EHR_extract/filter_tables_on_hashes.py#L24-L29)).
-3. **`custom_split_fn: kfold` writes its fold CSVs, then crashes.** `kfold` has no `return`, so
-   unpacking its result at [split.py:100](EHR_extract/split.py#L100) raises on `None`. The files are
-   already on disk by then.
-4. **`configs/testing/test_SL_ehr_table.yaml` inherits `SL_EHR_noMP_img_V5@`, which does not exist.**
-5. **`configs/tables_merged/EHR_SP.yaml` is not valid YAML.** The `table:` block under the second
-   `conditional_bool_criteria` condition is indented one level too deep, so the file fails to parse
-   (`line 1233, column 16`). The other eight `configs/tables_merged/*` configs compose cleanly.
-6. Many configs hardcode machine-specific absolute paths (`/Users/zcr545/...`,
-   `/projects/users/data/UCPH/...`, `/storage/archive/...`).
 
 ## License
 

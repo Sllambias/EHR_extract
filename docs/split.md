@@ -88,7 +88,8 @@ population:
 ```
 
 `kfold` writes `train_split_fold<i>_<date>.csv` / `test_split_fold<i>_<date>.csv` itself, then the
-run crashes — see the README's Known limitations. The fold files are complete before it does.
+run crashes — see [known_limitations.md](known_limitations.md). The fold files are complete before
+it does.
 
 `preterm_custom1` builds a criteria-driven split where test is the intersection of an imaging and an
 EHR criterion, rather than a random draw. Its config nests `conditional_criteria`, `imaging_table`
