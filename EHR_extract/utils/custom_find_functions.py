@@ -549,7 +549,7 @@ def extract_filtered_values(
                 fb_col
             )
         if not allow_duplicates:
-            main_table = check_duplicates(main_table, left_on, allow_duplicates=allow_duplicates)
+            main_table = check_duplicates(main_table, left_on)
     return main_table
 
 

@@ -1,0 +1,48 @@
+# @package _global_
+# extract.py with ultrasound images matched to each child.
+#   python EHR_extract/extract.py --config-name template_population_images
+# Output has one row per (child, image) instead of one row per child. See docs/extract.md
+defaults:
+  - /default
+  - template_population@   # reuse the population and criteria above
+  - _self_
+
+paths:
+  input_dir_img_db: ${oc.env:EHR_EXTRACT_DATA}/ultrasound/tables/database_snapshots
+  img_sequence_predictions: ${oc.env:EHR_EXTRACT_DATA}/ultrasound/tables/img_type.csv
+
+population:
+  # Not read by any Python code — it exists so the criteria below can interpolate it.
+  # extract.py hardcodes the column name FILE_PATH.
+  file_path_key: FILE_PATH
+
+# Joins images to the mother, then keeps only those with STUDY_DATE in [BIRTHDAY - GA, BIRTHDAY].
+# A twin pregnancy's images therefore appear once per child.
+imaging_table:
+  table: ${paths.input_dir_img_db}/all_images_2026-05-29.csv
+  columns:
+    CPR_MOR: phair_hash    # must match the population's mother-ID column
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+
+# Applied in order, after imaging_table. These filter images, not just IDs.
+imaging_matching_criteria:
+  # Keep scans taken at GA 112-168 days and at least 0 days before delivery.
+  - function: find_images_within_time_windows
+    args:
+      scan_date_column: STUDY_DATE
+      image_path_column: ${population.file_path_key}
+      population_delivery_date_column: BIRTHDAY
+      population_ga_in_days_at_delivery_column: GA
+      min_diff_days_scan_to_delivery: 0
+      max_diff_days_scan_to_delivery: 210
+      min_ga_in_days_at_scan: 112
+      max_ga_in_days_at_scan: 168
+  # Keep only images a classifier labelled as class 1.
+  - function: find_images_with_predicted_classes
+    args:
+      table: ${paths.img_sequence_predictions}
+      classes: [1]
+      image_path_column: file_path
+      class_column: is_cervix
+      population_image_path_column: ${population.file_path_key}

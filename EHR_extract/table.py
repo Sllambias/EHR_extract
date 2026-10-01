@@ -70,7 +70,7 @@ def make_main_table(cfg, strict, allow_duplicates=False):
     print("Main table size:", len(main_table))
 
     if not allow_duplicates:
-        main_table = check_duplicates(main_table, cfg.population_column, allow_duplicates=allow_duplicates)
+        main_table = check_duplicates(main_table, cfg.population_column)
 
     # Dropping nulls
     for key in cfg.key_columns:
@@ -145,7 +145,7 @@ def get_extract_criteria(cfg, main_table):
     return main_table
 
 
-def get_custom_extract_criteria(cfg, main_table):
+def get_custom_extract_criteria(cfg, main_table, allow_duplicates=False):
     for custom_extract_criterion in cfg.custom_extract_criteria:
         print("Custom extract criterion:", custom_extract_criterion.name)
         fn = custom_functions[custom_extract_criterion.function]
@@ -157,9 +157,9 @@ def get_custom_extract_criteria(cfg, main_table):
             main_table=main_table,
             min_date=min_date,
             max_date=max_date,
-            allow_duplicates=cfg.allow_duplicates,
+            allow_duplicates=allow_duplicates,
         )
-        if not cfg.allow_duplicates:
+        if not allow_duplicates:
             main_table = check_duplicates(main_table, custom_extract_criterion.args.left_on)
 
     return main_table
@@ -217,14 +217,15 @@ def get_conditional_bool_criteria(cfg, main_table):
 
 
 def table_from_cfg(cfg):
+    allow_duplicates = cfg.get("allow_duplicates", False)
     main_table, discards = make_main_table(
         cfg.base_table,
         strict=cfg.strict,
-        allow_duplicates=cfg.allow_duplicates,
+        allow_duplicates=allow_duplicates,
     )
     main_table = get_extract_criteria(cfg, main_table)
     main_table = get_conditional_bool_criteria(cfg, main_table)
-    main_table = get_custom_extract_criteria(cfg, main_table)
+    main_table = get_custom_extract_criteria(cfg, main_table, allow_duplicates=allow_duplicates)
 
     summary_cfg = cfg.get("summary_table")
     if summary_cfg is not None and summary_cfg.get("make_table", False):
