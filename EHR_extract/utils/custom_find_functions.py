@@ -56,8 +56,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
     Then matching the mom_CPR to child_CPR in Table C
     and finally filtering the child_CPR if the value_timestamps fall within their pregnancy
     """
-    # Every column name used below, including population's: a same-named column in these tables
-    # shadows population's after the joins, and must keep doing so.
+    # Includes population's columns: same-named columns in these tables take precedence in the joins.
     columns = [
         value_column,
         value_time_column,
@@ -118,8 +117,7 @@ def match_value_with_child_cpr_on_birth_id(
     population,
     population_key_column,
 ):
-    # Every column name used below, including population's: a same-named column in these tables
-    # shadows population's after the joins, and must keep doing so.
+    # Includes population's columns: same-named columns in these tables take precedence in the joins.
     columns = [
         value_column,
         value_table_birth_id_column,
@@ -173,8 +171,7 @@ def match_value_with_child_cpr_on_birthdate(
     population_key_column,
     include_days_after_birth=0,
 ):
-    # Every column name used below, including population's: a same-named column in this table
-    # shadows population's after the joins, and must keep doing so.
+    # Includes population's columns: same-named columns in this table take precedence in the join.
     columns = [
         value_column,
         value_time_column,
@@ -490,9 +487,8 @@ def extract_filtered_values_from_source(
     dtype,
     allow_duplicates=False,
 ):
-    date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
     filter_cols = [f.column for f in filters or []]
-    used = [left_on, right_on, target_col, date_col, *date_cols, *filter_cols]
+    used = [left_on, right_on, target_col, date_col, min_date.get("date_col"), max_date.get("date_col"), *filter_cols]
     table = load_table(table, strict=False, columns=used)
 
     for filter in filters or []:
@@ -680,8 +676,7 @@ def extract_latest_value_from_source(
     max_date,
     dtype,
 ):
-    date_cols = [(bound or {}).get("date_col") for bound in (min_date, max_date)]
-    used = [left_on, right_on, target_col, date_col, *date_cols]
+    used = [left_on, right_on, target_col, date_col, min_date.get("date_col"), max_date.get("date_col")]
     table = load_table(table, strict=False, columns=used)
 
     tmp_table = select_present(main_table, used).join(

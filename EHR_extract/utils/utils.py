@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 import polars as pl
@@ -5,10 +6,6 @@ import re
 from EHR_extract.utils.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
-
-# `x_right` / `x_join0`: names that only exist after joining two tables that both have `x`.
-_JOIN_SUFFIX = re.compile(r"_(right|join\d+)$")
-_full_read_fails_cache = {}
 
 
 def check_duplicates(table, population_column):
@@ -24,25 +21,6 @@ def take_latest_row(table, key_column, date_col):
     return table
 
 
-def _full_read_fails(path, ignore_errors, n_rows, has_header, null_values):
-    """Whether reading every column of `path` raises, sending load_table_path to its retry.
-
-    A read of fewer columns can succeed where the full read fails, skipping the retry's 10M-row schema
-    inference, so a kept column could be typed from 100 rows instead and come out differently. A
-    projected read therefore uses whichever inference the full read ends up with. Found by parsing every
-    value once (streamed, so in bounded memory) and cached, since tables are reloaded many times per run.
-    """
-    key = (path, ignore_errors, n_rows, has_header, repr(null_values))
-    if key not in _full_read_fails_cache:
-        lazy = pl.scan_csv(path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values)
-        try:
-            lazy.select(pl.all().max()).collect(engine="streaming")
-            _full_read_fails_cache[key] = False
-        except pl.exceptions.ComputeError:
-            _full_read_fails_cache[key] = True
-    return _full_read_fails_cache[key]
-
-
 def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None, columns=None):
     if strict:
         ignore_errors = False
@@ -52,12 +30,11 @@ def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values
     if path.endswith(".csv"):
         if columns is not None:
             header = pl.scan_csv(path, has_header=has_header).collect_schema().names()
-            fails = _full_read_fails(path, ignore_errors, n_rows, has_header, null_values)
             return pl.read_csv(
                 path,
                 columns=[c for c in header if c in columns] or None,
                 ignore_errors=ignore_errors,
-                infer_schema_length=10000000 if fails else 100,
+                infer_schema_length=10000000,
                 n_rows=n_rows,
                 has_header=has_header,
                 null_values=null_values,
@@ -84,24 +61,20 @@ def expr_startswith_any(col: pl.Expr, val) -> pl.Expr:
     return pl.any_horizontal([s.str.starts_with(p) for p in val])
 
 
-def _column_names(columns):
-    """A set of column names from names, lists of names (a `left_on` may be either) and Nones."""
+def column_names(columns):
+    """Flatten column names, lists of names and Nones into a set of names."""
     names = set()
     for c in columns:
         if isinstance(c, str):
             names.add(c)
         elif c is not None:
-            names |= _column_names(c)
+            names |= column_names(c)
     return names
 
 
 def select_present(table, columns):
-    """`table` narrowed to those of `columns` (names, lists of names, Nones) it has, in its own order.
-
-    For joining a wide frame on a few of its columns, which would otherwise copy all of them. Pass every
-    name used after the join: keeping a same-named column decides which side that name refers to.
-    """
-    keep = _column_names(columns)
+    """Select the columns of `table` that are in `columns`, keeping the table's column order."""
+    keep = column_names(columns)
     return table.select([c for c in table.columns if c in keep])
 
 
@@ -116,16 +89,10 @@ def load_table(
 ):
     """Load a CSV path, or a nested left-join spec of them.
 
-    columns: every column name the caller goes on to use (None = all). Only those, plus the spec's join
-    keys, are read from disk, which is what bounds memory. Names a table lacks are skipped, so callers
-    also list names meant for frames this table is joined with: a same-named column here shadows theirs
-    after the join, and must keep doing so. Columns come back in file order, not `columns` order.
+    columns: if given, only these columns and the join keys are read. Names a table lacks are ignored.
     """
     if columns is not None:
-        columns = _column_names(columns)
-        if any(_JOIN_SUFFIX.search(c) for c in columns):
-            # Which `x` a suffixed name needs depends on the joins; read everything rather than work it out.
-            columns = None
+        columns = column_names(columns)
     if isinstance(table_cfg, str):
         return load_table_path(
             table_cfg,
@@ -138,7 +105,7 @@ def load_table(
     left_on = table_cfg["left_on"]
     right_on = table_cfg["right_on"]
     if columns is not None:
-        columns = columns | _column_names([left_on, right_on])
+        columns = columns | column_names([left_on, right_on])
     table1 = load_table(
         table_cfg["table1"],
         strict=strict,
@@ -221,7 +188,7 @@ def update_population(population, key, subset, action):
         discards = subset
         population = population.filter(~keys.is_in(subset))
     elif action == "include":
-        # nulls_equal: a null key counts as discarded unless the subset holds None, as with set.difference
+        # nulls_equal: a null key is reported as discarded unless the subset contains None.
         in_subset = keys.is_in(subset, nulls_equal=True)
         discards = set(keys.filter(~in_subset).unique())
         population = population.filter(in_subset & keys.is_not_null())
