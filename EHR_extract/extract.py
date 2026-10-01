@@ -59,7 +59,7 @@ def handle_standard_condition(condition, population, population_key_column, popu
             for table: {condition.table}"
     )
 
-    table = table.filter(pl.col(condition.match_on).is_in(population[population_key]))
+    table = table.filter(pl.col(condition.match_on).rechunk().is_in(population[population_key].implode()))
     logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
         after filtering on {condition.match_on}"
@@ -159,8 +159,8 @@ def extract_from_cfg(cfg, population):
 def make_train_test_split(holdout_csv_path, population, split_key):
     holdout = load_table(holdout_csv_path)
     holdout = holdout.get_column(split_key).to_list()
-    train = population.filter(~pl.col(split_key).is_in(holdout))
-    test = population.filter(pl.col(split_key).is_in(holdout))
+    train = population.filter(~pl.col(split_key).rechunk().is_in(holdout))
+    test = population.filter(pl.col(split_key).rechunk().is_in(holdout))
     return train, test
 
 

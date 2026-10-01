@@ -65,7 +65,7 @@ def make_main_table(cfg, strict, allow_duplicates=False):
     for table in cfg.get("tables", []):
         table_df = load_table(table.table, strict=strict, columns=[*table.columns.keys(), *cfg.key_columns])
         table_df = table_df.rename(table.columns)[cfg.key_columns]
-        table_df = table_df.filter(pl.col(cfg.population_column).is_in(population.implode()))
+        table_df = table_df.filter(pl.col(cfg.population_column).rechunk().is_in(population.implode()))
         main_table = main_table.vstack(table_df)
     print("Main table size:", len(main_table))
 
@@ -214,7 +214,7 @@ def get_conditional_bool_criteria(cfg, main_table):
                 print("wow, weird condition")
 
         condition_matches = condition_matches.union(last_condition)
-        main_table = main_table.with_columns(pl.col(key_col).is_in(list(condition_matches)).alias(condition_name))
+        main_table = main_table.with_columns(pl.col(key_col).rechunk().is_in(list(condition_matches)).alias(condition_name))
     return main_table
 
 

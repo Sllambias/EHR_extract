@@ -100,7 +100,7 @@ def match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate(
         joined = joined.filter(pl.col("positive").any().over(population_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
-    population = population.filter(pl.col(population_key_column).is_in(set(joined[population_child_cpr_column])))
+    population = population.filter(pl.col(population_key_column).rechunk().is_in(set(joined[population_child_cpr_column])))
     matches = set(population[population_child_cpr_column].unique())
     return matches
 
@@ -132,7 +132,9 @@ def match_value_with_child_cpr_on_birth_id(
     value_table = value_table.with_columns(positive=py_operator(pl.col(value_column), value))
 
     mapping_table = load_table(mapping_table_path, columns=columns)
-    mapping_table = mapping_table.filter(pl.col(mapping_table_child_cpr_column).is_in(set(population[population_key_column])))
+    mapping_table = mapping_table.filter(
+        pl.col(mapping_table_child_cpr_column).rechunk().is_in(set(population[population_key_column]))
+    )
 
     joined = value_table.join(
         mapping_table,
@@ -147,7 +149,9 @@ def match_value_with_child_cpr_on_birth_id(
         joined = joined.filter(pl.col("positive").any().over(mapping_table_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(mapping_table_child_cpr_column))
-    population = population.filter(pl.col(population_key_column).is_in(set(joined[mapping_table_child_cpr_column])))
+    population = population.filter(
+        pl.col(population_key_column).rechunk().is_in(set(joined[mapping_table_child_cpr_column]))
+    )
     matches = set(population[population_key_column].unique())
 
     return matches
@@ -203,7 +207,9 @@ def match_value_with_child_cpr_on_birthdate(
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(population_child_cpr_column))
 
-    population = population.filter(pl.col(population_child_cpr_column).is_in(set(joined[population_child_cpr_column])))
+    population = population.filter(
+        pl.col(population_child_cpr_column).rechunk().is_in(set(joined[population_child_cpr_column]))
+    )
     matches = set(population[population_child_cpr_column].unique())
 
     return matches
@@ -325,7 +331,7 @@ def find_images_with_predicted_classes(
     matched_paths = table.filter(pl.col(class_column).is_in(classes))[image_path_column]
     logging.debug(f"Table rows matching predicted classes: {len(matched_paths)}")
 
-    population = population.filter(pl.col(population_image_path_column).is_in(matched_paths))
+    population = population.filter(pl.col(population_image_path_column).rechunk().is_in(matched_paths.implode()))
     logging.debug(f"Table rows matching population: {len(population)}")
 
     discard_stats.update(
@@ -370,7 +376,7 @@ def find_close_births(
     close_siblings = table.filter(
         (py_operator(pl.col("diff").dt.total_days(), value)) & (pl.col(birth_id_column) != pl.col("prev_child_birth_ID"))
     )
-    close_siblings = close_siblings.filter(pl.col(match_on).is_in(population))
+    close_siblings = close_siblings.filter(pl.col(match_on).rechunk().is_in(population))
 
     # Get the CPR_BARN values to exclude
     siblings_to_exclude = set(close_siblings[match_on]) | set(close_siblings["prev_child_ID"])
@@ -383,7 +389,7 @@ def find_duplicated_ids(table, match_on, id_columns, population, population_key_
     table = load_table(table, columns=[match_on, id_columns])
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
     duplicated_ids = table.filter(table[id_columns].is_duplicated())
-    duplicated_ids = duplicated_ids.filter(pl.col(match_on).is_in(population))
+    duplicated_ids = duplicated_ids.filter(pl.col(match_on).rechunk().is_in(population))
     logging.debug(
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[match_on].n_unique()} \
             after filtering on {match_on}"
@@ -639,7 +645,7 @@ def extract_filtered_conditional_values(
         else:
             print("wow, weird condition")
     condition_matches = condition_matches.union(last_condition)
-    tmp_table = tmp_table.with_columns(pl.col(key_column).is_in(list(condition_matches)).alias(new_col_name))
+    tmp_table = tmp_table.with_columns(pl.col(key_column).rechunk().is_in(list(condition_matches)).alias(new_col_name))
     main_table = main_table.join(
         tmp_table.select([key_column, new_col_name]),
         on=key_column,

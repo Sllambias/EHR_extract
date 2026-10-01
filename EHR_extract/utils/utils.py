@@ -215,7 +215,7 @@ def update_population(population, key, subset, action):
         population_set = population_set.intersection(subset)
     else:
         raise NotImplementedError(f"unexpected action: {action}")
-    population = population.filter(pl.col(key).is_in(population_set))
+    population = population.filter(pl.col(key).rechunk().is_in(population_set))
     return population, discards, len(discards), pre_discard_population
 
 
