@@ -1,6 +1,8 @@
+import functools
 import json
 import os
 import polars as pl
+import re
 from EHR_extract.utils.paths import get_config_path
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
@@ -19,13 +21,24 @@ def take_latest_row(table, key_column, date_col):
     return table
 
 
-def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None):
+def load_table_path(path, strict=True, n_rows=None, has_header=True, null_values=None, columns=None):
     if strict:
         ignore_errors = False
     else:
         ignore_errors = True
 
     if path.endswith(".csv"):
+        if columns is not None:
+            header = pl.scan_csv(path, has_header=has_header).collect_schema().names()
+            return pl.read_csv(
+                path,
+                columns=[c for c in header if c in columns] or None,
+                ignore_errors=ignore_errors,
+                infer_schema_length=10000000,
+                n_rows=n_rows,
+                has_header=has_header,
+                null_values=null_values,
+            )
         try:
             return pl.read_csv(
                 path, ignore_errors=ignore_errors, n_rows=n_rows, has_header=has_header, null_values=null_values
@@ -48,14 +61,38 @@ def expr_startswith_any(col: pl.Expr, val) -> pl.Expr:
     return pl.any_horizontal([s.str.starts_with(p) for p in val])
 
 
+def column_names(columns):
+    """Flatten column names, lists of names and Nones into a set of names."""
+    names = set()
+    for c in columns:
+        if isinstance(c, str):
+            names.add(c)
+        elif c is not None:
+            names |= column_names(c)
+    return names
+
+
+def select_present(table, columns):
+    """Select the columns of `table` that are in `columns`, keeping the table's column order."""
+    keep = column_names(columns)
+    return table.select([c for c in table.columns if c in keep])
+
+
 def load_table(
     table_cfg,
     strict=True,
     n_rows=None,
     has_header=True,
     null_values=None,
+    columns=None,
     _join_depth: int = 0,
 ):
+    """Load a CSV path, or a nested left-join spec of them.
+
+    columns: if given, only these columns and the join keys are read. Names a table lacks are ignored.
+    """
+    if columns is not None:
+        columns = column_names(columns)
     if isinstance(table_cfg, str):
         return load_table_path(
             table_cfg,
@@ -63,13 +100,19 @@ def load_table(
             n_rows=n_rows,
             has_header=has_header,
             null_values=null_values,
+            columns=columns,
         )
+    left_on = table_cfg["left_on"]
+    right_on = table_cfg["right_on"]
+    if columns is not None:
+        columns = columns | column_names([left_on, right_on])
     table1 = load_table(
         table_cfg["table1"],
         strict=strict,
         n_rows=n_rows,
         has_header=has_header,
         null_values=null_values,
+        columns=columns,
         _join_depth=_join_depth + 1,
     )
     table2 = load_table(
@@ -78,10 +121,9 @@ def load_table(
         n_rows=n_rows,
         has_header=has_header,
         null_values=null_values,
+        columns=columns,
         _join_depth=_join_depth + 1,
     )
-    left_on = table_cfg["left_on"]
-    right_on = table_cfg["right_on"]
     # Use a unique suffix per nested join so `_right` from an inner join
     # does not collide when an outer join also has overlapping columns.
     suffix = f"_join{_join_depth}"
@@ -141,21 +183,22 @@ def filter_numeric_rows(table, column):
 
 def update_population(population, key, subset, action):
     pre_discard_population = len(population)
-    population_set = set(population[key])
+    keys = population.get_column(key).rechunk()
     if action == "exclude":
         discards = subset
-        population_set.difference_update(subset)
+        population = population.filter(~keys.is_in(subset))
     elif action == "include":
-        discards = population_set.difference(subset)
-        population_set = population_set.intersection(subset)
+        # nulls_equal: a null key is reported as discarded unless the subset contains None.
+        in_subset = keys.is_in(subset, nulls_equal=True)
+        discards = set(keys.filter(~in_subset).unique())
+        population = population.filter(in_subset & keys.is_not_null())
     else:
         raise NotImplementedError(f"unexpected action: {action}")
-    population = population.filter(pl.col(key).is_in(population_set))
     return population, discards, len(discards), pre_discard_population
 
 
 def deduplicate_on_key(population, population_key):
-    missing_count = pl.concat_list([pl.col(column).is_null().cast(pl.UInt32) for column in population.columns]).list.sum()
+    missing_count = pl.sum_horizontal([pl.col(column).is_null().cast(pl.UInt32) for column in population.columns])
     population = population.with_columns(_missing_count=missing_count)
     population = population.sort([population_key, "_missing_count"], descending=[False, False])
     population = population.unique(subset=[population_key], keep="first").drop("_missing_count")
@@ -164,7 +207,7 @@ def deduplicate_on_key(population, population_key):
 
 def merge_population_tables(table_cfgs: list, population, strict=True):
     for table_cfg in table_cfgs:
-        tab = load_table(table_cfg.table, strict=strict)
+        tab = load_table(table_cfg.table, strict=strict, columns=list(table_cfg.columns.values()))
         tab = tab.select(list(table_cfg.columns.values()))
         tab = tab.rename({v: k for k, v in table_cfg.columns.items()})
         tab = tab.select(sorted(tab.columns))
@@ -251,10 +294,11 @@ def safe_save_df(df: pl.DataFrame, fp) -> pl.DataFrame:
 
 def merge_composed_population_tables(population, population_merge_on, composed_table_cfgs: list, format_SP_GA=False):
     for composition_cfg in composed_table_cfgs:
-        tables = [load_table(table_cfg.table) for table_cfg in composition_cfg.tables]
         tables = [
-            tab.select(list(table_cfg.columns.values())).rename({v: k for k, v in table_cfg.columns.items()})
-            for tab, table_cfg in zip(tables, composition_cfg.tables)
+            load_table(table_cfg.table, columns=list(table_cfg.columns.values()))
+            .select(list(table_cfg.columns.values()))
+            .rename({v: k for k, v in table_cfg.columns.items()})
+            for table_cfg in composition_cfg.tables
         ]
         merged_table = tables[0]
         for tab in tables[1:]:
