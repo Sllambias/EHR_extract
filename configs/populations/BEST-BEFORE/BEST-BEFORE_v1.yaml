@@ -74,19 +74,6 @@ imaging_table:
 
 
 imaging_matching_criteria:
-  # Filter1: Scan-to-delivery interval
-  # Filter2: GA at scan
-  - function: find_images_within_time_windows
-    args:
-      scan_date_column: STUDY_DATE
-      image_path_column: ${population.file_path_key}
-      population_ga_in_days_at_delivery_column: GA
-      population_delivery_date_column: BIRTHDAY
-      min_diff_days_scan_to_delivery: 0
-      max_diff_days_scan_to_delivery: 350
-      min_ga_in_days_at_scan: 0
-      max_ga_in_days_at_scan: 350
-  # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
       table: ${paths.img_sequence_predictions}
