@@ -1,0 +1,41 @@
+# @package _global_
+defaults:
+  - /default@
+  - _self_
+
+paths:
+  input_dir_SP: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_split/${hydra:job.config_name}
+  population_table: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/populations/test_example_pop/test_example_pop_population_train.csv
+
+population_id_column: CPR_MOR
+max_ids: null
+
+time_conditionals:
+  pregnancy:
+    min_date: {date_col: BIRTHDAY, offset_days: -300}
+    max_date: {date_col: BIRTHDAY, offset_days: 0}
+  up_to_birth:
+    min_date: {date_col: null, offset_days: 0}
+    max_date: {date_col: BIRTHDAY, offset_days: 0}
+
+tables:
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+    id_col: MOR_CPR
+    time_col: Noteret_dato
+    columns:
+    filters:
+      - {column: Diagnosekode, operator: startswith_any, value: ["DO"]}
+    time_window: pregnancy
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+    id_col: MOR_CPR
+    time_col: ServiceDatetime
+    columns:
+      - ProcedureCode
+    time_window: up_to_birth
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Patientinfo.csv
+    id_col: MOR_CPR
+    time_col: Fødselsdato
+    columns:

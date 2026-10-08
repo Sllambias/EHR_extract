@@ -14,13 +14,25 @@ paths:
 population_id_column: CPR_MOR
 max_ids: 30  # export this many patients (seed 4215); null = all
 
-# Unlike filter_tables_on_hashes.py, this script does read `time_col` and `columns`.
+# Named date windows, referenced by `time_window` below. Bounds are population_table columns
+# plus offset_days; date_col: null means "unbounded on this side".
+time_conditionals:
+  pregnancy:
+    min_date: {date_col: BIRTHDAY, offset_days: -300}
+    max_date: {date_col: BIRTHDAY, offset_days: 0}
+
+# Unlike filter_tables_on_hashes.py, this script does read `time_col`, `columns`, `filters`
+# and `time_window`.
 tables:
   # columns omitted (null) = keep every column
   - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
     id_col: MOR_CPR
     time_col: Noteret_dato  # rows are sorted by this, newest first
     columns:
+    # Optional: keep only rows passing every filter, dated inside the patient's window.
+    filters:
+      - {column: Diagnosekode, operator: startswith_any, value: ["DO"]}
+    time_window: pregnancy
   # columns listed = keep only these, plus id_col and time_col
   - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
     id_col: MOR_CPR
