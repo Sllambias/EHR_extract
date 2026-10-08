@@ -10,15 +10,29 @@ paths:
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  img_sequence_predictions: /projects/users/people/seblla/test/PN_CompleteV1_cls_outputs.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-08-24.csv
 
 strict: True
-preterm_cutoff: 259
 
 population: 
   population_key: CPR_BARN
   split_key: CPR_MOR
   file_path_key: FILE_PATH
   deduplication_key: CPR_BARN
+  tables: 
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
   composed_tables:
     - merge_on: CPR_BARN
       format_SP_GA: True
@@ -41,20 +55,29 @@ conditional_criteria:
         match_on: CPR_BARN
         column: GA
         operator: ">"
-        value: 224
+        value: 265
       - standard: or
         table: population
         match_on: CPR_BARN
         column: GA
         operator: "<"
-        value: 154
-  - action: include
-    conditions:
-      - custom:
-        function: match_years_with_child_cpr_on_birthdate
-        args:
-          date_start: "01012024"
-          date_end: "31122024"
-          value_table_path: ${paths.input_dir_SP}/Population.csv
-          value_time_column: Fødselstidspunkt
-          value_child_cpr_column: BABY_CPR
+        value: 238
+
+
+imaging_table:
+  table: ${paths.imaging_table}
+  columns:
+    CPR_MOR: phair_hash
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
+
+
+imaging_matching_criteria:
+  - function: find_images_with_predicted_classes
+    args:
+      table: ${paths.img_sequence_predictions}
+      classes: [4,6,10,24,25]
+      image_path_column: file_path
+      class_column: max_pred
+      population_image_path_column: ${population.file_path_key}
