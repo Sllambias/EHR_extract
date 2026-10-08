@@ -83,9 +83,9 @@ imaging_matching_criteria:
       population_ga_in_days_at_delivery_column: GA
       population_delivery_date_column: BIRTHDAY
       min_diff_days_scan_to_delivery: 0
-      max_diff_days_scan_to_delivery: 210
-      min_ga_in_days_at_scan: 112
-      max_ga_in_days_at_scan: 168
+      max_diff_days_scan_to_delivery: 350
+      min_ga_in_days_at_scan: 0
+      max_ga_in_days_at_scan: 350
   # Only Cervix (14)
   - function: find_images_with_predicted_classes
     args:
