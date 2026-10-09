@@ -14,11 +14,12 @@ paths:
 population_id_column: CPR_MOR
 max_ids: 30  # export this many patients (seed 4215); null = all
 
-# Named date windows, referenced by `time_window` below. Bounds are population_table columns
-# plus offset_days; date_col: null means "unbounded on this side".
+# Named date windows, referenced by `time_window` below. A bound is a population_table date column,
+# minus the days in `subtract_days_col` (optional), plus offset_days; date_col: null means
+# "unbounded on this side". Here min_date is BIRTHDAY - GA, i.e. conception.
 time_conditionals:
   pregnancy:
-    min_date: {date_col: BIRTHDAY, offset_days: -300}
+    min_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: 0}
     max_date: {date_col: BIRTHDAY, offset_days: 0}
 
 # Unlike filter_tables_on_hashes.py, this script does read `time_col`, `columns`, `filters`

@@ -13,7 +13,7 @@ max_ids: null
 
 time_conditionals:
   pregnancy:
-    min_date: {date_col: BIRTHDAY, offset_days: -300}
+    min_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: -14}
     max_date: {date_col: BIRTHDAY, offset_days: 0}
   up_to_birth:
     min_date: {date_col: null, offset_days: 0}

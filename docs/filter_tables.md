@@ -84,14 +84,23 @@ Both are applied before `columns`, so they may use columns that are not exported
 - `time_window` — the row's `time_col` must fall inside the named window, inclusive at both ends.
 
 Windows are defined once at the top level in `time_conditionals` and referenced by name, in the same
-format `table.py` uses. Each bound is a column of `population_table` plus `offset_days`, so every
-patient gets their own window; `date_col: null` leaves that side open.
+format `table.py` uses. Each bound is a date column of `population_table`, optionally minus a number of
+days from another of its columns (`subtract_days_col`), plus `offset_days`. Every patient gets their
+own window; `date_col: null` leaves that side open.
+
+`subtract_days_col` is what anchors a window to conception: with the population's `GA` in days, as
+`extract.py` writes it, `{date_col: BIRTHDAY, subtract_days_col: GA, offset_days: -14}` is
+BIRTHDAY − GA − 14 days. `offset_days` is always added, so a negative offset moves a bound earlier.
+`table.py` does not support `subtract_days_col` yet.
 
 ```yaml
 time_conditionals:
-  pregnancy:
-    min_date: {date_col: BIRTHDAY, offset_days: -300}
+  pregnancy:            # BIRTHDAY - GA  ...  BIRTHDAY
+    min_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: 0}
     max_date: {date_col: BIRTHDAY, offset_days: 0}
+  ga_16_to_24_weeks:    # GA 112 to 168 days
+    min_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: 112}
+    max_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: 168}
   up_to_birth:
     min_date: {date_col: null, offset_days: 0}
     max_date: {date_col: BIRTHDAY, offset_days: 0}
@@ -110,10 +119,11 @@ The population usually has one row per child, so a mother with several births ha
 A row is kept if it falls inside **any** of them, and is written once even when windows overlap, as
 they do for twins.
 
-Dates are parsed as in `table.py` (`YYYY-MM-DD`, optionally with a time). A row whose `time_col`, or
-whose patient's bound column, is missing or unparseable is dropped. The bound columns are always read
-from `population_table`, never from the source table, even if it has a column of the same name. A
-table with `time_window` must set `time_col`.
+Dates are parsed as in `table.py` (`YYYY-MM-DD`, optionally with a time). A row is dropped if its
+`time_col`, or any population column its patient's window uses (including `subtract_days_col`), is
+missing or unparseable. The bound columns are always read from `population_table`, never from the
+source table, even if it has a column of the same name. A table with `time_window` must set
+`time_col`.
 
 A runnable example on the local fixtures is
 [`configs/testing/test_split_table_time_window.yaml`](../configs/testing/test_split_table_time_window.yaml).
