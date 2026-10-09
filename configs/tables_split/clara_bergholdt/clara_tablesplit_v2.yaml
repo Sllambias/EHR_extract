@@ -1,0 +1,144 @@
+# @package _global_
+defaults:
+  - /default@
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/tables_filtered/${hydra:job.config_name}
+  population_table: /projects/users/data/UCPH/DeepFetal/projects/common/populations/preterm/clarav1/clarav1_population_train.csv
+
+population_id_column: CPR_MOR
+max_ids: 30 
+
+time_conditionals:
+  pregnancy:
+    min_date: {date_col: BIRTHDAY, subtract_days_col: GA, offset_days: -270}
+    max_date: {date_col: BIRTHDAY, offset_days: 0}
+
+tables:
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+    id_col: MOR_CPR
+    time_col: "Noteret_dato"
+    columns:
+      - Diagnose
+    filters:
+      - {column: Diagnosekode, operator: startswith_any, value: [DN18, DN19, DE0, DE890, DO992B, DO992C, DM32, DO991D, DE10, DE11, DE12, DE13, DE14, DO240, DO241, DO242, DO243, DI10, DI11, DI12, DI13, DI15, DO10, DO11, DJ45, DO995A, DD65, DD66, DD67, DD68, DD69, DI74, DI81, DI82, DC, DK04, DK05, DK06, DK08, DF0, DF1, DF2, DF3, DF4, DF5, DF6, DF7, DF8, DF9, DF99, DO993B1, DO993B2, DO993B3, DO993B4, DG473, DQ20, DQ21, DQ24, DO98, DO99]}
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Mikrobiologi Del 1.csv
+    id_col: MOR_CPR
+    time_col: "Provetagningstidspunkt"
+    columns:
+      - Materiale
+      - Komponentnavn
+      - Proveresultat
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Notater.csv
+    id_col: MOR_CPR
+    time_col: "Oprettelsestidspunkt"
+    columns:
+      - Notetype
+      - Speciale
+      - Note
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Medicin.csv
+    id_col: MOR_CPR
+    time_col: "Bestillingsdato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Patientinfo.csv
+    id_col: MOR_CPR
+    time_col: "Fødselsdato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
+    id_col: MOR_CPR
+    time_col: "ServiceDatetime"
+    columns:
+      - ProcedureCode
+      - ProcedureName
+      - Beskrivelse
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Prøvesvar.csv
+    id_col: MOR_CPR
+    time_col: "Prøvetagningstidspunkt"
+    columns:
+      - Resultatværdi
+      - Enhed
+      - Antibiotika
+      - Følsomhed
+      - Organisme
+    filters:
+      - {column: BestOrd, operator: startswith_any, value: [HÆMOGLOBIN, FERRITIN, VITAMIN, C-REAKTIVT PROTEIN, CRP, LEUKOCYTTER, ZINK, ZINC, INSULIN, FOLAT, IGF]}
+
+  - table: ${paths.input_dir_SP}/Mor - CPMI - Vital parametre.csv
+    id_col: MOR_CPR
+    time_col: "Registreringstidspunkt"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+    id_col: MOR_CPR
+    time_col: "Placenta dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 2.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Histologi og Cytologi.csv
+    id_col: MOR_CPR
+    time_col: "Bestillingstidspunkt"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Obstetriske kommentarer.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Ordinationer.csv
+    id_col: MOR_CPR
+    time_col: "Ordinationstidspunkt"
+    columns:
+
+
+  - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+    id_col: MOR_CPR
+    time_col: "Kontakt dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 2.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+      - Udfald
+      - Gestationsalder
+
+  - table: ${paths.input_dir_SP}/Mor - Patientinfo tillæg til CPMI.csv
+    id_col: MOR_CPR
+    time_col: "Dato for seneste opdatering"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Terminsberegning.csv
+    id_col: MOR_CPR
+    time_col: "Dato"
+    columns:
+
+  - table: ${paths.input_dir_SP}/Mor - Yderligere variable vurderingsskema.csv
+    id_col: MOR_CPR
+    time_col: "Registreringstidspunkt"
+    columns:
+
+
+  - table: ${paths.input_dir_SP}/Mor - Udleveret medicin.csv
+    id_col: MOR_CPR
+    time_col: "Udleveringstidspunkt"
+    columns:
+
+
+
+
+
+
+
