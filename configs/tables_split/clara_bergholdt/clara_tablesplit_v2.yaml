@@ -26,7 +26,8 @@ tables:
       - Diagnosekode
     filters:
       - {column: Diagnosekode, operator: startswith_any, value: [DN18, DN19, DE0, DE890, DO992B, DO992C, DM32, DO991D, DE10, DE11, DE12, DE13, DE14, DO240, DO241, DO242, DO243, DI10, DI11, DI12, DI13, DI15, DO10, DO11, DJ45, DO995A, DD65, DD66, DD67, DD68, DD69, DI74, DI81, DI82, DC, DK04, DK05, DK06, DK08, DF0, DF1, DF2, DF3, DF4, DF5, DF6, DF7, DF8, DF9, DF99, DO993B1, DO993B2, DO993B3, DO993B4, DG473, DQ20, DQ21, DQ24, DO98, DO99]}
-
+    time_window: pregnancy
+    
   - table: ${paths.input_dir_SP}/Mor - CPMI - Mikrobiologi Del 1.csv
     id_col: MOR_CPR
     time_col: "Provetagningstidspunkt"
