@@ -93,7 +93,6 @@ tables:
     time_col: "Ordinationstidspunkt"
     columns:
 
-
   - table: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
     id_col: MOR_CPR
     time_col: "Kontakt dato"
