@@ -2,8 +2,9 @@
 
 ## Operators
 
-Used by `conditional_criteria` ([extract.py](extract.md)) and `conditional_bool_criteria`
-([table.md](table.md)). Defined at
+Used by `conditional_criteria` ([extract.py](extract.md)), `conditional_bool_criteria`
+([table.md](table.md)) and the per-table `filters` of `split_tables_on_hashes.py`
+([filter_tables.md](filter_tables.md#row-filters-and-time-windows)). Defined at
 [utils.py:97-132](../EHR_extract/utils/utils.py#L97-L132).
 
 | Operator | `value` | Casts the column to |
@@ -23,6 +24,8 @@ The casts are the two easy mistakes:
   (`cannot compare string with numeric type`). Quote it: `value: "1"`, not `value: 1`.
 - `>`, `<`, `>=`, `<=` and `between` cast the column to Float64, turning non-numeric cells into
   nulls, which then silently fail the comparison instead of erroring.
+- An empty cell fails every comparison, including `!=`: a row with no `Diagnose` does not pass
+  `Diagnose != "X"`.
 
 Omitting `operator` entirely in a `standard` condition matches every row whose `match_on` is in the
 population — i.e. "present in this table at all".
