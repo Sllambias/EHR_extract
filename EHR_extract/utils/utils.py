@@ -264,12 +264,15 @@ def convert_to_datetime(
     return pl.coalesce([typed, parsed_dt])
 
 
-def date_bound_expr(date_col=None, offset_days=0) -> pl.Expr | None:
-    """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date) (YAML: column + offset_days)."""
+def date_bound_expr(date_col=None, offset_days=0, subtract_days_col=None) -> pl.Expr | None:
+    """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date): date_col - subtract_days_col + offset_days."""
     if date_col is None:
         return None
     off = int(offset_days) if offset_days is not None else 0
     base = convert_to_date(date_col, date_format="%Y-%m-%d")
+    if subtract_days_col is not None:
+        days = pl.col(subtract_days_col).cast(pl.Float64, strict=False).cast(pl.Int64)
+        base = base - pl.duration(days=days)
     if off == 0:
         return base
     return base + pl.duration(days=off)
