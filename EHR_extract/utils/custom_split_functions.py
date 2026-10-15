@@ -29,10 +29,6 @@ def preterm_custom1(cfg, population):
         population=population,
     )
 
-    # population = population.with_columns(pl.col("BIRTHDAY").dt.to_string("%Y-%m-%d %H:%M:%S"))
-    # population = population.with_columns(pl.col("STUDY_DATE").dt.to_string("%Y-%m-%d"))
-    # population = population.with_columns(pl.col("GA").cast(pl.String))
-
     # First get all hashed CPRs with cervix scan within week range
     for custom_cfg in cfg.get("imaging_matching_criteria", {}):
         fn = custom_functions[custom_cfg.function]
