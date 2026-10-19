@@ -10,7 +10,7 @@ paths:
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
-  img_sequence_predictions: /projects/users/people/seblla/test/PN_CompleteV1_cls_outputs.csv
+  img_sequence_predictions: /storage/archive/UCPH/DeepFetal/ultrasound/derived_data/PN_CompleteV1/PN_CompleteV1_cls_outputs.csv
   imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-08-24.csv
 
 strict: True
