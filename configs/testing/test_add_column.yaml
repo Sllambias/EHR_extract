@@ -1,0 +1,95 @@
+# @package _global_
+# action: add_column on the local fixtures: a flag, looked-up values, a fallback source and a latest value.
+defaults:
+  - /default@
+  - _self_
+
+paths:
+  input_dir_SDS: /Users/zcr545/Desktop/Projects/repos/ehr2meds/data/raw/fetal_data/SDS_AND_SP_from_population
+  output_dir: /Users/zcr545/Desktop/Projects/repos/EHR_extract/outputs/populations/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/holdout.csv
+
+strict: True
+
+population:
+  population_key: CPR_BARN
+  split_key: CPR_MOR
+  deduplication_key: CPR_BARN
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        GA: GESTATIONSALDER_DAGE
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        GA: Gestationsalder
+        BIRTHDAY: FoedselsDato_Barn
+
+conditional_criteria:
+  # True for births before 37 weeks, False otherwise
+  - action: add_column
+    name: preterm
+    conditions:
+      - standard:
+        table: population
+        match_on: CPR_BARN
+        column: GA
+        operator: "<"
+        value: 259
+  # Birth weight, empty for children not in nyfoedte.csv
+  - action: add_column
+    name: birth_weight
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        retrieve: Vaegt_Barn
+  # Caesarean code from nyfoedte.csv, else from mfr.csv
+  - action: add_column
+    name: caesarean_code
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Kejsersnit
+        operator: "!="
+        value: "-1"
+        retrieve: Kejsersnit
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: MARKOER_KEJSERSNIT
+        operator: "!="
+        value: "-1"
+        retrieve: MARKOER_KEJSERSNIT
+  # Several measurements per child: keep the latest
+  - action: add_column
+    name: latest_weight
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/maalinger_afl.csv
+        match_on: CPR
+        retrieve: WEIGHT
+        date_col: MEASUREMENTDATE
+  # Added columns can be used by later criteria
+  - action: add_column
+    name: preterm_caesarean
+    conditions:
+      - standard:
+        table: population
+        match_on: CPR_BARN
+        column: preterm
+        operator: is_true
+        value:
+      - standard: and
+        table: population
+        match_on: CPR_BARN
+        column: caesarean_code
+        operator: "not missing"
+        value:

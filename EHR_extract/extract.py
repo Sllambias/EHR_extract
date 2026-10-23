@@ -25,6 +25,8 @@ from EHR_extract.utils.utils import (
     load_table,
     merge_composed_population_tables,
     merge_population_tables,
+    select_present,
+    take_latest_row,
     update_population,
 )
 from hydra.core.plugins import Plugins
@@ -50,10 +52,12 @@ custom_functions = {
 
 
 def handle_standard_condition(condition, population, population_key_column, population_key, strict):
+    """Rows of the condition's table whose ID is in the population and that pass its operator."""
     if condition.table == "population":
         table = population.clone()
     else:
-        table = load_table(condition.table, strict=strict, columns=[condition.match_on, condition.get("column")])
+        columns = [condition.match_on, condition.get("column"), condition.get("retrieve"), condition.get("date_col")]
+        table = load_table(condition.table, strict=strict, columns=columns)
     logging.debug(
         f"Table rows / unique IDs total: {len(table)} / {table[condition.match_on].n_unique()} \
             for table: {condition.table}"
@@ -66,7 +70,7 @@ def handle_standard_condition(condition, population, population_key_column, popu
     )
 
     if condition.get("operator", None) is None:
-        return set(table[condition.match_on])
+        return table
 
     py_operator = get_python_operator(condition.operator)
     if condition.operator in [">", "<", ">=", "<="]:
@@ -76,7 +80,40 @@ def handle_standard_condition(condition, population, population_key_column, popu
         f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
             after filtering on {condition.column} {condition.operator} {condition.value}"
     )
-    return set(table[condition.match_on])
+    return table
+
+
+def get_retrieved_values(table, condition, population_key, name):
+    """The condition's `retrieve` value for each matched ID, as columns [population_key, name]."""
+    values = select_present(table, [condition.match_on, condition.retrieve, condition.get("date_col")])
+    values = values.drop_nulls(condition.retrieve)
+    if condition.get("date_col") is not None:
+        values = take_latest_row(values, condition.match_on, condition.date_col)
+    values = values.select([condition.match_on, condition.retrieve]).unique()
+    duplicates = values[condition.match_on].value_counts().filter(pl.col("count") > 1)
+    if duplicates.height > 0:
+        raise ValueError(
+            f"Several {condition.retrieve} values for one {condition.match_on} in {condition.table}. "
+            f"Set date_col to keep the latest. Examples: {duplicates.head(5)}"
+        )
+    return values.rename({condition.match_on: population_key, condition.retrieve: name})
+
+
+def keep_matched_values(value_tables, matched_ids, population_key):
+    """Keep only the values of IDs matched by every condition in the group."""
+    return [values.filter(pl.col(population_key).is_in(matched_ids)) for values in value_tables]
+
+
+def add_criterion_column(population, population_key, name, matched_ids, value_tables):
+    """Add column `name`: the retrieved values if any condition has `retrieve`, else whether the ID matched."""
+    if name in population.columns:
+        raise ValueError(f"Cannot add column {name}: the population already has a column with that name")
+    if len(value_tables) == 0:
+        matched = population.get_column(population_key).rechunk().is_in(matched_ids)
+        return population.with_columns(matched.alias(name))
+    values = pl.concat(value_tables, how="vertical_relaxed")
+    values = values.unique(subset=population_key, keep="first", maintain_order=True)
+    return population.join(values, on=population_key, how="left", maintain_order="left")
 
 
 def extract_from_cfg(cfg, population):
@@ -87,35 +124,61 @@ def extract_from_cfg(cfg, population):
     )
     for criterion in cfg.get("conditional_criteria", {}):
         criterion_population = set()
+        criterion_values = []
         for condition in criterion.conditions:
+            condition_values = None
             if "standard" in condition.keys():
-                matched_ids = handle_standard_condition(
+                table = handle_standard_condition(
                     condition, population, cfg.population.population_key, cfg.population.population_key, cfg.strict
                 )
+                matched_ids = set(table[condition.match_on])
+                if criterion.action == "add_column" and condition.get("retrieve") is not None:
+                    condition_values = get_retrieved_values(table, condition, cfg.population.population_key, criterion.name)
+                del table  # free the rows before the next condition loads its table
                 conditional = condition.standard
             elif "custom" in condition.keys():
+                if criterion.action == "add_column" and condition.get("retrieve") is not None:
+                    raise NotImplementedError("retrieve is only supported on standard conditions")
                 fn = custom_functions[condition.function]
                 args = condition.args
                 matched_ids = fn(**args, population=population, population_key_column=cfg.population.population_key)
                 conditional = condition.custom
             if conditional is None:
                 current_condition_population = matched_ids
+                current_values = []
             elif conditional == "and":
                 current_condition_population = current_condition_population.intersection(matched_ids)
             elif conditional == "or":
                 criterion_population = criterion_population.union(current_condition_population)
+                criterion_values += keep_matched_values(
+                    current_values, current_condition_population, cfg.population.population_key
+                )
                 current_condition_population = matched_ids
+                current_values = []
             else:
                 logging.warn("wow, weird condition")
+            if condition_values is not None:
+                current_values.append(condition_values)
         criterion_population = criterion_population.union(current_condition_population)
-        population, discards, n_discards, n_population_before_discard = update_population(
-            population=population,
-            key=cfg.population.population_key,
-            subset=set(criterion_population),
-            action=criterion.action,
-        )
-        logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
-        all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
+        criterion_values += keep_matched_values(current_values, current_condition_population, cfg.population.population_key)
+        if criterion.action == "add_column":
+            population = add_criterion_column(
+                population, cfg.population.population_key, criterion.name, criterion_population, criterion_values
+            )
+            logging.info(
+                f"Added column {criterion.name}: {len(criterion_population)} IDs matched criteria "
+                f"{format_criterion(criterion)} \n"
+            )
+            all_discards.append([OmegaConf.to_container(criterion), [], 0, len(population)])
+        else:
+            population, discards, n_discards, n_population_before_discard = update_population(
+                population=population,
+                key=cfg.population.population_key,
+                subset=set(criterion_population),
+                action=criterion.action,
+            )
+            logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
+            all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
 
     logging.info("\n ### Applying imaging matching criteria ### \n")
     if "imaging_table" in cfg.keys():
