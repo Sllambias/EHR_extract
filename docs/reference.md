@@ -32,12 +32,15 @@ population — i.e. "present in this table at all".
 
 ## Custom functions for extract.py
 
-Registered at [extract.py:38-49](../EHR_extract/extract.py#L38-L49). `population` and
+Registered at [extract.py:40-51](../EHR_extract/extract.py#L40-L51). `population` and
 `population_key_column` are injected by the script — never put them in `args`.
 
 Where each is legal depends on what it returns.
 
 ### In `conditional_criteria` — return a set of IDs
+
+Because they return only IDs, `retrieve` ([extract.md](extract.md#adding-a-column-instead-of-filtering))
+works on standard conditions only.
 
 | Function | `args` |
 |---|---|
