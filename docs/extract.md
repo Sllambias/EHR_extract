@@ -13,7 +13,7 @@ Template: [`configs/templates/template_population.yaml`](../configs/templates/te
 
 ## Order of operations
 
-[extract.py:235-282](../EHR_extract/extract.py#L235-L282)
+[extract.py:227-274](../EHR_extract/extract.py#L227-L274)
 
 1. `population.tables` — stack sources
 2. `population.composed_tables` — join-then-stack sources
@@ -40,7 +40,7 @@ These are read by attribute, so they must be present. They may be `null` where n
 
 `population.file_path_key` is **not** required and is read by no Python code. It exists so criteria
 can interpolate `${population.file_path_key}`; the code hardcodes `FILE_PATH`
-([extract.py:193](../EHR_extract/extract.py#L193)).
+([extract.py:185](../EHR_extract/extract.py#L185)).
 
 ## Sources
 
@@ -130,7 +130,7 @@ of a group". It looks like a YAML mistake; it is not.
 
 `and` intersects, `or` unions the accumulated group into the result. The net effect is an **OR of
 AND-groups — `and` binds tighter than `or`**
-([extract.py:146-162](../EHR_extract/extract.py#L146-L162)).
+([extract.py:139-154](../EHR_extract/extract.py#L139-L154)).
 
 Omitting `operator` matches every row of the table whose `match_on` is in the population — useful for
 "appears in this table at all".
@@ -283,7 +283,7 @@ imaging_matching_criteria:
 
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
-([extract.py:275-280](../EHR_extract/extract.py#L275-L280)).
+([extract.py:267-272](../EHR_extract/extract.py#L267-L272)).
 `paths.exclude_train_subjects_not_in_csv`, if set, further restricts train to IDs in that CSV.
 
 The discards JSON records, per criterion, the criterion as written, `n_discards`, the population

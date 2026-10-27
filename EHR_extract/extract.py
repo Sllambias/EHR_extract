@@ -18,6 +18,7 @@ from EHR_extract.utils.custom_find_functions import (
 from EHR_extract.utils.paths import get_config_path
 from EHR_extract.utils.utils import (
     RecursiveSearchpathPlugin,
+    check_duplicates,
     deduplicate_on_key,
     filter_numeric_rows,
     format_criterion,
@@ -25,7 +26,6 @@ from EHR_extract.utils.utils import (
     load_table,
     merge_composed_population_tables,
     merge_population_tables,
-    select_present,
     take_latest_row,
     update_population,
 )
@@ -85,23 +85,16 @@ def handle_standard_condition(condition, population, population_key_column, popu
 
 def get_retrieved_values(table, condition, population_key, name):
     """The condition's `retrieve` value for each matched ID, as columns [population_key, name]."""
-    values = select_present(table, [condition.match_on, condition.retrieve, condition.get("date_col")])
-    values = values.drop_nulls(condition.retrieve)
+    values = table.drop_nulls(condition.retrieve)
     if condition.get("date_col") is not None:
         values = take_latest_row(values, condition.match_on, condition.date_col)
-    values = values.select([condition.match_on, condition.retrieve]).unique()
-    duplicates = values[condition.match_on].value_counts().filter(pl.col("count") > 1)
-    if duplicates.height > 0:
-        raise ValueError(
-            f"Several {condition.retrieve} values for one {condition.match_on} in {condition.table}. "
-            f"Set date_col to keep the latest. Examples: {duplicates.head(5)}"
-        )
+    values = check_duplicates(values.select([condition.match_on, condition.retrieve]).unique(), condition.match_on)
     return values.rename({condition.match_on: population_key, condition.retrieve: name})
 
 
 def keep_matched_values(value_tables, matched_ids, population_key):
     """Keep only the values of IDs matched by every condition in the group."""
-    return [values.filter(pl.col(population_key).is_in(matched_ids)) for values in value_tables]
+    return [values.filter(pl.col(population_key).is_in(matched_ids)) for values in value_tables if values is not None]
 
 
 def add_criterion_column(population, population_key, name, matched_ids, value_tables):
@@ -145,20 +138,19 @@ def extract_from_cfg(cfg, population):
                 conditional = condition.custom
             if conditional is None:
                 current_condition_population = matched_ids
-                current_values = []
+                current_values = [condition_values]
             elif conditional == "and":
                 current_condition_population = current_condition_population.intersection(matched_ids)
+                current_values.append(condition_values)
             elif conditional == "or":
                 criterion_population = criterion_population.union(current_condition_population)
                 criterion_values += keep_matched_values(
                     current_values, current_condition_population, cfg.population.population_key
                 )
                 current_condition_population = matched_ids
-                current_values = []
+                current_values = [condition_values]
             else:
                 logging.warn("wow, weird condition")
-            if condition_values is not None:
-                current_values.append(condition_values)
         criterion_population = criterion_population.union(current_condition_population)
         criterion_values += keep_matched_values(current_values, current_condition_population, cfg.population.population_key)
         if criterion.action == "add_column":
@@ -170,15 +162,15 @@ def extract_from_cfg(cfg, population):
                 f"{format_criterion(criterion)} \n"
             )
             all_discards.append([OmegaConf.to_container(criterion), [], 0, len(population)])
-        else:
-            population, discards, n_discards, n_population_before_discard = update_population(
-                population=population,
-                key=cfg.population.population_key,
-                subset=set(criterion_population),
-                action=criterion.action,
-            )
-            logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
-            all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
+            continue
+        population, discards, n_discards, n_population_before_discard = update_population(
+            population=population,
+            key=cfg.population.population_key,
+            subset=set(criterion_population),
+            action=criterion.action,
+        )
+        logging.info(f"Population size: {len(population)} after filtering on criteria {format_criterion(criterion)} \n")
+        all_discards.append([OmegaConf.to_container(criterion), list(discards), n_discards, n_population_before_discard])
 
     logging.info("\n ### Applying imaging matching criteria ### \n")
     if "imaging_table" in cfg.keys():
