@@ -81,7 +81,7 @@ conditional_criteria:
       - standard: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
-        retrieve: apgarscore_efter5minutter
+        retrieve: APGARSCORE_EFTER5MINUTTER
 
 
 imaging_table:
