@@ -62,7 +62,7 @@ conditional_criteria:
         column: GA
         operator: "<"
         value: 238
-  # Apgar score at 5 minutes: from Fødselsresume, else from nyfoedte.csv
+  # Apgar score at 5 minutes: from Fødselsresume, else from nyfoedte.csv, else from mfr.csv
   - action: add_column
     name: APGAR_5
     conditions:
@@ -78,6 +78,10 @@ conditional_criteria:
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
         retrieve: Apgarscore
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        retrieve: apgarscore_efter5minutter
 
 
 imaging_table:
