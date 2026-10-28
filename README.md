@@ -9,6 +9,7 @@ criterion discarded.
 
 ```bash
 pip install -e .
+pip install --group test   # ehr2meds, which generates the synthetic test data (pip >= 25.1)
 pip install scikit-learn   # split.py only — not declared in pyproject.toml
 pip install pandas         # get_imgs_from_db.py only — not declared in pyproject.toml
 ```

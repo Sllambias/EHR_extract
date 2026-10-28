@@ -25,6 +25,12 @@ dependencies = [
     "xlsxwriter>=3.2.9",
 ]
 
+[dependency-groups]
+# Generates the synthetic test data: pip install --group test
+test = [
+    "ehr2meds @ git+https://github.com/FGA-DIKU/ehr2meds.git",
+]
+
 [tool.setuptools.packages.find]
 include = ["EHR_extract*"]
 
