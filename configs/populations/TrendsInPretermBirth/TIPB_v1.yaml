@@ -116,10 +116,10 @@ conditional_criteria:
       - standard:
         table: ${paths.input_dir_SDS}/nyfoedte.csv
         match_on: CPRnummer_Barn
-        column: Foedselsaar
+        column: FoedselsAar
         operator: ">"
         value: 0
-        retrieve: Foedselsaar
+        retrieve: FoedselsAar
       - standard: or
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
