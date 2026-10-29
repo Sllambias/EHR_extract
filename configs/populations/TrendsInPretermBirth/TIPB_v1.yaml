@@ -1,0 +1,130 @@
+defaults:
+  - default@
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/selma/${hydra:job.config_name}
+  population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
+  discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
+  distribution_save_path: ${paths.output_dir}/${hydra:job.config_name}_distribution
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+
+strict: True
+
+# GA is not a population column, so births without a numeric GA are kept. It is added as GA_dage below.
+population:
+  population_key: CPR_BARN
+  split_key: CPR_MOR
+  deduplication_key: CPR_BARN
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_BARN: CPR_BARN
+        CPR_MOR: CPR_MODER
+        BIRTHDAY: FOEDSELSDATO
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_BARN: CPRnummer_Barn
+        CPR_MOR: CPRnummer_Mor
+        BIRTHDAY: FoedselsDato_Barn
+
+conditional_criteria:
+  # Born 2009-2024
+  - action: include
+    conditions:
+      - standard:
+        table: population
+        match_on: CPR_BARN
+        column: BIRTHDAY
+        operator: startswith_any
+        value: ["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016",
+                "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"]
+  # The numeric columns below come from nyfoedte.csv, else from mfr.csv. The "> 0" skips non-numeric values.
+  # True if the mother's parity is 1 in either register. False also when parity is missing.
+  - action: add_column
+    name: mor_første_fødsel
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Paritet
+        operator: "=="
+        value: "1"
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: PARITET
+        operator: "=="
+        value: "1"
+  # Mother's age in years
+  - action: add_column
+    name: mor_alder
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Alder_Mor
+        operator: ">"
+        value: 0
+        retrieve: Alder_Mor
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: ALDER_MODER
+        operator: ">"
+        value: 0
+        retrieve: ALDER_MODER
+  # Gestational age at birth in days
+  - action: add_column
+    name: GA_dage
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Gestationsalder
+        operator: ">"
+        value: 0
+        retrieve: Gestationsalder
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: GESTATIONSALDER_DAGE
+        operator: ">"
+        value: 0
+        retrieve: GESTATIONSALDER_DAGE
+  # Birth year
+  - action: add_column
+    name: year
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Foedselsaar
+        operator: ">"
+        value: 0
+        retrieve: Foedselsaar
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: FOEDSELSAAR
+        operator: ">"
+        value: 0
+        retrieve: FOEDSELSAAR
+  # True for multiple births: more than one child in the birth, or a DO30 (multiple gestation) code
+  - action: add_column
+    name: flerfold
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: AntalBoernIFoedslen
+        operator: ">"
+        value: 1
+      - standard: or
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: FLERFOLDSGRAVIDITET
+        operator: startswith
+        value: "DO30"
