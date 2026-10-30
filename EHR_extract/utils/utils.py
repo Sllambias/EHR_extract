@@ -11,7 +11,11 @@ from hydra.plugins.search_path_plugin import SearchPathPlugin
 def check_duplicates(table, population_column):
     duplicates = table[population_column].value_counts().filter(pl.col("count") > 1)
     if duplicates.height > 0:
-        raise ValueError(f"Duplicate entries for key column {population_column}. Examples: {duplicates.head(5)}")
+        raise ValueError(
+            f"Duplicate entries for key column {population_column}. "
+            f"If this comes from an add_column criterion, consider setting date_col to keep the latest value. "
+            f"Examples: {duplicates.head(5)}"
+        )
     return table
 
 

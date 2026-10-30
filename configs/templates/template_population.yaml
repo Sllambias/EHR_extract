@@ -1,5 +1,5 @@
 # @package _global_
-# Minimal extract.py config: build a population and apply one criterion.
+# Minimal extract.py config: build a population, apply one criterion and add one column.
 #   python EHR_extract/extract.py --config-name template_population
 # See docs/extract.md
 defaults:
@@ -35,7 +35,8 @@ population:
         GA: Gestationsalder
         BIRTHDAY: FoedselsDato_Barn
 
-# Applied in order. Each criterion keeps (include) or drops (exclude) the IDs it matches.
+# Applied in order. Each criterion keeps (include) or drops (exclude) the IDs it matches,
+# or keeps everyone and adds a column (add_column).
 conditional_criteria:
   # Keep births between 154 and 258 days of gestation.
   - action: include
@@ -46,3 +47,11 @@ conditional_criteria:
         column: GA
         operator: between    # inclusive; casts the column to float
         value: [154, 258]
+  # Add each child's birth weight as a column; empty where nyfoedte.csv has none.
+  - action: add_column
+    name: birth_weight
+    conditions:
+      - standard:
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        retrieve: Vaegt_Barn  # without retrieve, the column is True/False for whether the ID matched

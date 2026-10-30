@@ -9,6 +9,7 @@ criterion discarded.
 
 ```bash
 pip install -e .
+pip install --group test   # ehr2meds, which generates the synthetic test data (pip >= 25.1)
 pip install scikit-learn   # split.py only — not declared in pyproject.toml
 pip install pandas         # get_imgs_from_db.py only — not declared in pyproject.toml
 ```
@@ -52,7 +53,7 @@ it, and each run writes `<output_dir>/log/{config,hydra,overrides}.yaml` alongsi
 | Script | Does | Docs |
 |---|---|---|
 | [`split.py`](EHR_extract/split.py) | Train/test or k-fold splits over subject IDs | [docs/split.md](docs/split.md) |
-| [`extract.py`](EHR_extract/extract.py) | Build a population, apply inclusion/exclusion criteria, optionally match images | [docs/extract.md](docs/extract.md) |
+| [`extract.py`](EHR_extract/extract.py) | Build a population, apply inclusion/exclusion criteria or add them as columns, optionally match images | [docs/extract.md](docs/extract.md) |
 | [`table.py`](EHR_extract/table.py) | Build a wide feature table from a population | [docs/table.md](docs/table.md) |
 | [`filter_tables_on_hashes.py`](EHR_extract/filter_tables_on_hashes.py) | Subset raw tables to a population's IDs | [docs/filter_tables.md](docs/filter_tables.md) |
 | [`split_tables_on_hashes.py`](EHR_extract/split_tables_on_hashes.py) | One `.xlsx` per patient for chart review | [docs/filter_tables.md](docs/filter_tables.md) |
@@ -79,7 +80,7 @@ Copy one and edit it rather than starting from the 1000+ line production configs
 
 | Template | For | Shows |
 |---|---|---|
-| [`template_population.yaml`](configs/templates/template_population.yaml) | `extract.py` | stacking source tables, one criterion |
+| [`template_population.yaml`](configs/templates/template_population.yaml) | `extract.py` | stacking source tables, one criterion, one added column |
 | [`template_population_images.yaml`](configs/templates/template_population_images.yaml) | `extract.py` | inheriting a config, matching ultrasound images |
 | [`template_split.yaml`](configs/templates/template_split.yaml) | `split.py` | a fresh random holdout |
 | [`template_table.yaml`](configs/templates/template_table.yaml) | `table.py` | nested joins, time windows, one of each criteria block |

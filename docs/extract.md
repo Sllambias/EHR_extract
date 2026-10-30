@@ -5,19 +5,20 @@ python EHR_extract/extract.py --config-name template_population
 ```
 
 Builds a population table from one or more sources, applies inclusion/exclusion criteria in order,
-and writes the survivors plus a record of everything discarded.
+and writes the survivors plus a record of everything discarded. A criterion can also add a column
+instead of filtering.
 
 Template: [`configs/templates/template_population.yaml`](../configs/templates/template_population.yaml),
 [`template_population_images.yaml`](../configs/templates/template_population_images.yaml).
 
 ## Order of operations
 
-[extract.py:172-219](../EHR_extract/extract.py#L172-L219)
+[extract.py:227-274](../EHR_extract/extract.py#L227-L274)
 
 1. `population.tables` — stack sources
 2. `population.composed_tables` — join-then-stack sources
 3. `population.deduplication_key` — one row per key (but see the caveat below)
-4. `conditional_criteria` — include/exclude
+4. `conditional_criteria` — include/exclude, or add a column
 5. `imaging_table` — attach images
 6. `imaging_matching_criteria` — filter images
 7. write
@@ -39,7 +40,7 @@ These are read by attribute, so they must be present. They may be `null` where n
 
 `population.file_path_key` is **not** required and is read by no Python code. It exists so criteria
 can interpolate `${population.file_path_key}`; the code hardcodes `FILE_PATH`
-([extract.py:130](../EHR_extract/extract.py#L130)).
+([extract.py:185](../EHR_extract/extract.py#L185)).
 
 ## Sources
 
@@ -95,7 +96,9 @@ Collapses stacked sources to one row per key, keeping the row with the **fewest*
 
 ## conditional_criteria
 
-A list applied in order. `action: include` keeps only the matched IDs; `action: exclude` drops them.
+A list applied in order. `action: include` keeps only the matched IDs; `action: exclude` drops them;
+`action: add_column` keeps everyone and records the match in a new column
+([below](#adding-a-column-instead-of-filtering)).
 
 ```yaml
 conditional_criteria:
@@ -127,7 +130,7 @@ of a group". It looks like a YAML mistake; it is not.
 
 `and` intersects, `or` unions the accumulated group into the result. The net effect is an **OR of
 AND-groups — `and` binds tighter than `or`**
-([extract.py:101-110](../EHR_extract/extract.py#L101-L110)).
+([extract.py:139-154](../EHR_extract/extract.py#L139-L154)).
 
 Omitting `operator` matches every row of the table whose `match_on` is in the population — useful for
 "appears in this table at all".
@@ -181,6 +184,60 @@ by the script — do not put them in `args`.
 
 Functions and their arguments: [reference.md](reference.md#custom-functions-for-extractpy).
 
+### Adding a column instead of filtering
+
+`action: add_column` keeps every row and adds a column called `name`: `True` where the row's
+`population_key` matched the conditions, `False` elsewhere.
+
+```yaml
+- action: add_column
+  name: preterm
+  conditions:
+    - standard:
+      table: population
+      match_on: CPR_BARN
+      column: GA
+      operator: "<"
+      value: 259
+```
+
+Give a standard condition `retrieve: <column>` to get that column's value from the matching row
+instead of `True`. Rows that did not match are left empty.
+
+```yaml
+- action: add_column
+  name: caesarean_code
+  conditions:
+    - standard:
+      table: ${paths.input_dir_SDS}/nyfoedte.csv
+      match_on: CPRnummer_Barn
+      column: Kejsersnit
+      operator: "!="
+      value: "-1"
+      retrieve: Kejsersnit
+    - standard: or             # fallback for children not matched above
+      table: ${paths.input_dir_SDS}/mfr.csv
+      match_on: CPR_BARN
+      column: MARKOER_KEJSERSNIT
+      operator: "!="
+      value: "-1"
+      retrieve: MARKOER_KEJSERSNIT
+```
+
+- **Several matching rows for one ID**: set `date_col` on the condition to keep the value with the
+  latest date. Without it, different values for one ID raise an error. Empty values are skipped.
+- **Several conditions with `retrieve`**: the first one, in config order, that matched the ID and has
+  a value wins, so `or` conditions work as fallbacks. A value only counts if its whole `and` group
+  matched the ID. Sources with different types are cast to a common one (numbers and text give text).
+- **Conditions without `retrieve`** still decide which IDs match, so a custom condition can narrow a
+  lookup. `retrieve` on a custom condition raises: those functions only return IDs.
+- **`name`** must not already be a population column. Later criteria can use the new column with
+  `table: population`, e.g. `operator: is_true` on a flag.
+- The column is carried through image matching into every output CSV. The criterion is listed in the
+  discards JSON with `n_discards: 0`.
+
+`include` and `exclude` ignore `retrieve` and `date_col`.
+
 ## Matching images
 
 Images are recorded against the **mother**, so matching them to a child is a two-step process.
@@ -226,7 +283,7 @@ imaging_matching_criteria:
 
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
-([extract.py:212-217](../EHR_extract/extract.py#L212-L217)).
+([extract.py:267-272](../EHR_extract/extract.py#L267-L272)).
 `paths.exclude_train_subjects_not_in_csv`, if set, further restricts train to IDs in that CSV.
 
 The discards JSON records, per criterion, the criterion as written, `n_discards`, the population
