@@ -112,7 +112,7 @@ conditional_criteria:
     - standard: kontakter.csv:shak_afd
 
 imaging_table:
-  table: ${paths.imaging_table}
+ِ  table: ${paths.imaging_table}
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path
