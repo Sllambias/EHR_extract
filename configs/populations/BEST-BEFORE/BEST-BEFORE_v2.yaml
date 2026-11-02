@@ -83,6 +83,33 @@ conditional_criteria:
         match_on: CPR_BARN
         retrieve: APGARSCORE_EFTER5MINUTTER
 
+#Umbilical arterial pH at birth (acid-base status)
+- add_column: pH_ARTERIAL
+  conditions:
+    - standard: Mor_Fødselsresume_DEL2.csv:ph_arterial
+    - standard: navlesnorsblod_analyse.csv:ph_vaerdi
+#Necrotizing enterocolitis diagnosis code (P77)
+- add_column: DIAGNOSIS_NEC
+  conditions:
+    - standard: Barn_Diagnoser.csv:diagnosis_code
+    - standard: diagnoser.csv:diagnosekode
+#Bronchopulmonary dysplasia diagnosis code (P27.1)
+- add_column: DIAGNOSIS_BPD
+  conditions:
+    - standard: Barn_Diagnoser.csv:diagnosis_code
+    - standard: diagnoser.csv:diagnosekode
+
+#Intracranial hemorrhage diagnosis code (P52)
+- add_column: DIAGNOSIS_ICH
+  conditions:
+    - standard: Barn_Diagnoser.csv:diagnosis_code
+    - standard: diagnoser.csv:diagnosekode
+
+#NICU admission (department indicator)
+- add_column: NICU_ADMISSION
+  conditions:
+    - standard: Barn_ADT.csv:department
+    - standard: kontakter.csv:shak_afd
 
 imaging_table:
   table: ${paths.imaging_table}
