@@ -83,36 +83,52 @@ conditional_criteria:
         match_on: CPR_BARN
         retrieve: APGARSCORE_EFTER5MINUTTER
 
-#Umbilical arterial pH at birth (acid-base status)
-- add_column: pH_ARTERIAL
-  conditions:
-    - standard: Mor_Fødselsresume_DEL2.csv:ph_arterial
-    - standard: navlesnorsblod_analyse.csv:ph_vaerdi
-#Necrotizing enterocolitis diagnosis code (P77)
-- add_column: DIAGNOSIS_NEC
-  conditions:
-    - standard: Barn_Diagnoser.csv:diagnosis_code
-    - standard: diagnoser.csv:diagnosekode
-#Bronchopulmonary dysplasia diagnosis code (P27.1)
-- add_column: DIAGNOSIS_BPD
-  conditions:
-    - standard: Barn_Diagnoser.csv:diagnosis_code
-    - standard: diagnoser.csv:diagnosekode
+  # Necrotizing enterocolitis (DP77): True if the child has the code, False otherwise
+  - action: add_column
+    name: DIAGNOSIS_NEC
+    conditions:
+      - standard:
+        table:
+          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Nyfoedt
+          right_on: DW_EK_Nyfoedt
+        match_on: CPRnummer_Barn
+        column: Aktionsdiagnose
+        operator: startswith_any
+        value: [DP77]
 
-#Intracranial hemorrhage diagnosis code (P52)
-- add_column: DIAGNOSIS_ICH
-  conditions:
-    - standard: Barn_Diagnoser.csv:diagnosis_code
-    - standard: diagnoser.csv:diagnosekode
+  # Bronchopulmonary dysplasia (DP271)
+  - action: add_column
+    name: DIAGNOSIS_BPD
+    conditions:
+      - standard:
+        table:
+          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Nyfoedt
+          right_on: DW_EK_Nyfoedt
+        match_on: CPRnummer_Barn
+        column: Aktionsdiagnose
+        operator: startswith_any
+        value: [DP271]
 
-#NICU admission (department indicator)
-- add_column: NICU_ADMISSION
-  conditions:
-    - standard: Barn_ADT.csv:department
-    - standard: kontakter.csv:shak_afd
-
+  # Intracranial hemorrhage (DP52)
+  - action: add_column
+    name: DIAGNOSIS_ICH
+    conditions:
+      - standard:
+        table:
+          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Nyfoedt
+          right_on: DW_EK_Nyfoedt
+        match_on: CPRnummer_Barn
+        column: Aktionsdiagnose
+        operator: startswith_any
+        value: [DP52]
 imaging_table:
-ِ  table: ${paths.imaging_table}
+  table: ${paths.imaging_table}
   columns:
     CPR_MOR: phair_hash
     FILE_PATH: file_path
