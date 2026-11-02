@@ -19,6 +19,8 @@ from EHR_extract.utils.paths import get_config_path
 from EHR_extract.utils.utils import (
     RecursiveSearchpathPlugin,
     check_duplicates,
+    convert_to_date,
+    date_bound_expr,
     deduplicate_on_key,
     filter_numeric_rows,
     format_criterion,
@@ -51,8 +53,26 @@ custom_functions = {
 }
 
 
-def handle_standard_condition(condition, population, population_key_column, population_key, strict):
-    """Rows of the condition's table whose ID is in the population and that pass its operator."""
+def filter_on_time_window(table, condition, population, population_key, time_window):
+    """Keep rows whose date_col falls inside the time window of the matching population row."""
+    lo = date_bound_expr(**time_window.min_date)
+    hi = date_bound_expr(**time_window.max_date)
+    bounds = [pl.col(population_key)]
+    if lo is not None:
+        bounds.append(lo.alias("window_min_date"))
+    if hi is not None:
+        bounds.append(hi.alias("window_max_date"))
+    table = table.join(population.select(bounds), left_on=condition.match_on, right_on=population_key, how="inner")
+    event_date = convert_to_date(condition.date_col)
+    if lo is not None:
+        table = table.filter(event_date >= pl.col("window_min_date"))
+    if hi is not None:
+        table = table.filter(event_date <= pl.col("window_max_date"))
+    return table.drop(["window_min_date", "window_max_date"], strict=False)
+
+
+def handle_standard_condition(condition, population, population_key_column, population_key, strict, time_conditionals=None):
+    """Rows of the condition's table whose ID is in the population, that pass its operator and fall in its time window."""
     if condition.table == "population":
         table = population.clone()
     else:
@@ -69,17 +89,27 @@ def handle_standard_condition(condition, population, population_key_column, popu
         after filtering on {condition.match_on}"
     )
 
-    if condition.get("operator", None) is None:
-        return table
+    if condition.get("operator", None) is not None:
+        py_operator = get_python_operator(condition.operator)
+        if condition.operator in [">", "<", ">=", "<="]:
+            table = filter_numeric_rows(table, condition.column)
+        table = table.filter(py_operator(pl.col(condition.column), condition.value))
+        logging.debug(
+            f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+                after filtering on {condition.column} {condition.operator} {condition.value}"
+        )
 
-    py_operator = get_python_operator(condition.operator)
-    if condition.operator in [">", "<", ">=", "<="]:
-        table = filter_numeric_rows(table, condition.column)
-    table = table.filter(py_operator(pl.col(condition.column), condition.value))
-    logging.debug(
-        f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
-            after filtering on {condition.column} {condition.operator} {condition.value}"
-    )
+    if condition.get("time_window", None) is not None:
+        if condition.get("date_col", None) is None:
+            raise ValueError(f"{condition.table}: time_window needs a date_col to filter on")
+        if time_conditionals is None or condition.time_window not in time_conditionals:
+            raise ValueError(f"time_window {condition.time_window} is not defined in time_conditionals")
+        time_window = time_conditionals[condition.time_window]
+        table = filter_on_time_window(table, condition, population, population_key, time_window)
+        logging.debug(
+            f"Table rows / unique IDs matching population IDs: {len(table)} / {table[condition.match_on].n_unique()} \
+                after filtering on {condition.date_col} in time window {condition.time_window}"
+        )
     return table
 
 
@@ -122,7 +152,12 @@ def extract_from_cfg(cfg, population):
             condition_values = None
             if "standard" in condition.keys():
                 table = handle_standard_condition(
-                    condition, population, cfg.population.population_key, cfg.population.population_key, cfg.strict
+                    condition,
+                    population,
+                    cfg.population.population_key,
+                    cfg.population.population_key,
+                    cfg.strict,
+                    cfg.get("time_conditionals", None),
                 )
                 matched_ids = set(table[condition.match_on])
                 if criterion.action == "add_column" and condition.get("retrieve") is not None:
