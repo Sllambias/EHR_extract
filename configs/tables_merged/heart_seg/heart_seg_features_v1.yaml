@@ -1,0 +1,422 @@
+# @package _global_
+# One row per child of the heart_seg population, with the MFR variables listed in
+# population_spec/registerdata_nationalhjerte.xlsx (mfr 1997-2018, nyfoedte 2019-, hjemmefoedsler_blanket).
+# Column names were checked against population_spec/register_specs/*_header.txt.
+#   python EHR_extract/extract.py --config-name heart_seg_all_v1
+#   python EHR_extract/table.py --config-name heart_seg_features_v1
+# See docs/table.md
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
+  # Output of extract.py with heart_seg_all_v1. It has one row per child and image; only its IDs are used.
+  population: ${oc.env:EHR_EXTRACT_OUTPUTS}/heart_seg_all_v1/heart_seg_all_v1_population_train_and_test.csv
+  output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
+  table_save_path: ${paths.output_dir}/table_${hydra:job.config_name}.csv
+  summary_save_path: ${paths.output_dir}/summary_${hydra:job.config_name}.csv
+  discards_save_path: ${paths.output_dir}/discards_${hydra:job.config_name}.json
+
+strict: True
+
+summary_table:
+  # True splits the summary at GA < 259, which needs the column named GA below.
+  make_table: False
+  ignore_columns: [CPR_BARN, CPR_MOR, pregnancy_end, pregnancy_start]
+  n_samples: 100000
+
+# The ID column is called CPR_BARN because it must also exist in the population CSV.
+base_table:
+  population: ${paths.population}
+  population_column: CPR_BARN
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns: {CPR_BARN: CPR_BARN, CPR_MODER: CPR_MOR, FOEDSELSDATO: pregnancy_end, GESTATIONSALDER_DAGE: GA}
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns: {CPRnummer_Barn: CPR_BARN, CPRnummer_Mor: CPR_MOR, FoedselsDato_Barn: pregnancy_end, Gestationsalder: GA}
+  key_columns: [CPR_BARN, CPR_MOR, GA, pregnancy_end]
+  dtypes: {CPR_BARN: string, CPR_MOR: string, GA: string, pregnancy_end: date}
+  add_columns:
+    - column: pregnancy_start
+      function: find_pregnancy_start
+      args: {birth_date_col: pregnancy_end, GA_days_col: GA, pregnancy_start_col: pregnancy_start}
+      dtype: date
+    # gestationsalderuger: full weeks, e.g. 283 days -> 40
+    - column: GA_weeks
+      function: find_GA_weeks
+      args: {GA_days_col: GA, GA_weeks_col: GA_weeks}
+      dtype: integer
+
+# Every variable is a property of the birth, so the window is unbounded.
+time_conditionals:
+  at_birth:
+    min_date: {date_col: null, offset_days: 0}
+    max_date: {date_col: null, offset_days: 0}
+
+extract_criteria: []
+
+# Add once the diagnosis/procedure code lists are decided (mor_diagnoser, LPR, LPR_F).
+conditional_bool_criteria: []
+
+# Each source is one register table. Sources are tried in order and the first non-empty value wins,
+# so mfr values are used before nyfoedte values.
+# Unreported values: nyfoedte uses -1, mfr apgar uses '.'/99. `filters` drop them so they are not
+# written as values (apgar 0 is real, hence ">= 0"). Non-numeric cells fail numeric filters.
+custom_extract_criteria:
+  ### Mother
+  - name: maternal_age
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: maternal_age
+      dtype: integer
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: ALDER_MODER
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Alder_Mor
+          date_col: FoedselsDato_Barn
+  - name: maternal_height_cm
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: maternal_height_cm
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: HOEJDE_MODER
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Hoejde_Mor
+          date_col: FoedselsDato_Barn
+          filters: [{column: Hoejde_Mor, operator: ">", value: 0}]
+  - name: maternal_weight_kg
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: maternal_weight_kg
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: VAEGT_MODER
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Vaegt_Mor
+          date_col: FoedselsDato_Barn
+          filters: [{column: Vaegt_Mor, operator: ">", value: 0}]
+  - name: maternal_BMI
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: maternal_BMI
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: BMI_MODER
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: BMI_Mor
+          date_col: FoedselsDato_Barn
+          filters: [{column: BMI_Mor, operator: ">", value: 0}]
+  - name: parity
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: parity
+      dtype: integer
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: PARITET
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Paritet
+          date_col: FoedselsDato_Barn
+          filters: [{column: Paritet, operator: ">=", value: 0}]
+
+  ### Pregnancy and delivery
+  # mfr: flerfoldsgraviditet is a diagnosis; nyfoedte: AntalBoernIFoedslen is a count. Kept apart.
+  - name: multiple_pregnancy_diagnosis
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: multiple_pregnancy_diagnosis
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: FLERFOLDSGRAVIDITET
+      date_col: FOEDSELSDATO
+  - name: n_children_in_birth
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: n_children_in_birth
+      dtype: integer
+      table: ${paths.input_dir_SDS}/nyfoedte.csv
+      right_on: CPRnummer_Barn
+      target_col: AntalBoernIFoedslen
+      date_col: FoedselsDato_Barn
+  # mfr MARKOER_KEJSERSNIT and nyfoedte Kejsersnit (SKS code); -1 means no caesarean.
+  - name: caesarean_code
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: caesarean_code
+      dtype: string
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: MARKOER_KEJSERSNIT
+          date_col: FOEDSELSDATO
+          filters: [{column: MARKOER_KEJSERSNIT, operator: "!=", value: "-1"}]
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Kejsersnit
+          date_col: FoedselsDato_Barn
+          filters: [{column: Kejsersnit, operator: "!=", value: "-1"}]
+  # Needs the FK_MFR -> PK_MFR link to reach the child's CPR.
+  - name: due_date
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: due_date
+      dtype: date
+      table:
+        table1: ${paths.input_dir_SDS}/hjemmefoedsler_blanket.csv
+        table2: ${paths.input_dir_SDS}/mfr.csv
+        left_on: [FK_MFR]
+        right_on: [PK_MFR]
+      right_on: CPR_BARN
+      target_col: TERMINSDATO
+      date_col: FOEDSELSDATO
+
+  ### Child
+  - name: child_sex
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: child_sex
+      dtype: string
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: KOEN_BARN
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Koen_Barn
+          date_col: FoedselsDato_Barn
+  - name: birth_weight_g
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: birth_weight_g
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: VAEGT_BARN
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Vaegt_Barn
+          date_col: FoedselsDato_Barn
+          filters: [{column: Vaegt_Barn, operator: ">", value: 0}]
+  - name: birth_length_cm
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: birth_length_cm
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: LAENGDE_BARN
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Laengde_Barn
+          date_col: FoedselsDato_Barn
+          filters: [{column: Laengde_Barn, operator: ">", value: 0}]
+  - name: head_circumference_cm
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: head_circumference_cm
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: HOVEDOMFANG
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Hovedomfang
+          date_col: FoedselsDato_Barn
+          filters: [{column: Hovedomfang, operator: ">", value: 0}]
+  - name: abdominal_circumference_cm
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: abdominal_circumference_cm
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: ABDOMINALOMFANG
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Abdominalomfang
+          date_col: FoedselsDato_Barn
+          filters: [{column: Abdominalomfang, operator: ">", value: 0}]
+  - name: apgar_5min
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: apgar_5min
+      dtype: integer
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: APGARSCORE_EFTER5MINUTTER
+          date_col: FOEDSELSDATO
+          filters: [{column: APGARSCORE_EFTER5MINUTTER, operator: "<", value: 99}]
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Apgarscore
+          date_col: FoedselsDato_Barn
+          filters: [{column: Apgarscore, operator: ">=", value: 0}]
+  - name: placenta_weight_g
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: placenta_weight_g
+      dtype: float
+      sources:
+        - table: ${paths.input_dir_SDS}/mfr.csv
+          right_on: CPR_BARN
+          target_col: PLACENTAVAEGT
+          date_col: FOEDSELSDATO
+        - table: ${paths.input_dir_SDS}/nyfoedte.csv
+          right_on: CPRnummer_Barn
+          target_col: Placentavaegt
+          date_col: FoedselsDato_Barn
+          filters: [{column: Placentavaegt, operator: ">", value: 0}]
+
+  ### Complications recorded in mfr only (1997-2018), kept as the raw register values
+  - name: abruptio
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: abruptio
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: ABRUPTIO
+      date_col: FOEDSELSDATO
+  - name: polyhydramnios
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: polyhydramnios
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: POLYHYDRAMNIOS
+      date_col: FOEDSELSDATO
+  - name: umbilical_cord_prolapse
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: umbilical_cord_prolapse
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: NAVLESNORSFREMFALD
+      date_col: FOEDSELSDATO
+  - name: marker_accreta
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: marker_accreta
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: MARKOER_ACCRETA
+      date_col: FOEDSELSDATO
+  - name: marker_post_partum_bleeding
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: marker_post_partum_bleeding
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: MARKOER_POST_PARTUM_BLOEDNING
+      date_col: FOEDSELSDATO
+  - name: marker_pregnancy_complication
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: marker_pregnancy_complication
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: MARKOER_GRAVIDITETSKOMPLIKATIO
+      date_col: FOEDSELSDATO
+  - name: marker_haemoperitoneum
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: marker_haemoperitoneum
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: MARKOER_HAEMOPERITONEUM
+      date_col: FOEDSELSDATO
+  - name: marker_infections
+    time_window: at_birth
+    function: extract_filtered_values
+    args:
+      left_on: CPR_BARN
+      new_col_name: marker_infections
+      dtype: string
+      table: ${paths.input_dir_SDS}/mfr.csv
+      right_on: CPR_BARN
+      target_col: MARKOER_INFEKTIONER
+      date_col: FOEDSELSDATO
