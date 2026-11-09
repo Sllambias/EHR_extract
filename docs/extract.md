@@ -164,6 +164,40 @@ Three sources, OR'd, so a subject is dropped only if GA is missing in all of the
       value:
 ```
 
+### Limiting a condition to a time window
+
+Give a standard condition `time_window: <name>` and `date_col: <column>` to keep only the rows whose
+`date_col` falls inside that window, inclusive at both ends. Windows are defined once at the top level
+in `time_conditionals`, the same way as for [table.py](table.md#time_conditionals). Their bound columns
+are population columns, such as `BIRTHDAY`, and are taken from the population row of the matching ID.
+
+```yaml
+time_conditionals:
+  birth_to_day_28:
+    min_date: {date_col: BIRTHDAY, offset_days: 0}
+    max_date: {date_col: BIRTHDAY, offset_days: 28}
+
+conditional_criteria:
+  - action: add_column
+    name: DIAGNOSIS_NEC
+    conditions:
+      - standard:
+        table:
+          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Nyfoedt
+          right_on: DW_EK_Nyfoedt
+        match_on: CPRnummer_Barn
+        column: Aktionsdiagnose
+        operator: startswith_any
+        value: [DP77]
+        date_col: Datostart
+        time_window: birth_to_day_28
+```
+
+Rows with an empty or unreadable date, and IDs with an empty bound column, never match. Example:
+[`configs/testing/test_extract_time_window.yaml`](../configs/testing/test_extract_time_window.yaml).
+
 ### Custom conditions
 
 `custom:` carries the connective the same way. `population` and `population_key_column` are injected
@@ -236,7 +270,7 @@ instead of `True`. Rows that did not match are left empty.
 - The column is carried through image matching into every output CSV. The criterion is listed in the
   discards JSON with `n_discards: 0`.
 
-`include` and `exclude` ignore `retrieve` and `date_col`.
+`include` and `exclude` ignore `retrieve`, and use `date_col` only for a `time_window`.
 
 ## Matching images
 
