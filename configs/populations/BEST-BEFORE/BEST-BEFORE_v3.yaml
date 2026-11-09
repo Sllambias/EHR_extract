@@ -88,48 +88,48 @@ conditional_criteria:
         match_on: CPR_BARN
         retrieve: APGARSCORE_EFTER5MINUTTER
 
-  # Necrotizing enterocolitis (DP77): True if a contact starting 0-28 days after birth has the code, False otherwise
-  - action: add_column
-    name: DIAGNOSIS_NEC
-    conditions:
-      - standard:
-        table: &child_contacts
-          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
-          table2: ${paths.input_dir_SDS}/nyfoedte.csv
-          left_on: DW_EK_Nyfoedt
-          right_on: DW_EK_Nyfoedt
-        match_on: CPRnummer_Barn
-        column: Aktionsdiagnose
-        operator: startswith_any
-        value: [DP77]
-        date_col: Datostart
-        time_window: birth_to_day_28
-
-  # Bronchopulmonary dysplasia (DP271), 0-28 days after birth
-  - action: add_column
-    name: DIAGNOSIS_BPD
-    conditions:
-      - standard:
-        table: *child_contacts
-        match_on: CPRnummer_Barn
-        column: Aktionsdiagnose
-        operator: startswith_any
-        value: [DP271]
-        date_col: Datostart
-        time_window: birth_to_day_28
-
-  # Intracranial hemorrhage (DP52), 0-28 days after birth
-  - action: add_column
-    name: DIAGNOSIS_ICH
-    conditions:
-      - standard:
-        table: *child_contacts
-        match_on: CPRnummer_Barn
-        column: Aktionsdiagnose
-        operator: startswith_any
-        value: [DP52]
-        date_col: Datostart
-        time_window: birth_to_day_28
+  ## Necrotizing enterocolitis (DP77): True if a contact starting 0-28 days after birth has the code, False otherwise
+  #- action: add_column
+  #  name: DIAGNOSIS_NEC
+  #  conditions:
+  #    - standard:
+  #      table: &child_contacts
+  #        table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+  #        table2: ${paths.input_dir_SDS}/nyfoedte.csv
+  #        left_on: DW_EK_Nyfoedt
+  #        right_on: DW_EK_Nyfoedt
+  #      match_on: CPRnummer_Barn
+  #      column: Aktionsdiagnose
+  #      operator: startswith_any
+  #      value: [DP77]
+  #      date_col: Datostart
+  #      time_window: birth_to_day_28
+#
+  ## Bronchopulmonary dysplasia (DP271), 0-28 days after birth
+  #- action: add_column
+  #  name: DIAGNOSIS_BPD
+  #  conditions:
+  #    - standard:
+  #      table: *child_contacts
+  #      match_on: CPRnummer_Barn
+  #      column: Aktionsdiagnose
+  #      operator: startswith_any
+  #      value: [DP271]
+  #      date_col: Datostart
+  #      time_window: birth_to_day_28
+#
+  ## Intracranial hemorrhage (DP52), 0-28 days after birth
+  #- action: add_column
+  #  name: DIAGNOSIS_ICH
+  #  conditions:
+  #    - standard:
+  #      table: *child_contacts
+  #      match_on: CPRnummer_Barn
+  #      column: Aktionsdiagnose
+  #      operator: startswith_any
+  #      value: [DP52]
+  #      date_col: Datostart
+  #      time_window: birth_to_day_28
 
 
 imaging_table:
