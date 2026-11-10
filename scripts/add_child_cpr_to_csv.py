@@ -8,7 +8,7 @@ MAX_DATE_DIFFERENCE_DAYS = 150
 def add_child_cpr_to_csv(csv_file, registers):
     df = pd.read_csv(csv_file)
     df_subset = df[['CPR mor', 'Termin']].drop_duplicates().copy()
-    df_subset['_termin_date'] = pd.to_datetime(df_subset['Termin'], errors='coerce', dayfirst=True)
+    df_subset['_termin_date'] = pd.to_datetime(df_subset['Termin'], errors='coerce', format='%Y-%m-%d')
 
     register_dfs = []
     for register in registers:
