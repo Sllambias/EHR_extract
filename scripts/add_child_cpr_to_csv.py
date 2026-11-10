@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 CSV_FILE = "/projects/users/data/UCPH/DeepFetal/projects/heart_seg/datanationalhjerte_phair.csv"
-REGISTERS = ['/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/nyfoedte.csv', '/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/MFR.csv']
+REGISTERS = ['/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/nyfoedte.csv', '/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/mfr.csv']
 
 def add_child_cpr_to_csv(csv_file, registers):
     df = pd.read_csv(csv_file)
@@ -12,7 +12,7 @@ def add_child_cpr_to_csv(csv_file, registers):
         reg_df = pd.read_csv(register)
 
         # differentiate between mfr and nyfoedte
-        if register.endswith("MFR.csv"):
+        if register.endswith("mfr.csv"):
             matches = df_subset.merge(
                 reg_df[['CPR_MODER', 'FOEDSELSDATO', 'CPR_BARN']],
                 left_on=['CPR mor', 'Termin'],
