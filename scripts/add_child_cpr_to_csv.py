@@ -31,7 +31,7 @@ def _read_register(register):
     )
     reg_df = reg_df.rename(columns=columns)
     reg_df["ga_fødsel"] = pd.to_numeric(reg_df["ga_fødsel"], errors="coerce")
-    reg_df["birth_date"] = pd.to_datetime(reg_df["birth_date"], errors="coerce", dayfirst=True)
+    reg_df["birth_date"] = pd.to_datetime(reg_df["birth_date"], errors="coerce", dayfirst=True).dt.normalize()
     return reg_df.dropna(subset=["CPR mor", "CPR barn"]).drop_duplicates()
 
 
@@ -58,13 +58,16 @@ def _closest_child_cpr(candidates, termin, context):
 def add_child_cpr_to_csv(csv_file, registers):
     df = pd.read_csv(csv_file, dtype={"CPR mor": "string", "CPR barn": "string"})
     df["ga_fødsel"] = pd.to_numeric(df["ga_fødsel"], errors="coerce")
-    df["Termin"] = pd.to_datetime(df["Termin"], errors="coerce", dayfirst=True)
+    df["Termin"] = pd.to_datetime(df["Termin"], errors="coerce", dayfirst=True).dt.normalize()
 
     register_df = pd.concat([_read_register(register) for register in registers], ignore_index=True)
     errors = []
 
     for index, row in df.iterrows():
         context = f"CSV row {index + 2} (CPR mor={row['CPR mor']!r}, Termin={row['Termin']})"
+        if pd.isna(row["CPR mor"]):
+            errors.append(f"{context}: mother CPR is missing.")
+            continue
         candidates = register_df[register_df["CPR mor"] == row["CPR mor"]]
         if candidates.empty:
             errors.append(f"{context}: no matching mother CPR in the registers.")
