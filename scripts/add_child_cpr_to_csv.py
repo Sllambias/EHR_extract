@@ -3,7 +3,7 @@ from pathlib import Path
 
 CSV_FILE = "/projects/users/data/UCPH/DeepFetal/projects/heart_seg/datanationalhjerte_phair.csv"
 REGISTERS = ['/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/nyfoedte.csv', '/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/mfr.csv']
-MAX_DATE_DIFFERENCE_DAYS = 150
+MAX_DATE_DIFFERENCE_DAYS = 250
 
 def add_child_cpr_to_csv(csv_file, registers):
     df = pd.read_csv(csv_file)
