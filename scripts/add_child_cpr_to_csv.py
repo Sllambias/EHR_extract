@@ -38,7 +38,7 @@ def add_child_cpr_to_csv(csv_file, registers):
 
     if register_dfs:
         reg_df = pd.concat(register_dfs, ignore_index=True)
-        reg_df['birth_date'] = pd.to_datetime(reg_df['birth_date'], errors='coerce', dayfirst=True)
+        reg_df['birth_date'] = pd.to_datetime(reg_df['birth_date'], errors='coerce', format='%Y-%m-%d')
         matches = df_subset.merge(reg_df, on='CPR mor', how='left')
         matches['day_difference'] = (matches['birth_date'] - matches['_termin_date']).abs().dt.days
         matches = matches[matches['day_difference'] <= MAX_DATE_DIFFERENCE_DAYS]
