@@ -6,8 +6,10 @@ REGISTERS = ['/storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized/nyfoed
 
 def add_child_cpr_to_csv(csv_file, registers):
     df = pd.read_csv(csv_file)
-    df_subset = df[['CPR mor', 'ga_fødsel']].drop_duplicates()
+    # fix ga_fødsel column to be consistent with gestational age in days
+    df['ga_fødsel'] = df['ga_fødsel'].astype(int)
     
+    df_subset = df[['CPR mor', 'ga_fødsel']].drop_duplicates()
     for register in registers:
         reg_df = pd.read_csv(register)
 
