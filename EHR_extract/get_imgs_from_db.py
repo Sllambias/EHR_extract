@@ -28,7 +28,7 @@ def get_all_images_from_db_old():
 
 def get_all_images_from_db_new():
     db_path = (
-        "/storage/archive/UCPH/DeepFetal/ultrasound/foundation_model_path_update/tables/DeepFetal_image_database_051126.sqlite"
+        "/storage/archive/UCPH/DeepFetal/ultrasound/foundation_model_path_update/tables/DeepFetal_image_database_111126.sqlite"
     )
 
     date = datetime.today().strftime("%Y-%m-%d")
