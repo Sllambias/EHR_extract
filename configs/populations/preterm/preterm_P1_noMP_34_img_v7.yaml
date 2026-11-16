@@ -1528,7 +1528,7 @@ conditional_criteria:
 imaging_table:
   table: ${paths.imaging_table}
   columns:
-    CPR_MOR: phair_hash
+    CPR_MOR: file_hash
     FILE_PATH: file_path
     STUDY_DATE: study_date
     PDX: physical_delta_x
