@@ -13,7 +13,7 @@ Template: [`configs/templates/template_population.yaml`](../configs/templates/te
 
 ## Order of operations
 
-[extract.py:227-274](../EHR_extract/extract.py#L227-L274)
+[extract.py:229-276](../EHR_extract/extract.py#L229-L276)
 
 1. `population.tables` — stack sources
 2. `population.composed_tables` — join-then-stack sources
@@ -40,7 +40,7 @@ These are read by attribute, so they must be present. They may be `null` where n
 
 `population.file_path_key` is **not** required and is read by no Python code. It exists so criteria
 can interpolate `${population.file_path_key}`; the code hardcodes `FILE_PATH`
-([extract.py:185](../EHR_extract/extract.py#L185)).
+([extract.py:187](../EHR_extract/extract.py#L187)).
 
 ## Sources
 
@@ -289,7 +289,7 @@ imaging_matching_criteria:
 
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
-([extract.py:267-272](../EHR_extract/extract.py#L267-L272)).
+([extract.py:269-274](../EHR_extract/extract.py#L269-L274)).
 `paths.exclude_train_subjects_not_in_csv`, if set, further restricts train to IDs in that CSV.
 
 The discards JSON records, per criterion, the criterion as written, `n_discards`, the population
