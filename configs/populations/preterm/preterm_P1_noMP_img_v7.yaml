@@ -10,9 +10,10 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4-1/test_split_0.15_2026-11-16.csv
+  img_sequence_predictions: /storage/archive/UCPH/DeepFetal/ultrasound/foundation_model_path_update/derived_data/PN_CompleteV1/PN_CompleteV1_cls_outputs.csv
+  imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-11-11.csv
 
 strict: True
-preterm_cutoff: 238
 
 population: 
   population_key: CPR_BARN
@@ -91,8 +92,122 @@ conditional_criteria:
           mapping_table_path: ${paths.input_dir_SP}/Population.csv
           mapping_table_birth_id_column: BABY_Fødsel_ID
           mapping_table_child_cpr_column: BABY_CPR
-  # No C-section/kejsersnit unless PPROM or Contractions or C-section during birth
+  # Remove multiple births (twins etc.)
   - action: exclude
+    conditions:
+      - custom:
+        function: find_duplicated_ids
+        args: 
+          table: ${paths.input_dir_SDS}/nyfoedte.csv
+          match_on: CPRnummer_Barn
+          id_columns: 
+          - DW_EK_Foedsel
+          - CPRnummer_Mor
+      - custom: or
+        function: find_duplicated_ids
+        args: 
+          table: ${paths.input_dir_SDS}/mfr.csv
+          match_on: CPR_BARN
+          id_columns: 
+          - FOEDSELSLOEBENUMMER
+          - CPR_MODER
+      - custom: or 
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: ["Foster 2", "Foster 3", "Foster 4"]
+          operator: [in, any]
+          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          value_column: Foster nr.
+          value_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_path: ${paths.input_dir_SP}/Population.csv
+          mapping_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_child_cpr_column: BABY_CPR
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: 1
+          operator: [">=", any]
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Flerfold
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+          include_days_after_birth: 7  
+  # Remove close siblings (no SP)
+  - action: exclude
+    conditions:
+      - custom: 
+        function: find_close_births
+        args:
+          value: 280
+          operator: <
+          table: ${paths.input_dir_SDS}/nyfoedte.csv
+          match_on: CPRnummer_Barn
+          mom_column: CPRnummer_Mor
+          birth_id_column: DW_EK_Foedsel
+          delivery_date_column: FoedselsDato_Barn
+      - custom: or
+        function: find_close_births        
+        args:
+          value: 280
+          operator: <
+          table: ${paths.input_dir_SDS}/mfr.csv
+          match_on: CPR_BARN
+          mom_column: CPR_MODER
+          birth_id_column: FOEDSELSLOEBENUMMER
+          delivery_date_column: FOEDSELSDATO
+  # Only first pregnancy 
+  # SDS: 1 = first pregnancy. An empty parity is unknown and kept, "." is dropped.
+  # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
+  # SP: dropped if any non-missing Para in the pregnancy is 2 or more
+  - action: exclude
+    conditions:
+      - standard: 
+        table: ${paths.input_dir_SDS}/mfr.csv
+        match_on: CPR_BARN
+        column: PARITET
+        operator: "!="
+        value: "1"
+      - standard: or
+        table: ${paths.input_dir_SDS}/nyfoedte.csv
+        match_on: CPRnummer_Barn
+        column: Paritet
+        operator: "!="
+        value: "1"
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: 2
+          operator: [">=", any]
+          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
+          value_column: Para
+          value_time_column: Kontakt dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+          include_days_after_birth: 7
+      - custom: or
+        function: match_value_with_child_cpr_on_birthdate
+        args:
+          value: DZ348A #Flergangsfødende
+          operator: ["==", any]
+          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
+          value_column: Diagnosekode
+          value_time_column: Noteret_dato
+          value_mother_cpr_column: MOR_CPR
+          population_birth_column: BIRTHDAY
+          population_gestational_age_column: GA
+          population_child_cpr_column: CPR_BARN
+          population_mother_cpr_column: CPR_MOR
+          include_days_after_birth: 7
+  # C-section/kejsersnit, at any GA, unless PPROM or Contractions or C-section during birth
+  - action: add_column
+    name: c-section_no_PP_CO_CSDB
     conditions:
       - standard:
         table: ${paths.input_dir_SDS}/nyfoedte.csv
@@ -100,12 +215,6 @@ conditional_criteria:
         column: Kejsersnit
         operator: "!="
         value: "-1"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -230,12 +339,6 @@ conditional_criteria:
         column: MARKOER_KEJSERSNIT
         operator: "=="
         value: "1"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - standard: and_not
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
@@ -355,12 +458,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mom_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -493,12 +590,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -617,8 +708,9 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-  # Not induced 
-  - action: exclude
+  # Induced, at any GA, unless PPROM
+  - action: add_column
+    name: induced_no_PP_CO_CSDB
     conditions:
       - standard:
         table: ${paths.input_dir_SDS}/mfr.csv
@@ -626,12 +718,6 @@ conditional_criteria:
         column: MARKOER_IGANGSAETTELSE
         operator: "=="
         value: "1"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - standard: and_not
         table: ${paths.input_dir_SDS}/mfr.csv
         match_on: CPR_BARN
@@ -692,12 +778,6 @@ conditional_criteria:
         column: Igangsaettelse_Ballonkateter
         operator: "=="
         value: "Ja"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -791,12 +871,6 @@ conditional_criteria:
         column: Igangsaettelse_Medicinsk
         operator: "=="
         value: "Ja"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -890,12 +964,6 @@ conditional_criteria:
         column: Igangsaettelse_HSP
         operator: "=="
         value: "Ja"
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -997,12 +1065,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -1104,12 +1166,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -1211,12 +1267,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -1315,12 +1365,6 @@ conditional_criteria:
           mapping_table_path: ${paths.input_dir_SP}/Population.csv
           mapping_table_birth_id_column: BABY_Fødsel_ID
           mapping_table_child_cpr_column: BABY_CPR
-      - standard: and
-        table: population
-        match_on: CPR_BARN
-        column: GA
-        operator: <
-        value: ${preterm_cutoff}
       - custom: and_not 
         function: match_value_with_child_cpr_on_birth_id
         args:
@@ -1408,121 +1452,6 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-  # Remove close siblings (no SP)
-  - action: exclude
-    conditions:
-      - custom: 
-        function: find_close_births
-        args:
-          value: 280
-          operator: <
-          table: ${paths.input_dir_SDS}/nyfoedte.csv
-          match_on: CPRnummer_Barn
-          mom_column: CPRnummer_Mor
-          birth_id_column: DW_EK_Foedsel
-          delivery_date_column: FoedselsDato_Barn
-      - custom: or
-        function: find_close_births        
-        args:
-          value: 280
-          operator: <
-          table: ${paths.input_dir_SDS}/mfr.csv
-          match_on: CPR_BARN
-          mom_column: CPR_MODER
-          birth_id_column: FOEDSELSLOEBENUMMER
-          delivery_date_column: FOEDSELSDATO
-  # Only first pregnancy 
-  # SDS: 1 = first pregnancy. An empty parity is unknown and kept, "." is dropped.
-  # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
-  # SP: dropped if any non-missing Para in the pregnancy is 2 or more
-  - action: exclude
-    conditions:
-      - standard: 
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PARITET
-        operator: "!="
-        value: "1"
-      - standard: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Paritet
-        operator: "!="
-        value: "1"
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: 2
-          operator: [">=", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-          value_column: Para
-          value_time_column: Kontakt dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: DZ348A #Flergangsfødende
-          operator: ["==", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          value_column: Diagnosekode
-          value_time_column: Noteret_dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-  # Remove multiple births (twins etc.)
-  - action: exclude
-    conditions:
-      - custom:
-        function: find_duplicated_ids
-        args: 
-          table: ${paths.input_dir_SDS}/nyfoedte.csv
-          match_on: CPRnummer_Barn
-          id_columns: 
-          - DW_EK_Foedsel
-          - CPRnummer_Mor
-      - custom: or
-        function: find_duplicated_ids
-        args: 
-          table: ${paths.input_dir_SDS}/mfr.csv
-          match_on: CPR_BARN
-          id_columns: 
-          - FOEDSELSLOEBENUMMER
-          - CPR_MODER
-      - custom: or 
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: ["Foster 2", "Foster 3", "Foster 4"]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-          value_column: Foster nr.
-          value_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_path: ${paths.input_dir_SP}/Population.csv
-          mapping_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_child_cpr_column: BABY_CPR
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: 1
-          operator: [">=", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-          value_column: Flerfold
-          value_time_column: Kontakt dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-  # Columns from ultradino-preterm's FirstPreg.yaml marks. add_column keeps every row.
-  # A child is marked if any source matches. Pregnancy records are looked up in [birth - GA, birth + 7 days].
   # Cerclage
   - action: add_column
     name: cerclage
@@ -1602,264 +1531,6 @@ conditional_criteria:
         args:
           value: "DO343C"
           operator: ["==", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          value_column: Diagnosekode
-          value_time_column: Noteret_dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-  # C-section (kejsersnit), at any GA and with or without an exemption
-  - action: add_column
-    name: c-section
-    conditions:
-      - standard:
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Kejsersnit
-        operator: "!="
-        value: "-1"
-      - standard: or
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: MARKOER_KEJSERSNIT
-        operator: "=="
-        value: "1"
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: "KMCA"
-          operator: [startswith, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
-          value_column: ProcedureCode
-          value_time_column: ServiceDatetime
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
-        args:
-          value: "KMCA"
-          operator: [startswith, any]
-          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
-          value_column: C_OPR
-          value_id_column: V_RECNUM
-          value_time_column: D_ODTO
-          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
-          mapping_table_id_column: K_RECNUM
-          mapping_table_mom_cpr_column: V_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mom_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-  # C-section during birth
-  - action: add_column
-    name: c-section_during_birth
-    conditions:
-      - custom:
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: [KMCA10D, KMCA10E]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
-          value_column: ProcedureCode
-          value_time_column: ServiceDatetime
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
-        args:
-          value: [KMCA10D, KMCA10E]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SDS}/t_sksopr.csv
-          value_column: C_OPR
-          value_id_column: V_RECNUM
-          value_time_column: D_ODTO
-          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
-          mapping_table_id_column: K_RECNUM
-          mapping_table_mom_cpr_column: V_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mom_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: [KMCA10D, KMCA10E]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SDS}/mor_procedurer.csv
-          value_column: ProcedureKode
-          value_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
-          mapping_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_child_cpr_column: CPRnummer_Barn
-  # Contractions with preterm birth
-  - action: add_column
-    name: contractions_with_preterm_birth
-    conditions:
-      - custom:
-        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
-        args:
-          value: "DO601"
-          operator: ["==", any]
-          value_table_path: ${paths.input_dir_SDS}/t_diag.csv
-          value_column: C_DIAG
-          value_id_column: V_RECNUM
-          value_time_column: D_INDDTO
-          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
-          mapping_table_id_column: K_RECNUM
-          mapping_table_mom_cpr_column: V_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mom_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: "DO601"
-          operator: ["==", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          value_column: Diagnosekode
-          value_time_column: Noteret_dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: "DO601"
-          operator: ["==", any]
-          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
-          value_column: DiagnoseKode
-          value_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
-          mapping_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_child_cpr_column: CPRnummer_Barn
-  # Induced, at any GA and with or without PPROM
-  - action: add_column
-    name: induced
-    conditions:
-      - standard:
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: MARKOER_IGANGSAETTELSE
-        operator: "=="
-        value: "1"
-      - standard: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_Ballonkateter
-        operator: "=="
-        value: "Ja"
-      - standard: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_Medicinsk
-        operator: "=="
-        value: "Ja"
-      - standard: or
-        table: ${paths.input_dir_SDS}/nyfoedte.csv
-        match_on: CPRnummer_Barn
-        column: Igangsaettelse_HSP
-        operator: "=="
-        value: "Ja"
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: [KMAC00, KMAC96A, BKHD2, BKHD20]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Procedurer.csv
-          value_column: ProcedureCode
-          value_time_column: ServiceDatetime
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: [DO837, DO847]
-          operator: [startswith_any, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
-          value_column: Diagnosekode
-          value_time_column: Noteret_dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: ["Vaginal, igangsat", "Vaginal, igangsat (Udgået)"]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-          value_column: Måde
-          value_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_path: ${paths.input_dir_SP}/Population.csv
-          mapping_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_child_cpr_column: BABY_CPR
-  # PPROM
-  - action: add_column
-    name: pprom
-    conditions:
-      - standard:
-        table: ${paths.input_dir_SDS}/mfr.csv
-        match_on: CPR_BARN
-        column: PPROM
-        operator: "in"
-        value: [DO422, DO420, DO424]
-      - custom: or
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: [DO422, DO420, DO424]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SDS}/mor_diagnoser.csv
-          value_column: DiagnoseKode
-          value_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
-          mapping_table_birth_id_column: DW_EK_Foedsel
-          mapping_table_child_cpr_column: CPRnummer_Barn
-      - custom: or
-        function: match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate
-        args:
-          value: [DO422, DO420, DO424]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SDS}/t_diag.csv
-          value_column: C_DIAG
-          value_id_column: V_RECNUM
-          value_time_column: D_INDDTO
-          mapping_table_path: ${paths.input_dir_SDS}/t_adm.csv
-          mapping_table_id_column: K_RECNUM
-          mapping_table_mom_cpr_column: V_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mom_cpr_column: CPR_MOR
-          include_days_after_birth: 7
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: [DO422, DO420, DO424]
-          operator: [in, any]
           value_table_path: ${paths.input_dir_SP}/Mor - CPMI - Diagnoseliste.csv
           value_column: Diagnosekode
           value_time_column: Noteret_dato
@@ -2025,3 +1696,36 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
+
+imaging_table:
+  table: ${paths.imaging_table}
+  columns:
+    CPR_MOR: file_hash
+    FILE_PATH: file_path
+    STUDY_DATE: study_date
+    PDX: physical_delta_x
+    PDY: physical_delta_y
+    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
+
+
+imaging_matching_criteria:
+  # Filter1: Scan-to-delivery interval
+  # Filter2: GA at scan
+  - function: find_images_within_time_windows
+    args:
+      scan_date_column: STUDY_DATE
+      image_path_column: ${population.file_path_key}
+      population_ga_in_days_at_delivery_column: GA
+      population_delivery_date_column: BIRTHDAY
+      min_diff_days_scan_to_delivery: 0
+      max_diff_days_scan_to_delivery: 210
+      min_ga_in_days_at_scan: 112
+      max_ga_in_days_at_scan: 168
+  # Only Cervix (14)
+  - function: find_images_with_predicted_classes
+    args:
+      table: ${paths.img_sequence_predictions}
+      classes: [12]
+      image_path_column: file_path
+      class_column: max_pred
+      population_image_path_column: ${population.file_path_key}
