@@ -70,9 +70,9 @@ before being appended to the population. Every entry must set `format_SP_GA`.
 
 `format_SP_GA: True` converts Sundhedsplatformen's GA strings to total days: `"38 2"` → `268`, a
 bare `"38"` → `266`. It expects **weeks and days separated by a space** and reads only the first
-character of the second token; anything else yields an empty string, and a token like
-`"38 weeks 2 days"` raises ([utils.py:270-282](../EHR_extract/utils/utils.py#L270-L282)). Check what
-your source column actually contains before enabling it.
+character of the second token; anything else yields null, so the row fails a `missing` GA check, and
+a token like `"38 weeks 2 days"` raises ([utils.py:321-333](../EHR_extract/utils/utils.py#L321-L333)).
+Check what your source column actually contains before enabling it.
 
 ```yaml
 population:
@@ -124,13 +124,19 @@ of a group". It looks like a YAML mistake; it is not.
   ...
 - standard: and        # intersect with the group so far
   ...
+- standard: and_not    # remove its matches from the group so far
+  ...
 - standard: or         # close the group, start a new one
   ...
 ```
 
-`and` intersects, `or` unions the accumulated group into the result. The net effect is an **OR of
-AND-groups — `and` binds tighter than `or`**
-([extract.py:139-154](../EHR_extract/extract.py#L139-L154)).
+`and` intersects, `and_not` subtracts, `or` unions the accumulated group into the result. The net
+effect is an **OR of AND-groups — `and` and `and_not` bind tighter than `or`**
+([extract.py:139-155](../EHR_extract/extract.py#L139-L155)).
+
+Write "has no record of X" as `and_not` with a condition that matches X, e.g. `operator: in` or
+`[in, any]`. IDs with no rows in that table are then kept in the group. A `not_in` condition with
+`and` drops them instead, because an ID without rows never matches.
 
 Omitting `operator` matches every row of the table whose `match_on` is in the population — useful for
 "appears in this table at all".

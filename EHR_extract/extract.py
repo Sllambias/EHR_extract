@@ -142,6 +142,8 @@ def extract_from_cfg(cfg, population):
             elif conditional == "and":
                 current_condition_population = current_condition_population.intersection(matched_ids)
                 current_values.append(condition_values)
+            elif conditional == "and_not":
+                current_condition_population = current_condition_population.difference(matched_ids)
             elif conditional == "or":
                 criterion_population = criterion_population.union(current_condition_population)
                 criterion_values += keep_matched_values(
