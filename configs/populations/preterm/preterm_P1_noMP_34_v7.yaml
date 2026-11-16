@@ -9,7 +9,7 @@ paths:
   output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/${hydra:job.config_name}
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4/test_split_0.15_2026-06-08.csv
+  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4-1/test_split_0.15_2026-11-16.csv
 
 strict: True
 preterm_cutoff: 238
