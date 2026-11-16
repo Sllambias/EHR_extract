@@ -7,7 +7,8 @@ paths:
   input_dir_SDS: /storage/archive/UCPH/DeepFetal/SDS/registers_pseudonymized
   input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables
   input_dir_img_db: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots
-  output_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits/${hydra:job.config_name}
+  split_dir: /projects/users/data/UCPH/DeepFetal/projects/common/splits
+  output_dir: ${paths.split_dir}/${hydra:job.config_name}
 
 update_train_split: ${paths.split_dir}/split_V4/train_split_0.15_2026-06-08.csv
 update_test_split: ${paths.split_dir}/split_V4/test_split_0.15_2026-06-08.csv
