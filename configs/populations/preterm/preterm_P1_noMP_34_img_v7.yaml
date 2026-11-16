@@ -1555,5 +1555,5 @@ imaging_matching_criteria:
       table: ${paths.img_sequence_predictions}
       classes: [12]
       image_path_column: file_path
-      class_column: is_cervix
+      class_column: max_pred
       population_image_path_column: ${population.file_path_key}
