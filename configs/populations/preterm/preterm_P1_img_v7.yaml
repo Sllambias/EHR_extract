@@ -92,50 +92,6 @@ conditional_criteria:
           mapping_table_path: ${paths.input_dir_SP}/Population.csv
           mapping_table_birth_id_column: BABY_Fødsel_ID
           mapping_table_child_cpr_column: BABY_CPR
-  # Remove multiple births (twins etc.)
-  - action: exclude
-    conditions:
-      - custom:
-        function: find_duplicated_ids
-        args: 
-          table: ${paths.input_dir_SDS}/nyfoedte.csv
-          match_on: CPRnummer_Barn
-          id_columns: 
-          - DW_EK_Foedsel
-          - CPRnummer_Mor
-      - custom: or
-        function: find_duplicated_ids
-        args: 
-          table: ${paths.input_dir_SDS}/mfr.csv
-          match_on: CPR_BARN
-          id_columns: 
-          - FOEDSELSLOEBENUMMER
-          - CPR_MODER
-      - custom: or 
-        function: match_value_with_child_cpr_on_birth_id
-        args:
-          value: ["Foster 2", "Foster 3", "Foster 4"]
-          operator: [in, any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
-          value_column: Foster nr.
-          value_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_path: ${paths.input_dir_SP}/Population.csv
-          mapping_table_birth_id_column: BABY_Fødsel_ID
-          mapping_table_child_cpr_column: BABY_CPR
-      - custom: or
-        function: match_value_with_child_cpr_on_birthdate
-        args:
-          value: 1
-          operator: [">=", any]
-          value_table_path: ${paths.input_dir_SP}/Mor - Obstetrisk Historik DEL 1.csv
-          value_column: Flerfold
-          value_time_column: Kontakt dato
-          value_mother_cpr_column: MOR_CPR
-          population_birth_column: BIRTHDAY
-          population_gestational_age_column: GA
-          population_child_cpr_column: CPR_BARN
-          population_mother_cpr_column: CPR_MOR
-          include_days_after_birth: 7  
   # Remove close siblings (no SP)
   - action: exclude
     conditions:
@@ -1656,7 +1612,7 @@ conditional_criteria:
           mapping_table_path: ${paths.input_dir_SDS}/nyfoedte.csv
           mapping_table_birth_id_column: DW_EK_Foedsel
           mapping_table_child_cpr_column: CPRnummer_Barn
-  # Multiple birth (twins etc.), as ultradino-preterm defines it
+  # Multiple birth (twins etc.)
   - action: add_column
     name: multi_birth
     conditions:
@@ -1682,6 +1638,17 @@ conditional_criteria:
             right_on: BABY_Fødsel_ID
           match_on: BABY_CPR
           id_columns: [MOR_CPR, BABY_Fødsel_ID]
+      - custom: or 
+        function: match_value_with_child_cpr_on_birth_id
+        args:
+          value: ["Foster 2", "Foster 3", "Foster 4"]
+          operator: [in, any]
+          value_table_path: ${paths.input_dir_SP}/Mor - Fødselsresume - DEL 1.csv
+          value_column: Foster nr.
+          value_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_path: ${paths.input_dir_SP}/Population.csv
+          mapping_table_birth_id_column: BABY_Fødsel_ID
+          mapping_table_child_cpr_column: BABY_CPR
       - custom: or
         function: match_value_with_child_cpr_on_birthdate
         args:
@@ -1696,7 +1663,7 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-
+          
 imaging_table:
   table: ${paths.imaging_table}
   columns:
