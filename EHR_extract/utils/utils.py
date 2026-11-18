@@ -268,6 +268,15 @@ def convert_to_datetime(
     return pl.coalesce([typed, parsed_dt])
 
 
+def format_dates(table, columns):
+    """Turn date, datetime and date string columns into dates, written as YYYY-MM-DD."""
+    for column in columns:
+        if table.schema[column] == pl.String:
+            table = table.with_columns(pl.col(column).str.to_datetime())
+        table = table.with_columns(pl.col(column).cast(pl.Date))
+    return table
+
+
 def date_bound_expr(date_col=None, offset_days=0, subtract_days_col=None) -> pl.Expr | None:
     """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date): date_col - subtract_days_col + offset_days."""
     if date_col is None:

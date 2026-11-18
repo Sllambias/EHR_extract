@@ -287,6 +287,13 @@ imaging_matching_criteria:
 | `<population_save_path>_train.csv` / `_test.csv` | only when `paths.holdout_csv` is set |
 | `<discards_save_path>` | JSON, one entry per criterion |
 
+`write_parquet: True` also writes each population file as `.parquet`. The optional `date_columns` key
+changes only the written population files, after all criteria and the train/test split have run:
+
+```yaml
+date_columns: [BIRTHDAY, STUDY_DATE]   # written as YYYY-MM-DD; date strings with a time part are parsed too
+```
+
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
 ([extract.py:269-274](../EHR_extract/extract.py#L269-L274)).
