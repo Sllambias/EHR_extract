@@ -12,6 +12,7 @@ paths:
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4-1/test_split_0.15_2026-11-16.csv
 
 strict: True
+write_parquet: True
 
 population: 
   population_key: CPR_BARN

@@ -14,6 +14,7 @@ paths:
   imaging_table: /projects/users/data/UCPH/DeepFetal/ultrasound/tables/database_snapshots/all_images_2026-11-11.csv
 
 strict: True
+write_parquet: True
 
 population: 
   population_key: CPR_BARN
