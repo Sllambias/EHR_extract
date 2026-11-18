@@ -257,6 +257,8 @@ def main(cfg: DictConfig) -> None:
     discards_file_path.write_text(json.dumps(d, indent=4))
 
     population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
+    if cfg.get("write_parquet", False):
+        population.write_parquet(cfg.paths.population_save_path + "_train_and_test.parquet")
 
     if cfg.paths.holdout_csv is not None:
         train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key)
@@ -274,6 +276,9 @@ def main(cfg: DictConfig) -> None:
             test_pop = test_pop.filter(~pl.col(cfg.population.population_key).is_in(intersection))
         train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
         test_pop.write_csv(cfg.paths.population_save_path + "_test.csv")
+        if cfg.get("write_parquet", False):
+            train_pop.write_parquet(cfg.paths.population_save_path + "_train.parquet")
+            test_pop.write_parquet(cfg.paths.population_save_path + "_test.parquet")
 
 
 if __name__ == "__main__":
