@@ -72,7 +72,8 @@ conditional_criteria:
   # Only first pregnancy
   # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
   # SP: dropped if any non-missing Para in the pregnancy is 2 or more
-  - action: exclude
+  - action: add_column
+    name: first_pregnancy
     conditions:
       - custom:
         function: match_value_with_child_cpr_on_birthdate
@@ -480,6 +481,7 @@ imaging_table:
     STUDY_DATE: study_date
     PDX: physical_delta_x
     PDY: physical_delta_y
+    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
 
 
 imaging_matching_criteria:
