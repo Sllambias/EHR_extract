@@ -480,7 +480,6 @@ imaging_table:
     STUDY_DATE: study_date
     PDX: physical_delta_x
     PDY: physical_delta_y
-    NO_OCR_FILE_PATH: file_path
 
 
 imaging_matching_criteria:
