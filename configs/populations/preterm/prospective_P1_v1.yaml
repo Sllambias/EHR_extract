@@ -11,8 +11,6 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4-1/test_split_0.15_2026-11-16.csv
-  # PN cervix predictions for the prospective images
-  img_sequence_predictions: ???
   imaging_table: /projects/users/people/seblla/repos/prepare_emilie_prospective_data/prospective_images_for_PN.csv
 
 strict: True
@@ -505,11 +503,3 @@ imaging_matching_criteria:
       max_ga_in_days_at_scan: 168
       # Adds the columns scan_to_delivery and ga_at_scan (days)
       add_columns: True
-  # Only Cervix (14)
-  - function: find_images_with_predicted_classes
-    args:
-      table: ${paths.img_sequence_predictions}
-      classes: [12]
-      image_path_column: file_path
-      class_column: max_pred
-      population_image_path_column: ${population.file_path_key}
