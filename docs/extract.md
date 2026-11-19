@@ -13,7 +13,7 @@ Template: [`configs/templates/template_population.yaml`](../configs/templates/te
 
 ## Order of operations
 
-[extract.py:227-274](../EHR_extract/extract.py#L227-L274)
+[extract.py:229-276](../EHR_extract/extract.py#L229-L276)
 
 1. `population.tables` — stack sources
 2. `population.composed_tables` — join-then-stack sources
@@ -40,7 +40,7 @@ These are read by attribute, so they must be present. They may be `null` where n
 
 `population.file_path_key` is **not** required and is read by no Python code. It exists so criteria
 can interpolate `${population.file_path_key}`; the code hardcodes `FILE_PATH`
-([extract.py:185](../EHR_extract/extract.py#L185)).
+([extract.py:187](../EHR_extract/extract.py#L187)).
 
 ## Sources
 
@@ -70,9 +70,9 @@ before being appended to the population. Every entry must set `format_SP_GA`.
 
 `format_SP_GA: True` converts Sundhedsplatformen's GA strings to total days: `"38 2"` → `268`, a
 bare `"38"` → `266`. It expects **weeks and days separated by a space** and reads only the first
-character of the second token; anything else yields an empty string, and a token like
-`"38 weeks 2 days"` raises ([utils.py:270-282](../EHR_extract/utils/utils.py#L270-L282)). Check what
-your source column actually contains before enabling it.
+character of the second token; anything else yields null, so the row fails a `missing` GA check, and
+a token like `"38 weeks 2 days"` raises ([utils.py:321-333](../EHR_extract/utils/utils.py#L321-L333)).
+Check what your source column actually contains before enabling it.
 
 ```yaml
 population:
@@ -124,13 +124,19 @@ of a group". It looks like a YAML mistake; it is not.
   ...
 - standard: and        # intersect with the group so far
   ...
+- standard: and_not    # remove its matches from the group so far
+  ...
 - standard: or         # close the group, start a new one
   ...
 ```
 
-`and` intersects, `or` unions the accumulated group into the result. The net effect is an **OR of
-AND-groups — `and` binds tighter than `or`**
-([extract.py:139-154](../EHR_extract/extract.py#L139-L154)).
+`and` intersects, `and_not` subtracts, `or` unions the accumulated group into the result. The net
+effect is an **OR of AND-groups — `and` and `and_not` bind tighter than `or`**
+([extract.py:139-155](../EHR_extract/extract.py#L139-L155)).
+
+Write "has no record of X" as `and_not` with a condition that matches X, e.g. `operator: in` or
+`[in, any]`. IDs with no rows in that table are then kept in the group. A `not_in` condition with
+`and` drops them instead, because an ID without rows never matches.
 
 Omitting `operator` matches every row of the table whose `match_on` is in the population — useful for
 "appears in this table at all".
@@ -281,9 +287,16 @@ imaging_matching_criteria:
 | `<population_save_path>_train.csv` / `_test.csv` | only when `paths.holdout_csv` is set |
 | `<discards_save_path>` | JSON, one entry per criterion |
 
+`write_parquet: True` also writes each population file as `.parquet`. The optional `date_columns` key
+changes only the written population files, after all criteria and the train/test split have run:
+
+```yaml
+date_columns: [BIRTHDAY, STUDY_DATE]   # written as YYYY-MM-DD; date strings with a time part are parsed too
+```
+
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
-([extract.py:267-272](../EHR_extract/extract.py#L267-L272)).
+([extract.py:269-274](../EHR_extract/extract.py#L269-L274)).
 `paths.exclude_train_subjects_not_in_csv`, if set, further restricts train to IDs in that CSV.
 
 The discards JSON records, per criterion, the criterion as written, `n_discards`, the population

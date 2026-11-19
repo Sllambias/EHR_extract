@@ -56,11 +56,17 @@ different route from a maternal row back to a child: via the mother's CPR and th
 birth ID, or via an LPR contact ID mapped to the mother's CPR and then the birth date. Pick the one
 whose join keys your source table actually has.
 
+Their `operator` is `[op, any]` or `[op, all]`: a child matches if any or all of its rows pass `op`.
+Rows where `op` gives null (an empty cell) are skipped. A child with no rows never matches, so
+`[not_in, all]` does not mean "has no such record". Use `[in, any]` with `and_not` for that
+([extract.md](extract.md#the-indentation-is-deliberate)).
+
 ### In `imaging_matching_criteria` — return `(population, discard_stats)`
 
 | Function | `args` |
 |---|---|
-| `find_images_within_time_windows` | `scan_date_column`, `image_path_column`, `min_diff_days_scan_to_delivery`, `max_diff_days_scan_to_delivery`, `min_ga_in_days_at_scan`, `max_ga_in_days_at_scan`, optional `population_delivery_date_column` (default `BIRTHDAY`), `population_ga_in_days_at_delivery_column` (default `GA`) |
+| `find_images_within_time_windows` | `scan_date_column`, `image_path_column`, `min_diff_days_scan_to_delivery`, `max_diff_days_scan_to_delivery`, `min_ga_in_days_at_scan`, `max_ga_in_days_at_scan`, optional `population_delivery_date_column` (default `BIRTHDAY`), `population_ga_in_days_at_delivery_column` (default `GA`), `add_columns` (default `False`; `True` keeps the columns `scan_to_delivery` and `ga_at_scan`, in days) |
+| `find_images_with_one_region` | `columns` (list). Drops images where any of the columns holds a list of values, e.g. `[0.01, 0.02]` in `PDX` for a flow image with two regions |
 | `find_images_with_predicted_classes` | `table`, `classes` (list), `class_column`, `image_path_column`, `population_image_path_column` |
 
 Using one of these in `conditional_criteria`, or one of the set-returning functions in

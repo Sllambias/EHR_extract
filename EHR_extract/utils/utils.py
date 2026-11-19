@@ -268,6 +268,15 @@ def convert_to_datetime(
     return pl.coalesce([typed, parsed_dt])
 
 
+def format_dates(table, columns):
+    """Turn date, datetime and date string columns into dates, written as YYYY-MM-DD."""
+    for column in columns:
+        if table.schema[column] == pl.String:
+            table = table.with_columns(pl.col(column).str.to_datetime())
+        table = table.with_columns(pl.col(column).cast(pl.Date))
+    return table
+
+
 def date_bound_expr(date_col=None, offset_days=0, subtract_days_col=None) -> pl.Expr | None:
     """Use as date_bound_expr(**cfg.time_conditionals.<window>.min_date): date_col - subtract_days_col + offset_days."""
     if date_col is None:
@@ -312,7 +321,7 @@ def merge_composed_population_tables(population, population_merge_on, composed_t
             merged_table = merged_table.join(tab, on=composition_cfg.merge_on)
         merged_table = merged_table.select(sorted(merged_table.columns))
         if composition_cfg.format_SP_GA:
-            merged_table = merged_table.with_columns(pl.col("GA").map_elements(format_sp_ga))
+            merged_table = merged_table.with_columns(pl.col("GA").map_elements(format_sp_ga, return_dtype=pl.String))
         population = population.vstack(merged_table)
 
     return population
@@ -323,14 +332,14 @@ def format_sp_ga(ga_str):
     if isinstance(ga_str, str):
         parts = ga_str.split()
         if len(parts) == 0 or not parts[0].isnumeric():
-            return ""
+            return None
         if len(parts) == 1:
             return str(int(parts[0]) * 7)
         weeks = int(parts[0])
         days = int(parts[1][0])
         return str(weeks * 7 + days)
     else:
-        return ""
+        return None
 
 
 def format_criterion(criterion):

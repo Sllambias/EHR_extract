@@ -13,6 +13,7 @@ paths:
   holdout_csv: /Users/zcr545/Desktop/Projects/repos/EHR_extract/test_data/tables/holdout.csv
   
 strict: True 
+write_parquet: True
 
 conditional_criteria:
   - action: exclude

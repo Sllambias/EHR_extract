@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from EHR_extract.utils.custom_find_functions import (
     find_close_births,
     find_duplicated_ids,
+    find_images_with_one_region,
     find_images_with_predicted_classes,
     find_images_within_time_windows,
     match_images_with_child,
@@ -22,6 +23,7 @@ from EHR_extract.utils.utils import (
     deduplicate_on_key,
     filter_numeric_rows,
     format_criterion,
+    format_dates,
     get_python_operator,
     load_table,
     merge_composed_population_tables,
@@ -40,6 +42,7 @@ Plugins.instance().register(RecursiveSearchpathPlugin)
 custom_functions = {
     "find_close_births": find_close_births,
     "find_images_within_time_windows": find_images_within_time_windows,
+    "find_images_with_one_region": find_images_with_one_region,
     "find_images_with_predicted_classes": find_images_with_predicted_classes,
     "find_duplicated_ids": find_duplicated_ids,
     "match_images_with_child": match_images_with_child,
@@ -142,6 +145,8 @@ def extract_from_cfg(cfg, population):
             elif conditional == "and":
                 current_condition_population = current_condition_population.intersection(matched_ids)
                 current_values.append(condition_values)
+            elif conditional == "and_not":
+                current_condition_population = current_condition_population.difference(matched_ids)
             elif conditional == "or":
                 criterion_population = criterion_population.union(current_condition_population)
                 criterion_values += keep_matched_values(
@@ -219,6 +224,14 @@ def make_train_test_split(holdout_csv_path, population, split_key):
     return train, test
 
 
+def write_population(population, cfg, suffix):
+    """Write the population with the date_columns as YYYY-MM-DD."""
+    population = format_dates(population, cfg.get("date_columns", []))
+    population.write_csv(cfg.paths.population_save_path + suffix + ".csv")
+    if cfg.get("write_parquet", False):
+        population.write_parquet(cfg.paths.population_save_path + suffix + ".parquet")
+
+
 @hydra.main(
     config_path=get_config_path(),
     config_name="default",
@@ -254,7 +267,7 @@ def main(cfg: DictConfig) -> None:
 
     discards_file_path.write_text(json.dumps(d, indent=4))
 
-    population.write_csv(cfg.paths.population_save_path + "_train_and_test.csv")
+    write_population(population, cfg, "_train_and_test")
 
     if cfg.paths.holdout_csv is not None:
         train_pop, test_pop = make_train_test_split(cfg.paths.holdout_csv, population, cfg.population.split_key)
@@ -270,8 +283,8 @@ def main(cfg: DictConfig) -> None:
                 f"leak detected in train and test splits. Removing leaked samples from TEST but this should be investigated. Leaked IDs: {intersection}"
             )
             test_pop = test_pop.filter(~pl.col(cfg.population.population_key).is_in(intersection))
-        train_pop.write_csv(cfg.paths.population_save_path + "_train.csv")
-        test_pop.write_csv(cfg.paths.population_save_path + "_test.csv")
+        write_population(train_pop, cfg, "_train")
+        write_population(test_pop, cfg, "_test")
 
 
 if __name__ == "__main__":

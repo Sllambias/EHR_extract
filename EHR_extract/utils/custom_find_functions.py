@@ -279,31 +279,51 @@ def find_images_within_time_windows(
     population_key_column,
     population_delivery_date_column="BIRTHDAY",
     population_ga_in_days_at_delivery_column="GA",
+    add_columns=False,
 ):
+    """Keep images inside both windows. add_columns keeps the columns scan_to_delivery and ga_at_scan (days)."""
     discard_stats = {"n_population_before_discard": len(population)}
     # Calculate absolute difference in days
     population = population.with_columns(
-        diff_in_days_scan_to_delivery=((pl.col(population_delivery_date_column) - pl.col(scan_date_column)).dt.total_days())
+        scan_to_delivery=((pl.col(population_delivery_date_column) - pl.col(scan_date_column)).dt.total_days())
     )
 
     population = population.filter(
-        (min_diff_days_scan_to_delivery < pl.col("diff_in_days_scan_to_delivery"))
-        & (pl.col("diff_in_days_scan_to_delivery") < max_diff_days_scan_to_delivery)
+        (min_diff_days_scan_to_delivery < pl.col("scan_to_delivery"))
+        & (pl.col("scan_to_delivery") < max_diff_days_scan_to_delivery)
     )
 
     population = filter_numeric_rows(population, population_ga_in_days_at_delivery_column)
     population = population.with_columns(
-        GA_in_days_at_scantime=(pl.col(population_ga_in_days_at_delivery_column)).cast(pl.Float64)
-        - pl.col("diff_in_days_scan_to_delivery")
+        ga_at_scan=(pl.col(population_ga_in_days_at_delivery_column)).cast(pl.Float64) - pl.col("scan_to_delivery")
     )
     population = population.filter(
-        (min_ga_in_days_at_scan < pl.col("GA_in_days_at_scantime"))
-        & (pl.col("GA_in_days_at_scantime") < max_ga_in_days_at_scan)
+        (min_ga_in_days_at_scan < pl.col("ga_at_scan")) & (pl.col("ga_at_scan") < max_ga_in_days_at_scan)
     )
-    population = population.drop(["GA_in_days_at_scantime", "diff_in_days_scan_to_delivery"])
+    if add_columns:
+        population = population.with_columns(pl.col("ga_at_scan").cast(pl.Int64))
+    else:
+        population = population.drop(["ga_at_scan", "scan_to_delivery"])
     discard_stats.update(
         {
             "criteria": "find_images_and_timedeltas",
+            "discards": "N/A",
+            "n_discards": discard_stats["n_population_before_discard"] - len(population),
+        }
+    )
+    return population, discard_stats
+
+
+def find_images_with_one_region(columns, population, population_key_column):
+    """Drop images where any of the columns holds a list of values, such as "[0.01, 0.02]" for flow images."""
+    discard_stats = {"n_population_before_discard": len(population)}
+    for column in columns:
+        n_values = pl.col(column).cast(pl.String).str.strip_chars("[] ").str.split(",").list.len()
+        population = population.filter(n_values.fill_null(1) == 1)
+
+    discard_stats.update(
+        {
+            "criteria": "find_images_with_one_region",
             "discards": "N/A",
             "n_discards": discard_stats["n_population_before_discard"] - len(population),
         }
