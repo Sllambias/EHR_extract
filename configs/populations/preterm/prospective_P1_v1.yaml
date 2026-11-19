@@ -10,7 +10,6 @@ paths:
   output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/preterm/${hydra:job.config_name}
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
-  holdout_csv: /projects/users/data/UCPH/DeepFetal/projects/common/splits/split_V4-1/test_split_0.15_2026-11-16.csv
   imaging_table: /projects/users/people/seblla/repos/prepare_emilie_prospective_data/prospective_images_for_PN.csv
 
 strict: True
@@ -481,7 +480,7 @@ imaging_table:
     STUDY_DATE: study_date
     PDX: physical_delta_x
     PDY: physical_delta_y
-    NO_OCR_FILE_PATH: no_ocr_preprocessed_file_path
+    NO_OCR_FILE_PATH: file_path
 
 
 imaging_matching_criteria:
