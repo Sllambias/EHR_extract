@@ -11,7 +11,7 @@ paths:
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
   imaging_table: /projects/users/people/seblla/repos/prepare_emilie_prospective_data/prospective_images_for_PN.csv
-
+  holdout_csv:
 strict: True
 write_parquet: True
 # Written as YYYY-MM-DD
