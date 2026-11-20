@@ -9,7 +9,7 @@ paths:
   population_table: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/AstCla/AstClav3/AstClav3_population_train.csv
 
 population_id_column: CPR_MOR
-max_ids: 30
+max_ids: 9999
 
 time_conditionals:
   pregnancy:
