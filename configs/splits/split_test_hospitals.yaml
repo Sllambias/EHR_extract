@@ -1,0 +1,45 @@
+# @package _global_
+# =====================================================================================
+# Train / test split of MOTHERS: every mother with at least one image at the chosen hospitals goes to the
+# TEST set (with all her data, at every hospital), optionally together with an existing test split.
+# All other mothers go to TRAIN.
+# Run:   python EHR_extract/split.py --config-name split_test_hospitals
+# Use:   put the written test_split_*.csv in holdout_csv of a cohort config (split_key: CPR_MOR)
+# =====================================================================================
+defaults:
+  - /default
+  - _self_
+
+paths:
+  input_dir_SDS: /home/am/data/raw/sds
+  output_dir: /home/am/Documents/splits/${hydra:job.config_name}
+  imaging_table: /home/am/Documents/DeepFetalCSVs/new_September/DeepFetal_image_database_090926_joined_on_sop_instance_uid_and_xx-file_hash.csv
+
+custom_split_fn: test_hospitals
+
+population:
+  population_key: CPR_MOR
+  # mothers from the registers (the mothers of imaging_table are added by the function)
+  tables:
+    - table: ${paths.input_dir_SDS}/mfr.csv
+      columns:
+        CPR_MOR: CPR_MODER
+    - table: ${paths.input_dir_SDS}/nyfoedte.csv
+      columns:
+        CPR_MOR: CPRnummer_Mor
+  # image database: mother ID and institution of every image
+  imaging_table:
+    table: ${paths.imaging_table}
+    columns:
+      CPR_MOR: phair_hash
+      INSTITUTION_NAME: institution_name
+  # hospitals whose mothers go to the TEST set
+  test_hospitals:
+    mapping_file: /home/am/Documents/final_population/analysis/institution_mapping.yaml  # <TODO>: change this path
+    sites: [herlev_hospital, nordsjaellands_hospital_hilleroed]          # site names from the mapping; several: [rigshospitalet, hvidovre_hospital]
+    institutions: []                 # and/or raw institution names, e.g. ["RH 4002"]
+  # optional: keep the mothers of an existing test split in the test set as well (empty = only the hospitals)
+  previous_test_split:
+
+holdout_frac: 0
+seed: 0
