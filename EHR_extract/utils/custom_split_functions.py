@@ -116,3 +116,81 @@ def kfold(cfg, population):
 
     test_ids = [val for sublist in test_ids for val in sublist]
     assert len(set(test_ids)) == len(set_of_hashes), "something funky happened here"
+
+
+def test_hospitals(cfg, population):
+    """Train / test split of MOTHERS where every mother with at least one image at one of the chosen
+    hospitals goes to the TEST set, with all her data (all her images, at every hospital and in every
+    pregnancy, because the cohorts are split on the mother). Optionally united with an existing test split.
+
+    cfg (the split config's population block):
+      population_key:      CPR_MOR
+      tables:              tables listing the mothers (mfr, nyfoedte); the mothers of imaging_table are added
+      imaging_table:       table + columns {CPR_MOR: <mother column>, INSTITUTION_NAME: <institution column>}
+      test_hospitals:
+        mapping_file:      institution_mapping.yaml (needed for `sites`)
+        sites:             site names from the mapping (all raw spellings of that hospital)
+        institutions:      raw institution names
+      previous_test_split: (optional) an existing test split CSV whose mothers stay in the test set
+    Returns two tables with one column, population_key: the train mothers and the test mothers.
+    """
+    key = cfg.population_key
+    population = merge_population_tables(cfg.tables, population=population, strict=False)
+    all_mothers = set(population.get_column(key).drop_nulls().to_list())
+
+    # mother x institution pairs of the image database (2 columns, read lazily)
+    img = cfg.imaging_table
+    mother_col, inst_col = img.columns[key], img.columns["INSTITUTION_NAME"]
+    pairs = (pl.scan_csv(img.table, infer_schema=False)
+               .select(pl.col(mother_col).alias(key), pl.col(inst_col).alias("institution"))
+               .unique().collect(engine="streaming"))
+    all_mothers |= set(pairs.get_column(key).drop_nulls().to_list())     # mothers with images belong to the population too
+
+    # institution names that belong to the test hospitals
+    th = cfg.test_hospitals
+    sites = set(th.get("sites") or [])
+    names = set(th.get("institutions") or [])
+    if sites:
+        if not th.get("mapping_file"):
+            raise ValueError("test_hospitals: 'sites' needs 'mapping_file' (institution_mapping.yaml)")
+        with open(th.mapping_file, encoding="utf-8") as f:
+            mapping = yaml.safe_load(f) or {}
+        site_of = {}
+        for name, entry in mapping.items():
+            name = "" if name is None else str(name)
+            entry = entry if isinstance(entry, dict) else {}
+            site_of[name] = entry["site"] if "site" in entry else name
+            site_of.setdefault(name.strip(), site_of[name])
+        unknown = sites - set(site_of.values())
+        if unknown:
+            raise ValueError(f"test_hospitals: sites {sorted(unknown)} are not in {th.mapping_file}")
+        for n in pairs.get_column("institution").unique().to_list():
+            key_n = "" if n is None else n
+            if site_of.get(key_n, site_of.get(key_n.strip())) in sites:
+                names.add(n)
+    if not names:
+        raise ValueError("test_hospitals: no institution name in the image database matches the chosen hospitals")
+
+    at_hospitals = pairs.filter(pl.col("institution").is_in(list(names)))
+    hospital_mothers = set(at_hospitals.get_column(key).drop_nulls().to_list())
+    also_elsewhere = pairs.filter(pl.col(key).is_in(list(hospital_mothers)) & ~pl.col("institution").is_in(list(names)))
+    test_population = set(hospital_mothers)
+    logging.info(f"test_hospitals: institution names {sorted(str(n) for n in names)}")
+    print(f"Mothers with >= 1 image at the test hospitals: {len(hospital_mothers):,} "
+          f"(of whom {also_elsewhere.get_column(key).n_unique():,} also have images at other hospitals: "
+          f"all their data goes to TEST)")
+
+    previous = cfg.get("previous_test_split")
+    if previous:
+        previous_mothers = set(pl.read_csv(previous, infer_schema_length=0).get_column(key).drop_nulls().to_list())
+        print(f"Mothers from the previous test split {os.path.basename(previous)}: {len(previous_mothers):,} "
+              f"({len(previous_mothers - hospital_mothers):,} not already in the test set)")
+        test_population |= previous_mothers
+
+    train_population = all_mothers - test_population
+    print(f"Made train split of len: {len(train_population)} and test split of len {len(test_population)}")
+    assert len(test_population & train_population) == 0, "polution between train & test"  # check for set polution
+
+    train_df = pl.DataFrame({key: sorted(train_population)}, schema={key: pl.String})
+    test_df = pl.DataFrame({key: sorted(test_population)}, schema={key: pl.String})
+    return train_df, test_df

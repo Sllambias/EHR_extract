@@ -1,0 +1,1202 @@
+# Author: Karl van Eeden Risager
+# Mapping: raw DICOM institution_name -> {region, site, department}.
+#
+# region/department left out of an entry (or an entry missing entirely)
+# come out null. `site` is the one exception: it falls back to the raw
+# institution_name value when the `site` key is left out entirely, so an
+# entry only needs to set the fields it actually knows (e.g. just `region`)
+# and can leave `site` to default on its own - but writing `site: null`
+# explicitly keeps it null instead of falling back.
+
+
+# ======================================================================
+# Region Hovedstaden
+# ======================================================================
+
+# --- Rigshospitalet ---
+"RH 4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"Rigshospitalet":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: null
+"Rigshospitalet afd. 4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"Rigshospitalet 4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"Rigshospitalet afd. 4002 st.12":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH Svangre 4001 stue 28":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: antenatal_clinic
+"Rigshospitalet afd. 4001 st.26":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: antenatal_clinic
+"RH afd. 4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"Fetal Medicin  4002 Rigshospitalet":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH Svangreambulatoriet 4001":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: antenatal_clinic
+"RH Ultralydklinikken":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH 4002 st. 28":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH 4001":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: antenatal_clinic
+"GYN 4004":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"Rigshospitalet afd. 4023":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: maternity_ward
+"Rigshospitalet Gyn. Amb.":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"Rigshospitalet Gyn. Amb":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"Rigshospitalet afd. 4001":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: antenatal_clinic
+"Gynækologisk Ambulatorium 4004":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"RH":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: null
+"RIGSHOSPITALET":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: null
+"Rigshospitalet Gyn.amb. stue 7":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"Gyn.Amb RH":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"RH 4004":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"Rigshospitalet 4004":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"RH Gyn. amb.":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"4002 Ultralydsklinikken":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH FØTAL MEDICIN 4002":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: fetal_medicine_ultrasound
+"RH 4004 Gyn. amb.":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: gynaecology_outpatient
+"RH 4023":
+  region: region_hovedstaden
+  site: rigshospitalet
+  department: maternity_ward
+
+# --- Hvidovre Hospital ---
+"Hvidovre Hospital":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 449":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital 449 1115704":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre  Hospital svangre amb":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: antenatal_clinic
+"Hvidovre Hospital 1099246":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1099242":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 449 1115708":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital 1080941":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1080945":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1120133":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1070063":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 449 /1112869":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital 1027645":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1135823":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 1120129":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 449  1115700":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital 76405":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 76407":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 76404":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre  Hospital 1012831":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 75193":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital afsnit 449":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital Afsnit 449":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Svangreamb. Hvidovre Hosp.":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: antenatal_clinic
+"Hvidovre":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"HH Ultralydklinikken 449":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Ultralydklinikken, Hvidovre":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital 76406":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital Fødeafsnit":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: maternity_ward
+"Hvidovre Hospital 75430":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+"Hvidovre Hospital 346":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: acute_obstetric_admission
+"Hvidovre Hospital 546":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: fetal_medicine_ultrasound
+"Hvidovre Hospital Svangre amb.":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: antenatal_clinic
+"HVIDOVRE HOSPITAL":
+  region: region_hovedstaden
+  site: hvidovre_hospital
+  department: null
+
+# --- Herlev Hospital ---
+"Herlev Hospital":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: null
+"Afsnit for føtalmed. Herlev":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Herlev Hospital Føtalmedicin":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"HERLEV HOSPITAL FØTALMEDICIN":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Afsnit for føtalmedicin Herlev":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"HERLEV HOSPITAL  FØTALMEDICIN":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Herlev Hospital Føtalmed.":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Herlev Sgh Gyn.Ob amb":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: obstetrics_gynaecology
+"Herlev Føtal Medicin":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"HERLEV HOSPITAL FØTAL":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Herlev hospital":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: null
+"Afsnit for føtalme. Herlev":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"Herlev Sgh. OB gyn ul":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+"HERLEV HOSPITAL":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: null
+"Herlev svangre amb.":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: antenatal_clinic
+"Herlev":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: null
+"KAS.HERLEV.OB.GYN":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: obstetrics_gynaecology
+"Herlev Svangreamb.":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: antenatal_clinic
+"Afsnit  for føtalmed. Herlev":
+  region: region_hovedstaden
+  site: herlev_hospital
+  department: fetal_medicine_ultrasound
+
+# --- Gentofte Hospital ---
+"Gentofte Svangreamb.":
+  region: region_hovedstaden
+  site: gentofte_hospital
+  department: antenatal_clinic
+"Gentofte Hospital":
+  region: region_hovedstaden
+  site: gentofte_hospital
+  department: null
+
+# --- Nordsjællands Hospital Hillerød ---
+"Hillerød Svangre amb.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"Nordsjællands Hospital":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: null
+"NOH Føtalmedicinsk afd.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: fetal_medicine_ultrasound
+"Hillerød Svangreamb.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"Nordsjællands hospital":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: null
+"Hillerød Hospital Føtalmedicin":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: fetal_medicine_ultrasound
+"Hillerød Sygehus":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: null
+"Hillerød Hospital svangre amb.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"NOH føtalmedicinsk afd.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: fetal_medicine_ultrasound
+"Hillerød Svangreamb,":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"NOH Føtalmedicin":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: fetal_medicine_ultrasound
+"Hillerød Svangre Amb.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"Svangre amb. Hillerød Hospital":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"NOH AMG":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"Hillerød":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: null
+"HILLERØD HOSPITAL SVANGRE AMB.":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"HILLERØD":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: null
+"Svangre amb. NOH":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: antenatal_clinic
+"Gynækologisk Amb. Hillerød":
+  region: region_hovedstaden
+  site: nordsjaellands_hospital_hilleroed
+  department: gynaecology_outpatient
+
+# --- Rigshospitalet Glostrup ---
+"Glostrup Svangreamb. 2":
+  region: region_hovedstaden
+  site: rigshospitalet_glostrup
+  department: antenatal_clinic
+"Svangreamb. Glostrup":
+  region: region_hovedstaden
+  site: rigshospitalet_glostrup
+  department: antenatal_clinic
+"Glostrup Svangreamb.":
+  region: region_hovedstaden
+  site: rigshospitalet_glostrup
+  department: antenatal_clinic
+"Svangre amb. Glostrup":
+  region: region_hovedstaden
+  site: rigshospitalet_glostrup
+  department: antenatal_clinic
+
+# --- Frederiksberg Hospital ---
+"Frb sgh,svangre":
+  region: region_hovedstaden
+  site: frederiksberg_hospital
+  department: antenatal_clinic
+
+# --- Bornholms Hospital ---
+"Bornholms Hospital Rønne":
+  region: region_hovedstaden
+  site: bornholms_hospital
+  department: null
+"Bornholms Fødeafsnit":
+  region: region_hovedstaden
+  site: bornholms_hospital
+  department: maternity_ward
+"Bornholms fødeafsnit":
+  region: region_hovedstaden
+  site: bornholms_hospital
+  department: maternity_ward
+
+# ======================================================================
+# Region Sjælland
+# ======================================================================
+
+# --- Holbæk Sygehus ---
+"Holbæk Hospital svangre":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+"Holbæk":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: null
+"Holbæk Sygehus Svangreamb.":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+"Holbæk Svangreamb.":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+"HOLBÆK":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: null
+"Svangre amb, Holbæk sygehus":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+"HOLBÆK SYGEHUS":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: null
+"Holbæk Svangre amb.":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+"SVANGRE AMB HOLBÆK":
+  region: region_sjaelland
+  site: holbaek_sygehus
+  department: antenatal_clinic
+
+# --- Slagelse Sygehus ---
+"Slagelse Sygehus":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: null
+"Amb. for gravide SLS":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: antenatal_clinic
+"Amb. for gravide Slagelse Sgh.":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: antenatal_clinic
+"Amb. for Gravide Slagelse Sgh.":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: antenatal_clinic
+"Amb. for gravide Slagelse Sgh":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: antenatal_clinic
+"Slagelse amb. for gravide":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: antenatal_clinic
+"Fødemodt. Slagelse Sygehus":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: maternity_ward
+"FØDE AFSNIT Slagelse Sgh.":
+  region: region_sjaelland
+  site: slagelse_sygehus
+  department: maternity_ward
+
+# --- Næstved Sygehus ---
+"Næstved Sygehus":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: null
+"Amb. for Gravide, Næstved":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"Næstved Sygehus Svangre Amb.":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"Svangre Amb. Næstved Sygehus":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"Næstved Sygeghus Svangre Amb.":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"Amb. for Gravide, Næstved.":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"Næstved Sygehus, svangre amb.":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: antenatal_clinic
+"½Næstved Sygehus":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: null
+"Næstved Sygehus Gyn. afd.":
+  region: region_sjaelland
+  site: naestved_sygehus
+  department: obstetrics_gynaecology
+
+# --- Roskilde Sygehus ---
+"Ultralyd obst. RAS":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Ultralyd Roskilde":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Ultralydafd. Roskilde Sygehus":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Roskilde Sygehus, amb.":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: antenatal_clinic
+"ULTRALYD OBST. RAS":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Svangre amb. Roskilde":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: antenatal_clinic
+"Roskilde sygehus svangream.":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: antenatal_clinic
+"Obs. ultralyd. Roskilde":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Obst. Ultralyd Roskilde":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: fetal_medicine_ultrasound
+"Roskilde Sygehus, Lillian":
+  region: region_sjaelland
+  site: roskilde_sygehus
+  department: null
+
+# --- Nykøbing Falster Sygehus ---
+"Nykøbing Falster Sygehus":
+  region: region_sjaelland
+  site: nykoebing_falster_sygehus
+  department: null
+"Nykøbing F. Sygehus":
+  region: region_sjaelland
+  site: nykoebing_falster_sygehus
+  department: null
+"Svangre amb. Nykøbing F.":
+  region: region_sjaelland
+  site: nykoebing_falster_sygehus
+  department: antenatal_clinic
+"Nykøbing Falster Gyn. afd.":
+  region: region_sjaelland
+  site: nykoebing_falster_sygehus
+  department: obstetrics_gynaecology
+"SSNy":
+  region: region_sjaelland
+  site: nykoebing_falster_sygehus
+  department: null
+
+# --- hospital unclear ---
+"Ambulatorium for Gravide":
+  region: null
+  site: null
+  department: antenatal_clinic
+"Ambulatorium for gravide":
+  region: null
+  site: null
+  department: antenatal_clinic
+"Ambulatorium  for Gravide":
+  region: null
+  site: null
+  department: antenatal_clinic
+
+# ======================================================================
+# Region Syddanmark
+# ======================================================================
+
+# --- Odense Universitetshospital ---
+"Odense Universitetshospital":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.3":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.12":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.5":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.9":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp. St.11":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St. 7":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.14":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St.7":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"Odense Universitetshosp.St. 11":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"GYNÆKOLOGISK-OBSTETRISK AFD., OUH":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: obstetrics_gynaecology
+"OUH D-Føtal (Reserve)":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: fetal_medicine_ultrasound
+"OUH Gyn./Obs.":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: obstetrics_gynaecology
+"OUH":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"OUH Svangreamb.":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: antenatal_clinic
+"Odense Universitets Hospital":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: null
+"OUH Ul-amb. D":
+  region: region_syddanmark
+  site: odense_universitetshospital
+  department: fetal_medicine_ultrasound
+
+# --- Svendborg Sygehus ---
+"OUH Svendborg Sygehus":
+  region: region_syddanmark
+  site: svendborg_sygehus
+  department: null
+"GYN/OBS AFD. Svendborg":
+  region: region_syddanmark
+  site: svendborg_sygehus
+  department: obstetrics_gynaecology
+"GYNÆKOLOGISK-OBSTETRISK AFD.,  SVENDBORG SYGEHUS":
+  region: region_syddanmark
+  site: svendborg_sygehus
+  department: obstetrics_gynaecology
+
+# --- Kolding Sygehus (Sygehus Lillebælt) ---
+"Sygehus Lillebælt, Kolding":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: null
+"Kolding Sygehus":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: null
+"Kolding Sygehus Svangreamb.":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: antenatal_clinic
+"Sygehus Lillebælt, Fødegangen":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: maternity_ward
+"SLB Kolding":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: null
+"Sygehus Lillebælt":
+  region: region_syddanmark
+  site: kolding_sygehus
+  department: null
+
+# --- Fredericia Sygehus ---
+"Fredericia Sygehus":
+  region: region_syddanmark
+  site: fredericia_sygehus
+  department: null
+
+# --- Sydvestjysk Sygehus Esbjerg ---
+"Sydvestjysk Sygehus, Esbjerg":
+  region: region_syddanmark
+  site: esbjerg_sygehus
+  department: null
+"Sydvestjysk Sygehus":
+  region: region_syddanmark
+  site: esbjerg_sygehus
+  department: null
+"Sydvestjysk Sygehus Esbjerg":
+  region: region_syddanmark
+  site: esbjerg_sygehus
+  department: null
+
+# --- Sygehus Sønderjylland Aabenraa ---
+"Sygehus Sønderjylland":
+  region: region_syddanmark
+  site: aabenraa_sygehus
+  department: null
+"Sygehus Sønderjylland, Åbenrå":
+  region: region_syddanmark
+  site: aabenraa_sygehus
+  department: null
+"Sygehus Sønderjylland,Aabenraa":
+  region: region_syddanmark
+  site: aabenraa_sygehus
+  department: null
+"Sygehus Sønderjylland, Aabenrå":
+  region: region_syddanmark
+  site: aabenraa_sygehus
+  department: null
+"Aabenraa":
+  region: region_syddanmark
+  site: aabenraa_sygehus
+  department: null
+
+# ======================================================================
+# Region Midtjylland
+# ======================================================================
+
+# --- Aarhus Universitetshospital (Skejby) ---
+"Aarhus Universitetshospital":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Skejby Sygehus":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Skejby Afd. Y Ultralyd":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: fetal_medicine_ultrasound
+"AUH":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Aarhus Universitetshospital 3":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Skejby":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Skejby Sygehus st.9":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"AUH Skejby":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"AUH projektskanner":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: research_scanner
+"AUH Fødeafsnit":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: maternity_ward
+"SKEJBY SYGEHUS":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: null
+"Skejby Sygehus Y6":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: obstetrics_gynaecology
+"SKEJBY FØTALMEDICINSK ULTRALYD":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: fetal_medicine_ultrasound
+"Skejby Afd.Y Ultralyd":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: fetal_medicine_ultrasound
+"Skejby Sygehus Y5":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: obstetrics_gynaecology
+"URO-GYN AUH Skejby":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: urogynaecology
+"Kvindeklinikken Skejby":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: obstetrics_gynaecology
+"Skejby Sygehus Ultralyd Afd.Y":
+  region: region_midtjylland
+  site: aarhus_universitetshospital
+  department: fetal_medicine_ultrasound
+
+# --- Hospitalsenheden Horsens ---
+"Regionshospitalet Horsens":
+  region: region_midtjylland
+  site: regionshospitalet_horsens
+  department: null
+"Hospitalsenheden Horsens":
+  region: region_midtjylland
+  site: regionshospitalet_horsens
+  department: null
+"Skanderborg Sundhedscenter":
+  region: region_midtjylland
+  site: regionshospitalet_horsens
+  department: null
+
+# --- Regionshospitalet Viborg ---
+"Hospitalsenheden Midt, Viborg":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Regionshospitalet Viborg":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Viborg Sygehus Afd. Y18":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: obstetrics_gynaecology
+"Regionshospital Viborg":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Regionshospitalet Viborg St.14":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Regionshospital  Viborg":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Regionshospitalet Viborg,":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Viborg Y18":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: obstetrics_gynaecology
+"Hospitalsenheden Midi, Viborg":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: null
+"Y18":
+  region: region_midtjylland
+  site: regionshospitalet_viborg
+  department: obstetrics_gynaecology
+
+# --- Hospitalsenheden Vest (Herning / Gødstrup / Holstebro) ---
+"Regionshospitalet Herning":
+  region: region_midtjylland
+  site: regionshospitalet_herning
+  department: null
+"Hospitalsenheden Vest, Herning":
+  region: region_midtjylland
+  site: regionshospitalet_herning
+  department: null
+"Hospitalsenhed Vest, Herning":
+  region: region_midtjylland
+  site: regionshospitalet_herning
+  department: null
+"Regionshospitalet Gødstrup":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: null
+"Regionshospitalet Gøsdstrup":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: null
+"Regionshosp. Gødstrup, fødeafd":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: maternity_ward
+"Regionshospitalet  Gødstrup":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: null
+"Regionshospitalt Gødstrup":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: null
+"Regionshosp. Gødstrup, Fødeafd":
+  region: region_midtjylland
+  site: regionshospitalet_goedstrup
+  department: maternity_ward
+"Regionshosp.Holstebro, fødeafd":
+  region: region_midtjylland
+  site: regionshospitalet_holstebro
+  department: maternity_ward
+
+# --- Regionshospitalet Randers ---
+"Regionshospitalet Randers":
+  region: region_midtjylland
+  site: regionshospitalet_randers
+  department: null
+"Regionshospitalet Randers 4":
+  region: region_midtjylland
+  site: regionshospitalet_randers
+  department: null
+"Regionshospitalet Randers 2":
+  region: region_midtjylland
+  site: regionshospitalet_randers
+  department: null
+"Regionshospitalet Randers 3":
+  region: region_midtjylland
+  site: regionshospitalet_randers
+  department: null
+"Regionshospitalet Randers 1":
+  region: region_midtjylland
+  site: regionshospitalet_randers
+  department: null
+
+# --- Regionshospitalet Silkeborg ---
+"Regionshospitalet Silkeborg":
+  region: region_midtjylland
+  site: regionshospitalet_silkeborg
+  department: null
+"Silkeborg OB7GYN":
+  region: region_midtjylland
+  site: regionshospitalet_silkeborg
+  department: obstetrics_gynaecology
+
+# ======================================================================
+# Region Nordjylland
+# ======================================================================
+
+# --- Aalborg Universitetshospital ---
+"Aalborg Universitetshosp. st 1":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshosp. St 5":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshospital 3":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshosp. St 8":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshosp. St 6":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshospital":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshosp. st 3":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshosp. Gyn":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: obstetrics_gynaecology
+"Aalborg Universitets Hospital":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Universitetshospital 1":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: null
+"Aalborg Sygehus Nord - ob st3":
+  region: region_nordjylland
+  site: aalborg_universitetshospital
+  department: obstetrics_gynaecology
+
+# --- Regionshospital Nordjylland Hjørring ---
+"Regionshospital Nordjylland":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: null
+"SV GOO stue 4":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: obstetrics_gynaecology
+"SV GOO stue 1":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: obstetrics_gynaecology
+"Hjørring GOO stue 1":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: obstetrics_gynaecology
+"Vendsyssel GOO stue 4":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: obstetrics_gynaecology
+"Hjørring, GOO stue 4":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: obstetrics_gynaecology
+"Gyn.OP Hjørring stue 1,SVE":
+  region: region_nordjylland
+  site: regionshospital_nordjylland_hjoerring
+  department: null
+
+# ======================================================================
+# Not a hospital or unclear
+# ======================================================================
+
+# --- Scanner vendors (not a site) ---
+"GE Healthcare":
+  region: null
+  site: null
+  department: null
+"Philips Medical":
+  region: null
+  site: null
+  department: null
+"Ge Healthcare":
+  region: null
+  site: null
+  department: null
+"GE Medical Systems":
+  region: null
+  site: null
+  department: null
+"GE HealthCare":
+  region: null
+  site: null
+  department: null
+"GE":
+  region: null
+  site: null
+  department: null
+"GE HEALTHCARE":
+  region: null
+  site: null
+  department: null
+"GE HEALHCARE":
+  region: null
+  site: null
+  department: null
+"ViCare Medical":
+  region: null
+  site: null
+  department: null
+"Ge healtcare":
+  region: null
+  site: null
+  department: null
+"ZONARE":
+  region: null
+  site: null
+  department: null
+"B-K Medical":
+  region: null
+  site: null
+  department: null
+
+# --- Placeholders, missing and unclear ---
+"":
+  region: null
+  site: null
+  department: null
+"NaN":
+  region: null
+  site: null
+  department: null
+"Hospitalsenheden Hospitalet":
+  region: null
+  site: null
+  department: null
+"09":
+  region: null
+  site: null
+  department: null
+"Afsnit for gravide":
+  region: null
+  site: null
+  department: antenatal_clinic
+"Development":
+  region: null
+  site: null
+  department: null
+"HospitalName":
+  region: null
+  site: null
+  department: null
