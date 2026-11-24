@@ -772,3 +772,74 @@ def extract_latest_value(
                 fb_col
             )
     return main_table
+
+
+def find_images_with_min_mother_age_at_scan(
+    population,
+    population_key_column,
+    min_age=18,
+    mother_birthday_column="MOTHER_BIRTHDAY",
+    scan_date_column="STUDY_DATE",
+):
+    """Remove images taken while the mother was younger than min_age (age ON THE DAY OF THE SCAN).
+    Only possible where the mother's birth date is known (nyfoedte). Images of mothers without a known
+    birth date are kept here: their age AT THE BIRTH is checked by a criterion on MOTHER_AGE."""
+    discard_stats = {"n_population_before_discard": len(population)}
+    birthday = convert_to_date(mother_birthday_column)
+    scan = convert_to_date(scan_date_column)
+    had_birthday = (scan.dt.month() > birthday.dt.month()) | (
+        (scan.dt.month() == birthday.dt.month()) & (scan.dt.day() >= birthday.dt.day())
+    )
+    age_at_scan = scan.dt.year() - birthday.dt.year() - pl.when(had_birthday).then(0).otherwise(1)  # scan year - birth year - 1 (if mother's birthday has not happened yet this year)
+    population = population.filter(birthday.is_null() | (age_at_scan >= min_age))
+    discard_stats.update({"criteria": f"find_images_with_min_mother_age_at_scan (>= {min_age})", "discards": "N/A",
+                          "n_discards": discard_stats["n_population_before_discard"] - len(population)})
+    return population, discard_stats
+
+
+def find_images_in_scan_years(
+    population,
+    population_key_column,
+    year_from=None,
+    year_to=None,
+    scan_date_column="STUDY_DATE"
+):
+    """Keep only images with a scan date from year_from to year_to (both included; None = no limit)."""
+    discard_stats = {"n_population_before_discard": len(population)}
+    year = convert_to_date(scan_date_column).dt.year()
+    if year_from is not None:
+        population = population.filter(year >= int(year_from))
+    if year_to is not None:
+        population = population.filter(year <= int(year_to))
+    discard_stats.update({"criteria": f"find_images_in_scan_years ({year_from}-{year_to})", "discards": "N/A",
+                          "n_discards": discard_stats["n_population_before_discard"] - len(population)})
+    return population, discard_stats
+
+
+def keep_one_row_per_image(population, population_key_column, image_path_column="FILE_PATH"):
+    """Twins share their mother's images, so a shared image appears once per twin. Keep it once: the row
+    of the child whose ID sorts first (twins have the same GA at birth, so the label is the same)."""
+    discard_stats = {"n_population_before_discard": len(population)}
+    population = (population.sort([image_path_column, population_key_column])
+                            .unique(subset=image_path_column, keep="first", maintain_order=True))
+    discard_stats.update({"criteria": "keep_one_row_per_image", "discards": "N/A",
+                          "n_discards": discard_stats["n_population_before_discard"] - len(population)})
+    return population, discard_stats
+
+
+def add_label_by_ga_at_birth(
+    population,
+    population_key_column,
+    positive_max_ga_at_birth=224,
+    ga_column="GA",
+    label_column="label",
+    positive="positive",
+    negative="negative"
+):
+    """Add a label column: positive if GA at birth <= positive_max_ga_at_birth (days), else negative.
+    Removes nothing."""
+    population = population.with_columns(
+        pl.when(pl.col(ga_column).cast(pl.Float64, strict=False) <= positive_max_ga_at_birth)
+          .then(pl.lit(positive)).otherwise(pl.lit(negative)).alias(label_column))
+    return population, {"n_population_before_discard": len(population), "criteria": "add_label_by_ga_at_birth",
+                        "discards": "N/A", "n_discards": 0}

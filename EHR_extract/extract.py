@@ -15,6 +15,10 @@ from EHR_extract.utils.custom_find_functions import (
     match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     match_years_with_child_cpr_on_birthdate,
     merge_population_on,
+    find_images_with_min_mother_age_at_scan,
+    find_images_in_scan_years,
+    keep_one_row_per_image,
+    add_label_by_ga_at_birth,
 )
 from EHR_extract.utils.paths import get_config_path
 from EHR_extract.utils.utils import (
@@ -51,6 +55,10 @@ custom_functions = {
     "match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate": match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     "match_years_with_child_cpr_on_birthdate": match_years_with_child_cpr_on_birthdate,
     "merge_population_on": merge_population_on,
+    "find_images_with_min_mother_age_at_scan": find_images_with_min_mother_age_at_scan,
+    "find_images_in_scan_years": find_images_in_scan_years,
+    "keep_one_row_per_image": keep_one_row_per_image,
+    "add_label_by_ga_at_birth": add_label_by_ga_at_birth,
 }
 
 
