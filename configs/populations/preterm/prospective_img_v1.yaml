@@ -6,7 +6,7 @@ defaults:
 # SP-only version of preterm_P1_img_v7: the prospective export has no SDS tables,
 # so v7's SDS conditions and its close-sibling exclusion (SDS only) are left out.
 paths:
-  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables/Oct23_ProspectiveCervicalImageSettings
+  input_dir_SP: /storage/archive/UCPH/DeepFetal/SP/tables/Oct2026_ProspectiveCervicalImageSettings
   output_dir: ${oc.env:EHR_EXTRACT_OUTPUTS}/populations/preterm/${hydra:job.config_name}
   population_save_path: ${paths.output_dir}/${hydra:job.config_name}_population
   discards_save_path: ${paths.output_dir}/${hydra:job.config_name}_discards
