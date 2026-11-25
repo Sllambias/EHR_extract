@@ -69,13 +69,16 @@ conditional_criteria:
           mapping_table_path: ${paths.input_dir_SP}/Population.csv
           mapping_table_birth_id_column: BABY_Fødsel_ID
           mapping_table_child_cpr_column: BABY_CPR
-  # Only first pregnancy
+  # First pregnancy (parity_0), as in preterm_img_v7: every child minus the SP conditions of v7's parity exclusion
   # SP: 0 = first pregnancy (but many mistakes so often 1 == first pregnancy as well)
-  # SP: dropped if any non-missing Para in the pregnancy is 2 or more
+  # SP: not first if any non-missing Para in the pregnancy is 2 or more
   - action: add_column
-    name: first_pregnancy
+    name: parity_0
     conditions:
-      - custom:
+      - standard:
+        table: population
+        match_on: CPR_BARN
+      - custom: and_not
         function: match_value_with_child_cpr_on_birthdate
         args:
           value: 2
@@ -89,7 +92,7 @@ conditional_criteria:
           population_child_cpr_column: CPR_BARN
           population_mother_cpr_column: CPR_MOR
           include_days_after_birth: 7
-      - custom: or
+      - custom: and_not
         function: match_value_with_child_cpr_on_birthdate
         args:
           value: DZ348A #Flergangsfødende
