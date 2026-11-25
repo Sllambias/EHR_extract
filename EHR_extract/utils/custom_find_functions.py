@@ -148,9 +148,7 @@ def match_value_with_child_cpr_on_birth_id(
         joined = joined.filter(pl.col("positive").any().over(mapping_table_child_cpr_column))
     elif operator[1] == "all":
         joined = joined.filter(pl.col("positive").all().over(mapping_table_child_cpr_column))
-    population = population.filter(
-        pl.col(population_key_column).rechunk().is_in(set(joined[mapping_table_child_cpr_column]))
-    )
+    population = population.filter(pl.col(population_key_column).rechunk().is_in(set(joined[mapping_table_child_cpr_column])))
     matches = set(population[population_key_column].unique())
 
     return matches
@@ -253,9 +251,13 @@ def match_images_with_child(
             pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
         )
     )
-
+    logging.info(
+        f"Valid images: {len(table)} with moms: {len(table[mom_key].unique())} before filtering for image_during_pregnancy  \n"
+    )
     table = table.filter(pl.col("image_during_pregnancy"))
-    logging.info(f"Valid images: {len(table)} after matching image + EHR matching.  \n")
+    logging.info(
+        f"Valid images: {len(table)} with moms: {len(table[mom_key].unique())} after matching image + EHR matching.  \n"
+    )
     return table
 
 
