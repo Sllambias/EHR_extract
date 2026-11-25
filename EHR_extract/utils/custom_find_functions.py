@@ -248,7 +248,8 @@ def match_images_with_child(
     table = table.unique()
     table = table.with_columns(
         image_during_pregnancy=pl.col(study_date_key).is_between(
-            pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)), pl.col(birthday_key)
+            pl.col(birthday_key) - pl.duration(days=pl.col(ga_key)) - pl.duration(days=1),
+            pl.col(birthday_key) + pl.duration(days=1),
         )
     )
     logging.info(
