@@ -32,7 +32,7 @@ population — i.e. "present in this table at all".
 
 ## Custom functions for extract.py
 
-Registered at [extract.py:40-51](../EHR_extract/extract.py#L40-L51). `population` and
+Registered at [extract.py:44-56](../EHR_extract/extract.py#L44-L56). `population` and
 `population_key_column` are injected by the script — never put them in `args`.
 
 Where each is legal depends on what it returns.

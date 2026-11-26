@@ -13,7 +13,7 @@ Template: [`configs/templates/template_population.yaml`](../configs/templates/te
 
 ## Order of operations
 
-[extract.py:229-276](../EHR_extract/extract.py#L229-L276)
+[extract.py:270-322](../EHR_extract/extract.py#L270-L322)
 
 1. `population.tables` — stack sources
 2. `population.composed_tables` — join-then-stack sources
@@ -40,7 +40,7 @@ These are read by attribute, so they must be present. They may be `null` where n
 
 `population.file_path_key` is **not** required and is read by no Python code. It exists so criteria
 can interpolate `${population.file_path_key}`; the code hardcodes `FILE_PATH`
-([extract.py:187](../EHR_extract/extract.py#L187)).
+([extract.py:225](../EHR_extract/extract.py#L225)).
 
 ## Sources
 
@@ -132,7 +132,7 @@ of a group". It looks like a YAML mistake; it is not.
 
 `and` intersects, `and_not` subtracts, `or` unions the accumulated group into the result. The net
 effect is an **OR of AND-groups — `and` and `and_not` bind tighter than `or`**
-([extract.py:139-155](../EHR_extract/extract.py#L139-L155)).
+([extract.py:177-193](../EHR_extract/extract.py#L177-L193)).
 
 Write "has no record of X" as `and_not` with a condition that matches X, e.g. `operator: in` or
 `[in, any]`. IDs with no rows in that table are then kept in the group. A `not_in` condition with
@@ -169,6 +169,39 @@ Three sources, OR'd, so a subject is dropped only if GA is missing in all of the
       operator: "missing"
       value:
 ```
+
+### Limiting a condition to a time window
+
+Give a standard condition `time_window: <name>` and `date_col: <column>` to keep only the rows whose
+`date_col` falls inside that window, inclusive at both ends. Windows are defined once at the top level
+in `time_conditionals`, the same way as for [table.py](table.md#time_conditionals). Their bound columns
+are population columns, such as `BIRTHDAY`, and are taken from the population row of the matching ID.
+
+```yaml
+time_conditionals:
+  birth_to_day_28:
+    min_date: {date_col: BIRTHDAY, offset_days: 0}
+    max_date: {date_col: BIRTHDAY, offset_days: 28}
+
+conditional_criteria:
+  - action: add_column
+    name: DIAGNOSIS_NEC
+    conditions:
+      - standard:
+        table:
+          table1: ${paths.input_dir_SDS}/barn_kontakter.csv
+          table2: ${paths.input_dir_SDS}/nyfoedte.csv
+          left_on: DW_EK_Nyfoedt
+          right_on: DW_EK_Nyfoedt
+        match_on: CPRnummer_Barn
+        column: Aktionsdiagnose
+        operator: startswith_any
+        value: [DP77]
+        date_col: Datostart
+        time_window: birth_to_day_28
+```
+
+Rows with an empty or unreadable date, and IDs with an empty bound column, never match.
 
 ### Custom conditions
 
@@ -242,7 +275,7 @@ instead of `True`. Rows that did not match are left empty.
 - The column is carried through image matching into every output CSV. The criterion is listed in the
   discards JSON with `n_discards: 0`.
 
-`include` and `exclude` ignore `retrieve` and `date_col`.
+`include` and `exclude` ignore `retrieve`, and use `date_col` only for a `time_window`.
 
 ## Matching images
 
@@ -296,7 +329,7 @@ date_columns: [BIRTHDAY, STUDY_DATE]   # written as YYYY-MM-DD; date strings wit
 
 The train/test split assigns rows by `population.split_key` against the IDs in `holdout_csv`. If a
 subject ends up in both, it is removed from **test** and a warning is logged
-([extract.py:269-274](../EHR_extract/extract.py#L269-L274)).
+([extract.py:315-320](../EHR_extract/extract.py#L315-L320)).
 `paths.exclude_train_subjects_not_in_csv`, if set, further restricts train to IDs in that CSV.
 
 The discards JSON records, per criterion, the criterion as written, `n_discards`, the population
