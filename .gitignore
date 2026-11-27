@@ -142,3 +142,6 @@ distribution_*
 outputs/*
 test_data/preprocessed_images
 test_data/tables
+
+# data configs
+/configs/populations/preterm/prenaital/

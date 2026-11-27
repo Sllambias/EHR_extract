@@ -5,7 +5,7 @@ import os
 import polars as pl
 from datetime import datetime
 from dotenv import load_dotenv
-from EHR_extract.utils.custom_split_functions import kfold, preterm_custom1
+from EHR_extract.utils.custom_split_functions import kfold, preterm_custom1, test_hospitals
 from EHR_extract.utils.paths import get_config_path
 from EHR_extract.utils.utils import RecursiveSearchpathPlugin, merge_population_tables
 from hydra.core.plugins import Plugins
@@ -15,7 +15,7 @@ Plugins.instance().register(RecursiveSearchpathPlugin)
 
 load_dotenv()
 
-custom_split_functions = {"preterm_custom1": preterm_custom1, "kfold": kfold}
+custom_split_functions = {"preterm_custom1": preterm_custom1, "kfold": kfold, "test_hospitals": test_hospitals}
 
 
 def create_splits(

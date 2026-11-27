@@ -217,7 +217,9 @@ def merge_population_tables(table_cfgs: list, population, strict=True):
         tab = tab.select(sorted(tab.columns))
         if "GA" in tab.columns:
             tab = filter_numeric_rows(tab, "GA")
-        population = population.vstack(tab)
+        # diagonal_relaxed: a column that only some tables have (e.g. the mother's birth date, only in
+        # nyfoedte) is filled with empty values for the other tables; identical columns stack as before
+        population = pl.concat([population, tab], how="diagonal_relaxed")
     return population
 
 
