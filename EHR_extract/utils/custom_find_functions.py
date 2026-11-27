@@ -335,21 +335,33 @@ def find_images_with_one_region(columns, population, population_key_column):
 
 def find_images_with_predicted_classes(
     table,
-    classes,
-    class_column,
     image_path_column,
     population,
     population_image_path_column,
     population_key_column,
+    classes=None,
+    class_column=None,
+    confidence_column=None,
+    confidence_threshold=None,
 ):
+    """Keep images whose class_column is in classes and whose confidence_column is above confidence_threshold, if given."""
     discard_stats = {"n_population_before_discard": len(population)}
 
     table_path = table
-    table = load_table(table, columns=[class_column, image_path_column])
+    table = load_table(table, columns=[image_path_column, class_column, confidence_column])
     logging.debug(f"Table rows total: {len(table)} for table: {table_path}")
 
-    matched_paths = table.filter(pl.col(class_column).is_in(classes))[image_path_column]
-    logging.debug(f"Table rows matching predicted classes: {len(matched_paths)}")
+    if class_column is not None:
+        table = table.filter(pl.col(class_column).is_in(classes))
+        logging.debug(f"Table rows matching predicted classes: {len(table)}")
+
+    if confidence_column is not None:
+        if confidence_threshold is None:
+            raise ValueError("confidence_column needs confidence_threshold")
+        table = table.filter(pl.col(confidence_column).cast(pl.Float64, strict=False) > confidence_threshold)
+        logging.debug(f"Table rows with {confidence_column} above {confidence_threshold}: {len(table)}")
+
+    matched_paths = table[image_path_column]
 
     population = population.filter(pl.col(population_image_path_column).rechunk().is_in(matched_paths.implode()))
     logging.debug(f"Table rows matching population: {len(population)}")

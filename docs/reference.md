@@ -67,7 +67,7 @@ Rows where `op` gives null (an empty cell) are skipped. A child with no rows nev
 |---|---|
 | `find_images_within_time_windows` | `scan_date_column`, `image_path_column`, `min_diff_days_scan_to_delivery`, `max_diff_days_scan_to_delivery`, `min_ga_in_days_at_scan`, `max_ga_in_days_at_scan`, optional `population_delivery_date_column` (default `BIRTHDAY`), `population_ga_in_days_at_delivery_column` (default `GA`), `add_columns` (default `False`; `True` keeps the columns `scan_to_delivery` and `ga_at_scan`, in days) |
 | `find_images_with_one_region` | `columns` (list). Drops images where any of the columns holds a list of values, e.g. `[0.01, 0.02]` in `PDX` for a flow image with two regions |
-| `find_images_with_predicted_classes` | `table`, `classes` (list), `class_column`, `image_path_column`, `population_image_path_column` |
+| `find_images_with_predicted_classes` | `table`, `image_path_column`, `population_image_path_column`, and one or both of: `class_column` with `classes` (list), keeping images whose class is in `classes`; `confidence_column` with `confidence_threshold`, keeping images whose value is above the threshold (empty or non-numeric values do not pass) |
 
 Using one of these in `conditional_criteria`, or one of the set-returning functions in
 `imaging_matching_criteria`, will fail — the return types are not interchangeable.
