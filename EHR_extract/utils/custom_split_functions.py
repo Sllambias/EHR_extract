@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import os
 import polars as pl
+import yaml
 from datetime import datetime
 from EHR_extract.extract import handle_standard_condition
 from EHR_extract.utils.custom_find_functions import (

@@ -15,6 +15,7 @@ from EHR_extract.utils.custom_find_functions import (
     match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     match_years_with_child_cpr_on_birthdate,
     merge_population_on,
+    find_images_before_event,
     find_images_with_min_mother_age_at_scan,
     find_images_in_scan_years,
     keep_one_row_per_image,
@@ -55,6 +56,7 @@ custom_functions = {
     "match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate": match_value_with_child_cpr_on_lpr_id_to_mom_cpr_to_birthdate,
     "match_years_with_child_cpr_on_birthdate": match_years_with_child_cpr_on_birthdate,
     "merge_population_on": merge_population_on,
+    "find_images_before_event": find_images_before_event,
     "find_images_with_min_mother_age_at_scan": find_images_with_min_mother_age_at_scan,
     "find_images_in_scan_years": find_images_in_scan_years,
     "keep_one_row_per_image": keep_one_row_per_image,
@@ -191,6 +193,16 @@ def extract_from_cfg(cfg, population):
             table_cfg=cfg.imaging_table,
             population=population,
         )
+        all_discards.append(
+            [
+                "match_images_with_child",
+                "N/A",
+                0,
+                len(population),
+                {"children_after": population[cfg.population.population_key].n_unique(),
+                 "images_after": population[cfg.population.file_path_key].n_unique()},
+            ]
+        )
         logging.info(
             f"After matching images with patients: \n"
             f"Valid image+patient matches: {len(population)} with "
@@ -213,6 +225,8 @@ def extract_from_cfg(cfg, population):
                 discard_stats["discards"],
                 discard_stats["n_discards"],
                 discard_stats["n_population_before_discard"],
+                {"children_after": population[cfg.population.population_key].n_unique(),
+                 "images_after": population[cfg.population.file_path_key].n_unique()},
             ]
         )
         logging.info(
@@ -272,6 +286,8 @@ def main(cfg: DictConfig) -> None:
             "n_population_post_discard": discards[i][3] - discards[i][2],
             "discards": discards[i][1],
         }
+        if len(discards[i]) > 4:  # image steps: children and images left after the step
+            d[i].update(discards[i][4])
 
     discards_file_path.write_text(json.dumps(d, indent=4))
 

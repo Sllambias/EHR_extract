@@ -12,8 +12,8 @@ defaults:
 
 paths:
   input_dir_SDS: /home/am/data/raw/sds
-  output_dir: # output directory
-  imaging_table: # table with mother ID
+  output_dir: /home/am/Documents/splits/${hydra:job.config_name}
+  imaging_table: /home/am/Documents/DeepFetalCSVs/111126/DeepFetal_image_database_111126_joined_on_sop_instance_uid.csv
 
 custom_split_fn: test_hospitals
 
@@ -31,12 +31,12 @@ population:
   imaging_table:
     table: ${paths.imaging_table}
     columns:
-      CPR_MOR: phair_hash
+      CPR_MOR: file_hash
       INSTITUTION_NAME: institution_name
   # hospitals whose mothers go to the TEST set
   test_hospitals:
     mapping_file: /home/am/Documents/EHR_extract/configs/institution_mapping.yaml
-    sites: []  #[hospital_1, hospital_2, ..., hospital_n] 
+    sites: [herlev_hospital, nordsjaellands_hospital_hilleroed]  #[hospital_1, hospital_2, ..., hospital_n] 
     institutions: []  # and/or raw institution names, e.g. ["RH 4002"]
   # optional: keep the mothers of an existing test split in the test set as well (empty = only the hospitals)
   previous_test_split:
